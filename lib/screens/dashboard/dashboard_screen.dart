@@ -109,6 +109,31 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── Sticky Date Header ──────────────────────────────────────────
+          Sticky(
+            child: Container(
+              color: AppColors.background,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenH,
+                  vertical: AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatDateHeader(),
+                    style: AppTypography.labelMedium
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+                  Text(
+                    _formatMonth(),
+                    style: AppTypography.headingSmall
+                        .copyWith(color: AppColors.gold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // ── Fuel Gauge ──────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -281,7 +306,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
 
           const Divider(color: AppColors.border),
 
-          // ── Next 7 Days ──────────────────────────────────────────────────
+          // ── Until End of Month ──────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.screenH,
@@ -289,13 +314,13 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionLabel('next 7 days'),
+                const SectionLabel('until end of month'),
                 const SizedBox(height: AppSpacing.md),
                 if (radarItems.isEmpty)
                   const EmptyState(
                     icon: '✓',
                     title: 'All clear',
-                    message: 'No debits in the next 7 days',
+                    message: 'No debits until end of month',
                   )
                 else ...[
                   ...visibleRadar.map((item) => _RadarItem(
@@ -330,9 +355,21 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
       ),
     );
   }
+
+  String _formatDateHeader() {
+    final now = DateTime.now();
+    final weekday = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][now.weekday - 1];
+    return '$weekday, ${now.day}';
+  }
+
+  String _formatMonth() {
+    final now = DateTime.now();
+    const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+                    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+    return months[now.month - 1];
+  }
 }
 
-// ─── Runway Table ─────────────────────────────────────────────────────────
 
 class _RunwayTable extends StatelessWidget {
   const _RunwayTable(
@@ -927,7 +964,30 @@ class _RadarItem extends StatelessWidget {
   }
 }
 
-// ─── Overall Tab ──────────────────────────────────────────────────────────
+// ─── Sticky Widget (frozen header on scroll) ───────────────────────────────
+
+class Sticky extends StatelessWidget {
+  const Sticky({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withAlpha(10),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
 
 class _OverallTab extends StatelessWidget {
   const _OverallTab({required this.dashboard});

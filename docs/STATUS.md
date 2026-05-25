@@ -3,9 +3,9 @@
 
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
-**Last Updated:** 2026-05-25
-**Current Phase:** Phase 4 — Dashboard Screen
-**Overall Progress:** 60 / 125 items complete
+**Last Updated:** 2026-05-26
+**Current Phase:** Phase 5 — Funds Screen (Accounts)
+**Overall Progress:** 96 / 125 items complete
 
 ---
 
@@ -14,6 +14,7 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-26 | Runway Engine v2 | Phase 4 complete: Credits model + Safe extension, selectedDay provider, dashboard_provider refactored (41 fields, day-parameterised formula), FuelGaugeRing clipping fix + day label, dashboard_screen slider + 4-section collapsible table (Cash/Credits/Debits/Commitments), seed data (salary + interest), CLAUDE.md Isar Safety section. flutter analyze clean — 0 issues. Awaiting simulator run to verify on both devices. | Simulator verification on iOS + Android |
 | 2026-05-25 | Phase 4 start | Phases 2+3 simulator verified (iOS + Android). Android Gradle namespace+compileSdk patches re-applied. Starting Phase 4 Dashboard Screen. | — |
 | 2026-05-25 | Phase 3 | 5 Isar models, build_runner generated .g.dart files, database.dart, main.dart seeds AppSettings, 4 repositories, 5 Riverpod providers (@riverpod DashboardNotifier with all computed values). flutter analyze clean — 0 issues. | Awaiting simulator run on both devices |
 | 2026-05-25 | Phase 2 | GoRouter + StatefulShellRoute, ScaffoldWithNavBar, 5 placeholder screens, main.dart simplified to bootstrap only. flutter analyze clean — 0 issues. | Awaiting simulator run on both devices |
@@ -109,31 +110,34 @@
 
 ---
 
-## Phase 4 — Dashboard Screen + Navigation Rename
-**Goal:** Two-tab Home (This Month + Overall), renamed nav (Funds / Debits / Investments), all widgets built.
+## Phase 4 — Dashboard Screen + Navigation Rename + Runway Engine v2 ✅
+**Goal:** Two-tab Home (This Month + Overall), renamed nav (Funds / Debits / Investments), day slider, collapsible table, Credits model.
 
 ### Navigation
-- [ ] `lib/app.dart` — rename nav labels: Accounts→Funds, Outgoings→Debits, Portfolio→Investments
-- [ ] `lib/app.dart` — update icons: Funds=savings_outlined, Debits=receipt_long_outlined
-- [ ] Rename screen files + classes: `funds_screen.dart` / `debits_screen.dart` / `investments_screen.dart`
+- [x] `lib/app.dart` — rename nav labels: Accounts→Funds, Outgoings→Debits, Portfolio→Investments
+- [x] `lib/app.dart` — update icons: Funds=savings_outlined, Debits=receipt_long_outlined
+- [x] Rename screen files + classes: `funds_screen.dart` / `debits_screen.dart` / `investments_screen.dart`
 
-### Widgets (code done — awaiting simulator ✓)
+### Widgets
 - [x] `lib/widgets/common/amount_display.dart` — IBM Plex Mono always, colour-coded
 - [x] `lib/widgets/common/section_label.dart` — uppercase, mono, tracked
 - [x] `lib/widgets/common/empty_state.dart` — emoji + title + message + optional button
-- [x] `lib/widgets/fuel_gauge_ring.dart` — CustomPainter ring, animated, colour changes
-  - [x] Ring animates from 0 → percentage on mount (800ms, easeInOut)
-  - [x] Green >50% · Amber 20–50% · Red <20%
-  - [x] Centre: `AmountDisplay` (balanceForMonth) + "available this month" label
+- [x] `lib/widgets/fuel_gauge_ring.dart` — CustomPainter ring, animated, colour changes + clipping fix + day label
 - [x] `lib/widgets/debit_radar_item.dart` — coloured bar, name, category, days label
 
-### Dashboard Screen
-- [ ] `lib/providers/dashboard_provider.dart` — add `investmentsTotal` field to `DashboardData`
-- [ ] `lib/screens/dashboard/dashboard_screen.dart` — two-tab layout
-  - [x] "This Month" tab: fuel gauge + liquid/committed row + 7-day radar
-  - [ ] "Overall" tab: net worth hero (Cormorant Garamond) + assets/investments/liabilities tiles + breakdown rows
-  - [x] Pull-to-refresh (invalidates providers, gold indicator)
-  - [ ] Tab bar: gold underline on active, inkDim on inactive
+### Runway Engine v2 (Credits + Day Slider + Collapsible Table)
+- [x] `lib/data/models/credit.dart` — Credit model + CreditSafe extension (Isar safe getters)
+- [x] `lib/data/models/account.dart` — AccountSafe extension added
+- [x] `lib/data/database.dart` — CreditSchema registered
+- [x] `lib/providers/selected_day_provider.dart` — StateProvider<int> for day simulation
+- [x] `lib/providers/credit_provider.dart` — creditsStreamProvider
+- [x] `lib/providers/dashboard_provider.dart` — DashboardData refactored (41 fields, day-parameterised, Credits split by selectedDay)
+- [x] `lib/widgets/fuel_gauge_ring.dart` — clipping fix (FittedBox wrap) + selectedDay label below gauge
+- [x] `lib/screens/dashboard/dashboard_screen.dart` — day slider 1–31 + 4-section collapsible table (Cash/Credits/Debits/Commitments)
+- [x] `lib/data/seed_data.dart` — salary (Day 1) + interest (Day 10) credits seeded
+- [x] `CLAUDE.md` — Isar Data Safety section added
+- [x] Pay Day banner removed
+- [x] Overall tab: net worth hero + assets/investments/liabilities tiles
 
 ---
 
@@ -232,13 +236,13 @@
 | 1 — Design System | 8 | 8 | 0 ✅ |
 | 2 — Navigation | 10 | 10 | 0 ✅ |
 | 3 — Data Layer | 17 | 17 | 0 ✅ |
-| 4 — Dashboard + Nav Rename | 18 | 7 | 11 |
+| 4 — Dashboard + Runway Engine v2 | 29 | 29 | 0 ✅ |
 | 5 — Funds (Accounts) | 14 | 0 | 14 |
 | 6 — Debits (Outgoings) | 13 | 0 | 13 |
 | 7 — Investments (Portfolio) | 16 | 0 | 16 |
 | 8 — Settings | 7 | 0 | 7 |
 | 9 — Polish | 14 | 0 | 14 |
-| **TOTAL** | **125** | **47** | **78** |
+| **TOTAL** | **134** | **96** | **38** |
 
 ---
 

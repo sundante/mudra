@@ -312,7 +312,9 @@ class DashboardNotifier extends _$DashboardNotifier {
     final totalLiabilities = ccOutstanding + personalDebts;
     final netWorth = totalAssets - totalLiabilities;
 
-    // ── Debit Radar (next 7 days, real-time — not shifted by selectedDay)
+    // ── Debit Radar (until end of month, real-time — not shifted by selectedDay)
+    final daysInMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+    final daysUntilEndOfMonth = daysInMonth - DateTime.now().day;
     final radar = outgoings
         .where((o) => o.isActive)
         .map((o) => (
@@ -324,7 +326,7 @@ class DashboardNotifier extends _$DashboardNotifier {
               ),
               daysUntil: DateHelpers.daysUntilDebit(safeInt(o.debitDate)),
             ))
-        .where((item) => item.daysUntil <= 7)
+        .where((item) => item.daysUntil <= daysUntilEndOfMonth)
         .toList()
       ..sort((a, b) => a.daysUntil.compareTo(b.daysUntil));
 
