@@ -42,13 +42,25 @@ A local Flutter finance awareness app (iOS + Android). No backend. No login. All
 
 | Tab | Screen | Purpose |
 |---|---|---|
-| 🏠 Home | Dashboard | Fuel gauge, liquid total, 7-day debit radar, net worth |
-| 🏦 Accounts | Accounts | Bank accounts by type, add/edit/delete, quick balance update |
-| 📤 Outgoings | Outgoings | Fixed expenses + investments, monthly totals |
-| 📈 Portfolio | Portfolio | Investment platforms P&L, debts, net worth breakdown |
+| 🏠 Home | Dashboard | Two-tab layout: "This Month" (fuel gauge, debit radar) + "Overall" (net worth hero, assets/liabilities) |
+| 💰 Funds | Funds | Bank accounts by type, add/edit/delete, quick balance update |
+| 🧾 Debits | Debits | Fixed expenses + investments with debit dates, monthly totals |
+| 📈 Investments | Investments | Investment platforms P&L, debts owed/receivable, net worth breakdown |
 | ⚙️ Settings | Settings | Income, currency, data management |
 
 All forms open as **bottom sheets**, never full-screen routes.
+
+### Home Screen — Two Tabs
+
+**"This Month"** — What's my financial health right now?
+- Fuel gauge ring (balanceForMonth / liquidTotal, animated, green/amber/red)
+- Liquid total + Committed split row
+- 7-day debit radar (upcoming fixed debits)
+
+**"Overall"** — What does my full picture look like?
+- Net Worth hero (Cormorant Garamond, large, colour-coded)
+- Three stat tiles: Total Assets · Investments · Liabilities
+- Breakdown rows: Liquid / FD / Investments / Total Liabilities
 
 ---
 
@@ -94,15 +106,16 @@ baseCurrency, monthlyIncome, payDate (1–31)
 ## Key Computed Values (DashboardData)
 
 ```
-liquidTotal     = SUM(balance) WHERE personal + includeInLiquid + NOT creditCard
-fdTotal         = SUM(fdAmount) across ALL accounts
-fixedCommitted  = SUM(amount) WHERE isActive AND debitDate >= today.day
-balanceForMonth = liquidTotal - fixedCommitted
-balancePercent  = (balanceForMonth / liquidTotal * 100).clamp(0, 100)
-totalAssets     = liquidTotal + fdTotal + SUM(platform.currentValue)
+liquidTotal      = SUM(balance) WHERE personal + includeInLiquid + NOT creditCard
+fdTotal          = SUM(fdAmount) across ALL accounts
+fixedCommitted   = SUM(amount) WHERE isActive AND debitDate >= today.day
+balanceForMonth  = liquidTotal - fixedCommitted
+balancePercent   = (balanceForMonth / liquidTotal * 100).clamp(0, 100)
+investmentsTotal = SUM(platform.currentValue)
+totalAssets      = liquidTotal + fdTotal + investmentsTotal
 totalLiabilities = SUM(cc.balance) + SUM(debt.amount WHERE iOwe + !settled)
-netWorth        = totalAssets - totalLiabilities
-debitRadar      = outgoings WHERE daysUntilDebit <= 7, sorted by daysUntil
+netWorth         = totalAssets - totalLiabilities
+debitRadar       = outgoings WHERE daysUntilDebit <= 7, sorted by daysUntil
 ```
 
 ---
@@ -139,10 +152,10 @@ debitRadar      = outgoings WHERE daysUntilDebit <= 7, sorted by daysUntil
 | **1** | Design System | Theme applied, fonts loading, `flutter analyze` clean |
 | **2** | Navigation Shell | 5-tab nav working on both simulators |
 | **3** | Data Layer | Isar opens, providers compile, sample data persists on hot restart |
-| **4** | Dashboard | Fuel gauge animates, debit radar loads, pull-to-refresh works |
-| **5** | Accounts | Full CRUD: add/edit/delete/quick-update, all 3 segments working |
-| **6** | Outgoings | Full CRUD: expenses + investments, date picker, monthly totals |
-| **7** | Portfolio | Net worth hero, P&L platforms, debt sections, breakdown sheet |
+| **4** | Dashboard | Both tabs render: fuel gauge animates, debit radar loads, Overall tab shows net worth |
+| **5** | Funds | Full CRUD: add/edit/delete/quick-update, all 3 segments working |
+| **6** | Debits | Full CRUD: expenses + investments, date picker, monthly totals |
+| **7** | Investments | Net worth hero, P&L platforms, debt sections, breakdown sheet |
 | **8** | Settings | Income/date/currency/clear-data all saving to Isar |
 | **9** | Polish | Release build clean on both simulators, all edge cases handled |
 
@@ -186,10 +199,10 @@ lib/
 │   ├── settings_provider.dart         # settingsProvider
 │   └── dashboard_provider.dart        # DashboardNotifier → DashboardData
 ├── screens/
-│   ├── dashboard/dashboard_screen.dart
-│   ├── accounts/accounts_screen.dart
-│   ├── outgoings/outgoings_screen.dart
-│   ├── portfolio/portfolio_screen.dart
+│   ├── dashboard/dashboard_screen.dart   # two-tab: This Month + Overall
+│   ├── accounts/funds_screen.dart        # tab label: Funds
+│   ├── outgoings/debits_screen.dart      # tab label: Debits
+│   ├── portfolio/investments_screen.dart # tab label: Investments
 │   └── settings/settings_screen.dart
 └── widgets/
     ├── common/

@@ -4,8 +4,8 @@
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
 **Last Updated:** 2026-05-25
-**Current Phase:** Phase 3 — Data Layer (simulator verification pending)
-**Overall Progress:** 43 / 125 items complete
+**Current Phase:** Phase 4 — Dashboard Screen
+**Overall Progress:** 60 / 125 items complete
 
 ---
 
@@ -14,6 +14,7 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-25 | Phase 4 start | Phases 2+3 simulator verified (iOS + Android). Android Gradle namespace+compileSdk patches re-applied. Starting Phase 4 Dashboard Screen. | — |
 | 2026-05-25 | Phase 3 | 5 Isar models, build_runner generated .g.dart files, database.dart, main.dart seeds AppSettings, 4 repositories, 5 Riverpod providers (@riverpod DashboardNotifier with all computed values). flutter analyze clean — 0 issues. | Awaiting simulator run on both devices |
 | 2026-05-25 | Phase 2 | GoRouter + StatefulShellRoute, ScaffoldWithNavBar, 5 placeholder screens, main.dart simplified to bootstrap only. flutter analyze clean — 0 issues. | Awaiting simulator run on both devices |
 | 2026-05-25 | Phase 1 ✅ | Design system complete: app_colors, app_typography (3 fonts), app_theme (full ThemeData), spacing, currency_formatter (INR lakh/crore + 6 currencies), date_helpers. Applied AppTheme.lightTheme to MaterialApp. flutter analyze clean — 0 issues. | Phase 1 COMPLETE — starting Phase 2 |
@@ -72,8 +73,8 @@
 - [x] `lib/screens/outgoings/outgoings_screen.dart` — placeholder
 - [x] `lib/screens/portfolio/portfolio_screen.dart` — placeholder
 - [x] `lib/screens/settings/settings_screen.dart` — placeholder
-- [ ] Tab switching works on both simulators
-- [ ] App bar: "Mudra" wordmark in Cormorant Garamond, gold
+- [x] Tab switching works on both simulators
+- [x] App bar: "Mudra" wordmark in Cormorant Garamond, gold
 
 ---
 
@@ -88,8 +89,8 @@
 - [x] `lib/data/models/app_settings.dart` — `AppSettings` (singleton, id=1)
 - [x] `dart run build_runner build --delete-conflicting-outputs` — `.g.dart` files generated
 - [x] `lib/data/database.dart` — `openDatabase()` + `isarProvider`
-- [ ] Isar opens on iOS simulator (no crash)
-- [ ] Isar opens on Android emulator (no crash)
+- [x] Isar opens on iOS simulator (no crash)
+- [x] Isar opens on Android emulator (no crash)
 
 ### Repositories
 - [x] `lib/data/repositories/account_repository.dart` — CRUD + `watchAll()` stream
@@ -104,56 +105,63 @@
 - [x] `lib/providers/settings_provider.dart` — `settingsProvider`
 - [x] `lib/providers/dashboard_provider.dart` — `DashboardData` computed from all streams
 - [x] `main.dart` updated — Isar init before `runApp`, default settings seeded, `isarProvider` overridden
-- [ ] Sample data persists across app restarts (hot restart test)
+- [x] Sample data persists across app restarts (hot restart test)
 
 ---
 
-## Phase 4 — Dashboard Screen
-**Goal:** Fuel gauge, liquid total, debit radar, quick stats. The hero screen.
+## Phase 4 — Dashboard Screen + Navigation Rename
+**Goal:** Two-tab Home (This Month + Overall), renamed nav (Funds / Debits / Investments), all widgets built.
 
-- [ ] `lib/widgets/common/amount_display.dart` — IBM Plex Mono always, colour-coded
-- [ ] `lib/widgets/common/section_label.dart` — uppercase, mono, tracked
-- [ ] `lib/widgets/common/empty_state.dart` — emoji + title + message + optional button
-- [ ] `lib/widgets/fuel_gauge_ring.dart` — CustomPainter ring, animated, colour changes
-  - [ ] Ring animates from 0 → percentage on mount (800ms, easeInOut)
-  - [ ] Green >50% · Amber 20–50% · Red <20%
-  - [ ] Centre: `AmountDisplay` (balanceForMonth) + "available this month" label
-- [ ] `lib/widgets/debit_radar_item.dart` — coloured bar, name, category, days label
-- [ ] `lib/screens/dashboard/dashboard_screen.dart` — full implementation
-  - [ ] Fuel gauge section (centred, ring + liquid/committed row)
-  - [ ] Quick stats row (net worth, fixed items count, accounts count)
-  - [ ] 7-day debit radar list (max 5 + "see all" link)
-  - [ ] Empty debit radar state
-  - [ ] Pull-to-refresh (invalidates providers, gold indicator)
-  - [ ] Skeleton shimmer while data loads
+### Navigation
+- [ ] `lib/app.dart` — rename nav labels: Accounts→Funds, Outgoings→Debits, Portfolio→Investments
+- [ ] `lib/app.dart` — update icons: Funds=savings_outlined, Debits=receipt_long_outlined
+- [ ] Rename screen files + classes: `funds_screen.dart` / `debits_screen.dart` / `investments_screen.dart`
+
+### Widgets (code done — awaiting simulator ✓)
+- [x] `lib/widgets/common/amount_display.dart` — IBM Plex Mono always, colour-coded
+- [x] `lib/widgets/common/section_label.dart` — uppercase, mono, tracked
+- [x] `lib/widgets/common/empty_state.dart` — emoji + title + message + optional button
+- [x] `lib/widgets/fuel_gauge_ring.dart` — CustomPainter ring, animated, colour changes
+  - [x] Ring animates from 0 → percentage on mount (800ms, easeInOut)
+  - [x] Green >50% · Amber 20–50% · Red <20%
+  - [x] Centre: `AmountDisplay` (balanceForMonth) + "available this month" label
+- [x] `lib/widgets/debit_radar_item.dart` — coloured bar, name, category, days label
+
+### Dashboard Screen
+- [ ] `lib/providers/dashboard_provider.dart` — add `investmentsTotal` field to `DashboardData`
+- [ ] `lib/screens/dashboard/dashboard_screen.dart` — two-tab layout
+  - [x] "This Month" tab: fuel gauge + liquid/committed row + 7-day radar
+  - [ ] "Overall" tab: net worth hero (Cormorant Garamond) + assets/investments/liabilities tiles + breakdown rows
+  - [x] Pull-to-refresh (invalidates providers, gold indicator)
+  - [ ] Tab bar: gold underline on active, inkDim on inactive
 
 ---
 
-## Phase 5 — Accounts Screen
+## Phase 5 — Funds Screen (Accounts)
 **Goal:** Full CRUD for bank accounts with Add/Edit/Quick-Update sheets.
 
 - [ ] `lib/widgets/account_tile.dart` — nickname, bank, balance, CC badge, FD line
-- [ ] `lib/screens/accounts/accounts_screen.dart`
+- [ ] `lib/screens/accounts/funds_screen.dart`
   - [ ] Header card: liquid total + FD total (gold-light bg)
   - [ ] Segment control: Personal / Joint / Business
   - [ ] Accounts list filtered by segment, Dismissible delete
   - [ ] Empty state per segment
   - [ ] FAB → Add Account sheet
 - [ ] Add Account bottom sheet
-  - [ ] All fields: nickname, bank (with chips), balance, type, CC toggle, FD, liquid toggle
+  - [ ] All fields: nickname, bank (with chips), balance, type, CC toggle, FD, liquid toggle (default ON for Personal only)
   - [ ] Validation: nickname required, balance is number
   - [ ] Save → Isar → haptic → close
 - [ ] Edit Account sheet (pre-filled, same form + delete button)
-- [ ] Quick Balance Update sheet (large numeric input, current balance shown)
+- [ ] Quick Balance Update sheet (tap balance amount on tile → large numeric input)
 - [ ] Swipe-to-delete with confirmation
 
 ---
 
-## Phase 6 — Outgoings Screen
+## Phase 6 — Debits Screen (Outgoings)
 **Goal:** Full CRUD for expenses and investments with date-aware sorting.
 
 - [ ] `lib/widgets/outgoing_row.dart` — coloured left bar, name, category badge, date
-- [ ] `lib/screens/outgoings/outgoings_screen.dart`
+- [ ] `lib/screens/outgoings/debits_screen.dart`
   - [ ] Upcoming strip (next 7 days, horizontal scroll chips)
   - [ ] Tab switcher: Expenses | Investments
   - [ ] Monthly total per tab (red / amber)
@@ -166,11 +174,11 @@
 
 ---
 
-## Phase 7 — Portfolio Screen
+## Phase 7 — Investments Screen (Portfolio)
 **Goal:** Net worth hero, investment platforms P&L, personal debts.
 
 - [ ] `lib/widgets/platform_card.dart` — name, asset type badge, invested, current value, P&L chip
-- [ ] `lib/screens/portfolio/portfolio_screen.dart`
+- [ ] `lib/screens/portfolio/investments_screen.dart`
   - [ ] Net worth hero (Cormorant Garamond, green/red/dim, tappable)
   - [ ] Assets + Liabilities row below hero
   - [ ] Investment platforms list with Dismissible delete
@@ -221,16 +229,16 @@
 | Phase | Items | Done | Remaining |
 |---|---|---|---|
 | 0 — Scaffold | 12 | 12 | 0 ✅ |
-| 1 — Design System | 8 | 6 | 2 (simulator verification pending) |
-| 2 — Navigation | 10 | 0 | 10 |
-| 3 — Data Layer | 17 | 15 | 2 (simulator verification pending) |
-| 4 — Dashboard | 14 | 0 | 14 |
-| 5 — Accounts | 14 | 0 | 14 |
-| 6 — Outgoings | 13 | 0 | 13 |
-| 7 — Portfolio | 16 | 0 | 16 |
+| 1 — Design System | 8 | 8 | 0 ✅ |
+| 2 — Navigation | 10 | 10 | 0 ✅ |
+| 3 — Data Layer | 17 | 17 | 0 ✅ |
+| 4 — Dashboard + Nav Rename | 18 | 7 | 11 |
+| 5 — Funds (Accounts) | 14 | 0 | 14 |
+| 6 — Debits (Outgoings) | 13 | 0 | 13 |
+| 7 — Investments (Portfolio) | 16 | 0 | 16 |
 | 8 — Settings | 7 | 0 | 7 |
 | 9 — Polish | 14 | 0 | 14 |
-| **TOTAL** | **125** | **1** | **124** |
+| **TOTAL** | **125** | **47** | **78** |
 
 ---
 

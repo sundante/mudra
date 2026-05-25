@@ -21,6 +21,20 @@ class Outgoing {
   late DateTime createdAt;
 }
 
+// Isar v3 bypasses Dart null safety at runtime — non-nullable primitive
+// fields can return null for records written by an older schema version.
+// Isar v3 bypasses Dart null safety at runtime — non-nullable primitive
+// fields can return null for records written by an older schema version.
+extension OutgoingSafe on Outgoing {
+  double get safeAmount => ((amount as dynamic) as double?) ?? 0.0;
+  int get safeDebitDate => ((debitDate as dynamic) as int?) ?? 0;
+  String get safeName => ((name as dynamic) as String?) ?? '';
+  OutgoingType get safeType =>
+      ((outgoingType as dynamic) as OutgoingType?) ?? OutgoingType.expense;
+  OutgoingCategory get safeCategory =>
+      ((category as dynamic) as OutgoingCategory?) ?? OutgoingCategory.other;
+}
+
 enum OutgoingType { expense, investment }
 
 enum OutgoingCategory {

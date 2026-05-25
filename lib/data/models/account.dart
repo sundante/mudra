@@ -26,3 +26,11 @@ class Account {
 }
 
 enum AccountType { personal, joint, business }
+
+// Isar v3 bypasses Dart null safety at runtime — use these safe getters everywhere.
+extension AccountSafe on Account {
+  double get safeBalance  => ((balance as dynamic) as double?) ?? 0.0;
+  double get safeFdAmount => ((fdAmount as dynamic) as double?) ?? 0.0;
+  String get safeNickname => ((nickname as dynamic) as String?) ?? '';
+  String get safeBankName => ((bankName as dynamic) as String?) ?? '';
+}

@@ -1,21 +1,1101 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/constants/spacing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../data/models/credit.dart';
+import '../../data/models/outgoing.dart';
+import '../../providers/account_provider.dart';
+import '../../providers/dashboard_provider.dart';
+import '../../providers/investment_provider.dart';
+import '../../providers/outgoing_provider.dart';
+import '../../providers/selected_day_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../widgets/common/amount_display.dart';
+import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/section_label.dart';
+import '../../widgets/fuel_gauge_ring.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
+
+  Future<void> _refresh(WidgetRef ref) async {
+    ref.invalidate(accountsStreamProvider);
+    ref.invalidate(outgoingsStreamProvider);
+    ref.invalidate(platformsStreamProvider);
+    ref.invalidate(debtsStreamProvider);
+    ref.invalidate(settingsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboard = ref.watch(dashboardNotifierProvider);
+
+    return DefaultTabController(
+      length: 2,
+      child: RefreshIndicator(
+        color: AppColors.gold,
+        onRefresh: () => _refresh(ref),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+              title: Text(
+                'Mudra',
+                style: AppTypography.headingMedium
+                    .copyWith(color: AppColors.gold),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined,
+                      color: AppColors.inkDim),
+                  onPressed: () => context.go('/settings'),
+                ),
+              ],
+              bottom: TabBar(
+                labelColor: AppColors.gold,
+                unselectedLabelColor: AppColors.inkDim,
+                labelStyle: AppTypography.labelMedium,
+                unselectedLabelStyle: AppTypography.labelMedium,
+                indicatorColor: AppColors.gold,
+                indicatorWeight: 2,
+                tabs: const [
+                  Tab(text: 'This Month'),
+                  Tab(text: 'Overall'),
+                ],
+              ),
+            ),
+            SliverFillRemaining(
+              child: TabBarView(
+                children: [
+                  _ThisMonthTab(dashboard: dashboard),
+                  _OverallTab(dashboard: dashboard),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── This Month Tab ────────────────────────────────────────────────────────
+
+class _ThisMonthTab extends ConsumerStatefulWidget {
+  const _ThisMonthTab({required this.dashboard});
+  final DashboardData dashboard;
+
+  @override
+  ConsumerState<_ThisMonthTab> createState() => _ThisMonthTabState();
+}
+
+class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
+  @override
+  Widget build(BuildContext context) {
+    final dashboard = widget.dashboard;
+    final selectedDay = ref.watch(selectedDayProvider);
+    final today = DateTime.now().day;
+
+    final radarItems = dashboard.debitRadar;
+    final showSeeAll = radarItems.length > 5;
+    final visibleRadar = radarItems.take(5).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.screenV),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Fuel Gauge ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenH,
+                vertical: AppSpacing.screenV),
+            child: Column(
+              children: [
+                Center(
+                  child: FuelGaugeRing(
+                    percentage: dashboard.runwayPercent,
+                    runway: dashboard.monthRunway,
+                    currency: dashboard.currency,
+                    arcColor: dashboard.gaugeColor,
+                    isOvercommitted: dashboard.isOvercommitted,
+                    selectedDay: selectedDay,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // ── Day Slider ────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenH),
+                  child: Row(
+                    children: [
+                      const SectionLabel('simulate day'),
+                      const Spacer(),
+                      Text(
+                        'Day $selectedDay',
+                        style: AppTypography.monoSmall
+                            .copyWith(color: AppColors.gold),
+                      ),
+                      if (selectedDay != today) ...[
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(selectedDayProvider.notifier)
+                              .state = today,
+                          child: Text(
+                            'Reset',
+                            style: AppTypography.labelMedium
+                                .copyWith(color: AppColors.inkDim),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 2,
+                    thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 7),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 14),
+                    activeTrackColor: dashboard.gaugeColor,
+                    inactiveTrackColor: AppColors.border,
+                    thumbColor: dashboard.gaugeColor,
+                    overlayColor: dashboard.gaugeColor.withAlpha(40),
+                  ),
+                  child: Slider(
+                    value: selectedDay.toDouble(),
+                    min: 1,
+                    max: 31,
+                    divisions: 30,
+                    onChanged: (v) => ref
+                        .read(selectedDayProvider.notifier)
+                        .state = v.round(),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── LIQUID | AFTER DEBITS ─────────────────────────────────
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SectionLabel('liquid'),
+                            const SizedBox(height: 4),
+                            AmountDisplay(
+                              amount: dashboard.bankBalance,
+                              currency: dashboard.currency,
+                              style: AppTypography.monoMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const VerticalDivider(
+                          color: AppColors.border, thickness: 1, width: 32),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SectionLabel('after debits'),
+                            const SizedBox(height: 4),
+                            AmountDisplay(
+                              amount: dashboard.monthRunway,
+                              currency: dashboard.currency,
+                              style: AppTypography.monoMedium
+                                  .copyWith(color: dashboard.gaugeColor),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(color: AppColors.border),
+
+          // ── Runway Table ─────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenH,
+                vertical: AppSpacing.screenV),
+            child: _RunwayTable(
+                dashboard: dashboard, selectedDay: selectedDay),
+          ),
+
+          const Divider(color: AppColors.border),
+
+          // ── Quick Stats ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenH, vertical: AppSpacing.md),
+            child: Row(
+              children: [
+                _StatTile(
+                  label: 'NET WORTH',
+                  onTap: () => context.go('/portfolio'),
+                  child: AmountDisplay(
+                    amount: dashboard.netWorth,
+                    currency: dashboard.currency,
+                    style: AppTypography.monoLarge,
+                    coloured: true,
+                    compact: true,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _StatTile(
+                  label: 'FIXED ITEMS',
+                  onTap: () => context.go('/outgoings'),
+                  child: Text(
+                    '${dashboard.fixedItemsCount}',
+                    style: AppTypography.monoLarge
+                        .copyWith(color: AppColors.ink),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _StatTile(
+                  label: 'ACCOUNTS',
+                  onTap: () => context.go('/accounts'),
+                  child: Text(
+                    '${dashboard.accountsCount}',
+                    style: AppTypography.monoLarge
+                        .copyWith(color: AppColors.ink),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(color: AppColors.border),
+
+          // ── Next 7 Days ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenH,
+                vertical: AppSpacing.screenV),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('next 7 days'),
+                const SizedBox(height: AppSpacing.md),
+                if (radarItems.isEmpty)
+                  const EmptyState(
+                    icon: '✓',
+                    title: 'All clear',
+                    message: 'No debits in the next 7 days',
+                  )
+                else ...[
+                  ...visibleRadar.map((item) => _RadarItem(
+                        row: item.outgoing,
+                        daysUntil: item.daysUntil,
+                        currency: dashboard.currency,
+                      )),
+                  if (showSeeAll)
+                    TextButton(
+                      onPressed: () => context.go('/outgoings'),
+                      child: Text(
+                        'See all in Debits',
+                        style: AppTypography.labelMedium
+                            .copyWith(color: AppColors.gold),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.screenV),
+            child: Text(
+              'Pull to refresh',
+              style: AppTypography.monoXSmall
+                  .copyWith(color: AppColors.inkDim),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Runway Table ─────────────────────────────────────────────────────────
+
+class _RunwayTable extends StatelessWidget {
+  const _RunwayTable(
+      {required this.dashboard, required this.selectedDay});
+
+  final DashboardData dashboard;
+  final int selectedDay;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Mudra',
-            style: AppTypography.headingMedium.copyWith(color: AppColors.gold)),
+    final commitmentsTotal =
+        dashboard.futureCommitted + dashboard.ccOutstanding;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE4E0D8)),
       ),
-      body: Center(
-        child: Text('Dashboard — coming soon',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim)),
+      child: Column(
+        children: [
+          // Cash in Accounts
+          _TableSection(
+            title: 'Cash in Accounts',
+            total: dashboard.bankBalance,
+            prefix: '',
+            totalColor: AppColors.ink,
+            body: _AccountsBody(rows: dashboard.liquidRows,
+                currency: dashboard.currency),
+          ),
+
+          const Divider(color: Color(0xFFE4E0D8), height: 1),
+
+          // Credits
+          _TableSection(
+            title: 'Credits',
+            subtitle: 'as of Day $selectedDay',
+            total: dashboard.creditsTotal,
+            prefix: '+ ',
+            totalColor: AppColors.green,
+            body: _CreditsBody(
+              received: dashboard.receivedCredits,
+              pending: dashboard.pendingCredits,
+              currency: dashboard.currency,
+            ),
+          ),
+
+          const Divider(color: Color(0xFFE4E0D8), height: 1),
+
+          // Debits
+          _TableSection(
+            title: 'Debits',
+            subtitle: 'as of Day $selectedDay',
+            total: dashboard.alreadyFired,
+            prefix: '− ',
+            totalColor: AppColors.inkDim,
+            body: _DebitsBody(
+                groups: dashboard.firedGroups,
+                currency: dashboard.currency),
+          ),
+
+          const Divider(color: Color(0xFFE4E0D8), height: 1),
+
+          // Commitments
+          _TableSection(
+            title: 'Commitments',
+            subtitle: 'after Day $selectedDay',
+            total: commitmentsTotal,
+            prefix: '− ',
+            totalColor: AppColors.red,
+            body: _CommitmentsBody(
+              ccOutstanding: dashboard.ccOutstanding,
+              futureRows: dashboard.futureRows,
+              currency: dashboard.currency,
+            ),
+            isLast: true,
+          ),
+
+          // Result row
+          Container(
+            decoration: BoxDecoration(
+              color: dashboard.isOvercommitted
+                  ? const Color(0xFFF5DBD8)
+                  : const Color(0xFFF5ECD4),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Month runway',
+                  style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600, color: AppColors.ink),
+                ),
+                AmountDisplay(
+                  amount: dashboard.monthRunway,
+                  currency: dashboard.currency,
+                  style: AppTypography.monoMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: dashboard.gaugeColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Table Section (collapsible) ──────────────────────────────────────────
+
+class _TableSection extends StatefulWidget {
+  const _TableSection({
+    required this.title,
+    required this.total,
+    required this.prefix,
+    required this.totalColor,
+    required this.body,
+    this.subtitle,
+    this.isLast = false,
+  });
+
+  final String title;
+  final String? subtitle;
+  final double total;
+  final String prefix;
+  final Color totalColor;
+  final Widget body;
+  final bool isLast;
+
+  @override
+  State<_TableSection> createState() => _TableSectionState();
+}
+
+class _TableSectionState extends State<_TableSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: AppColors.ink),
+                      ),
+                      if (widget.subtitle != null)
+                        Text(
+                          widget.subtitle!,
+                          style: AppTypography.monoXSmall
+                              .copyWith(color: AppColors.inkDim),
+                        ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      widget.prefix,
+                      style: AppTypography.monoXSmall
+                          .copyWith(color: widget.totalColor),
+                    ),
+                    AmountDisplay(
+                      amount: widget.total,
+                      currency: '',
+                      style: AppTypography.monoSmall
+                          .copyWith(color: widget.totalColor),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      _expanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 16,
+                      color: AppColors.inkDim,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeInOut,
+          child: _expanded
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppSpacing.md,
+                    right: AppSpacing.md,
+                    bottom: AppSpacing.sm,
+                  ),
+                  child: widget.body,
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Section Bodies ───────────────────────────────────────────────────────
+
+class _AccountsBody extends StatelessWidget {
+  const _AccountsBody({required this.rows, required this.currency});
+  final List<AccountRow> rows;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.isEmpty) {
+      return Text('No liquid accounts',
+          style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim));
+    }
+    return Column(
+      children: rows
+          .map((r) => _SimpleRow(
+                label: r.nickname,
+                amount: r.balance,
+                currency: currency,
+                color: AppColors.ink,
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _CreditsBody extends StatelessWidget {
+  const _CreditsBody({
+    required this.received,
+    required this.pending,
+    required this.currency,
+  });
+  final List<CreditRow> received;
+  final List<CreditRow> pending;
+  final String currency;
+
+  String _categoryLabel(CreditCategory cat) {
+    switch (cat) {
+      case CreditCategory.salary:
+        return 'salary';
+      case CreditCategory.interest:
+        return 'interest';
+      case CreditCategory.refund:
+        return 'refund';
+      case CreditCategory.cashback:
+        return 'cashback';
+      case CreditCategory.dividend:
+        return 'dividend';
+      case CreditCategory.other:
+        return 'other';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (received.isEmpty && pending.isEmpty) {
+      return Text('No credits recorded',
+          style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...received.map((c) => _SimpleRow(
+              label: c.name,
+              sublabel: _categoryLabel(c.category),
+              amount: c.amount,
+              currency: currency,
+              color: AppColors.green,
+            )),
+        if (pending.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text('Upcoming',
+              style: AppTypography.monoXSmall
+                  .copyWith(color: AppColors.inkDim)),
+          ...pending.map((c) => _SimpleRow(
+                label: c.name,
+                sublabel: 'Day ${c.creditDate} · ${_categoryLabel(c.category)}',
+                amount: c.amount,
+                currency: currency,
+                color: AppColors.inkDim,
+                italic: true,
+              )),
+        ],
+      ],
+    );
+  }
+}
+
+class _DebitsBody extends StatelessWidget {
+  const _DebitsBody({required this.groups, required this.currency});
+  final List<CategoryGroup> groups;
+  final String currency;
+
+  String _categoryLabel(OutgoingCategory cat) {
+    switch (cat) {
+      case OutgoingCategory.loan:
+        return 'Loans';
+      case OutgoingCategory.insurance:
+        return 'Insurance';
+      case OutgoingCategory.utility:
+        return 'Utilities';
+      case OutgoingCategory.subscription:
+        return 'Subscriptions';
+      case OutgoingCategory.sip:
+        return 'SIPs';
+      case OutgoingCategory.ppf:
+        return 'PPF';
+      case OutgoingCategory.epf:
+        return 'EPF';
+      case OutgoingCategory.nps:
+        return 'NPS';
+      case OutgoingCategory.other:
+        return 'Other';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (groups.isEmpty) {
+      return Text('Nothing debited yet',
+          style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: groups.expand((g) {
+        return [
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SectionLabel(_categoryLabel(g.category)),
+                AmountDisplay(
+                  amount: g.total,
+                  currency: currency,
+                  style: AppTypography.monoXSmall
+                      .copyWith(color: AppColors.inkDim),
+                ),
+              ],
+            ),
+          ),
+          ...g.items.map((r) => Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: _SimpleRow(
+                  label: r.name,
+                  amount: r.amount,
+                  currency: currency,
+                  color: AppColors.inkDim,
+                ),
+              )),
+        ];
+      }).toList(),
+    );
+  }
+}
+
+class _CommitmentsBody extends StatelessWidget {
+  const _CommitmentsBody({
+    required this.ccOutstanding,
+    required this.futureRows,
+    required this.currency,
+  });
+  final double ccOutstanding;
+  final List<OutgoingRow> futureRows;
+  final String currency;
+
+  String _daySuffix(int day) {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (ccOutstanding == 0 && futureRows.isEmpty) {
+      return Row(
+        children: [
+          const Icon(Icons.check_circle_outline,
+              size: 14, color: AppColors.green),
+          const SizedBox(width: 8),
+          Text('No commitments remaining',
+              style:
+                  AppTypography.bodySmall.copyWith(color: AppColors.green)),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (ccOutstanding > 0)
+          _SimpleRow(
+            label: 'CC Outstanding',
+            amount: ccOutstanding,
+            currency: currency,
+            color: AppColors.red,
+            bold: true,
+          ),
+        ...futureRows.map((r) {
+          final isInv = r.type == OutgoingType.investment;
+          return _SimpleRow(
+            label: r.name,
+            sublabel: 'Debits on ${r.debitDate}${_daySuffix(r.debitDate)}',
+            amount: r.amount,
+            currency: currency,
+            color: isInv ? AppColors.amber : AppColors.red,
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ─── Simple Row ───────────────────────────────────────────────────────────
+
+class _SimpleRow extends StatelessWidget {
+  const _SimpleRow({
+    required this.label,
+    required this.amount,
+    required this.currency,
+    required this.color,
+    this.sublabel,
+    this.italic = false,
+    this.bold = false,
+  });
+
+  final String label;
+  final String? sublabel;
+  final double amount;
+  final String currency;
+  final Color color;
+  final bool italic;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: color,
+                    fontStyle:
+                        italic ? FontStyle.italic : FontStyle.normal,
+                    fontWeight:
+                        bold ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+                if (sublabel != null)
+                  Text(
+                    sublabel!,
+                    style: AppTypography.monoXSmall
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+              ],
+            ),
+          ),
+          AmountDisplay(
+            amount: amount,
+            currency: currency,
+            style: AppTypography.monoXSmall.copyWith(
+              color: color,
+              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Radar Item (uses pre-typed OutgoingRow) ───────────────────────────────
+
+class _RadarItem extends StatelessWidget {
+  const _RadarItem({
+    required this.row,
+    required this.daysUntil,
+    required this.currency,
+  });
+
+  final OutgoingRow row;
+  final int daysUntil;
+  final String currency;
+
+  String _debitLabel(int d) {
+    if (d == 0) return 'Today';
+    if (d == 1) return 'Tomorrow';
+    return 'in $d days';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isExpense = row.type == OutgoingType.expense;
+    final barColor = isExpense ? AppColors.red : AppColors.amber;
+    final urgent = daysUntil <= 2;
+
+    final Color chipBg;
+    final Color chipText;
+    if (urgent) {
+      chipBg = AppColors.redLight;
+      chipText = AppColors.red;
+    } else if (daysUntil <= 5) {
+      chipBg = AppColors.amberLight;
+      chipText = AppColors.amber;
+    } else {
+      chipBg = AppColors.surfaceAlt;
+      chipText = AppColors.inkDim;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(width: 3, height: 48, color: barColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(row.name, style: AppTypography.bodyMedium),
+                Text(
+                  row.type == OutgoingType.investment
+                      ? 'investment'
+                      : 'expense',
+                  style: AppTypography.monoXSmall
+                      .copyWith(color: AppColors.inkDim),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              AmountDisplay(
+                amount: row.amount,
+                currency: currency,
+                style: AppTypography.monoSmall,
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: chipBg,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _debitLabel(daysUntil),
+                  style:
+                      AppTypography.monoXSmall.copyWith(color: chipText),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Overall Tab ──────────────────────────────────────────────────────────
+
+class _OverallTab extends StatelessWidget {
+  const _OverallTab({required this.dashboard});
+  final DashboardData dashboard;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenH, vertical: AppSpacing.screenV),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                AmountDisplay(
+                  amount: dashboard.netWorth,
+                  currency: dashboard.currency,
+                  style: AppTypography.displayMedium,
+                  coloured: true,
+                ),
+                const SizedBox(height: 4),
+                const SectionLabel('net worth'),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Divider(color: AppColors.border),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              _StatTile(
+                label: 'ASSETS',
+                onTap: () => context.go('/accounts'),
+                child: AmountDisplay(
+                  amount: dashboard.totalAssets,
+                  currency: dashboard.currency,
+                  style: AppTypography.monoLarge,
+                  compact: true,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _StatTile(
+                label: 'INVESTED',
+                onTap: () => context.go('/portfolio'),
+                child: AmountDisplay(
+                  amount: dashboard.investmentsTotal,
+                  currency: dashboard.currency,
+                  style: AppTypography.monoLarge
+                      .copyWith(color: AppColors.amber),
+                  compact: true,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _StatTile(
+                label: 'LIABILITIES',
+                onTap: () => context.go('/portfolio'),
+                child: AmountDisplay(
+                  amount: dashboard.totalLiabilities,
+                  currency: dashboard.currency,
+                  style: AppTypography.monoLarge
+                      .copyWith(color: AppColors.red),
+                  compact: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const Divider(color: AppColors.border),
+          const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('assets breakdown'),
+          const SizedBox(height: AppSpacing.md),
+          _BreakdownRow(
+              label: 'Liquid Cash',
+              amount: dashboard.bankBalance,
+              currency: dashboard.currency),
+          _BreakdownRow(
+              label: 'Fixed Deposits',
+              amount: dashboard.fdTotal,
+              currency: dashboard.currency),
+          _BreakdownRow(
+              label: 'Investments',
+              amount: dashboard.investmentsTotal,
+              currency: dashboard.currency,
+              color: AppColors.amber),
+          const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('liabilities'),
+          const SizedBox(height: AppSpacing.md),
+          _BreakdownRow(
+              label: 'Total Owed',
+              amount: dashboard.totalLiabilities,
+              currency: dashboard.currency,
+              color: AppColors.red),
+          const SizedBox(height: AppSpacing.screenV),
+        ],
+      ),
+    );
+  }
+}
+
+class _BreakdownRow extends StatelessWidget {
+  const _BreakdownRow(
+      {required this.label,
+      required this.amount,
+      required this.currency,
+      this.color});
+  final String label;
+  final double amount;
+  final String currency;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: AppTypography.bodyMedium
+                  .copyWith(color: AppColors.inkDim)),
+          AmountDisplay(
+            amount: amount,
+            currency: currency,
+            style: AppTypography.monoSmall.copyWith(color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Shared Stat Tile ─────────────────────────────────────────────────────
+
+class _StatTile extends StatelessWidget {
+  const _StatTile(
+      {required this.label,
+      required this.child,
+      required this.onTap});
+  final String label;
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          highlightColor: AppColors.goldLight.withAlpha(120),
+          splashColor: AppColors.goldLight.withAlpha(80),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm, vertical: AppSpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                child,
+                const SizedBox(height: 4),
+                SectionLabel(label),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-class OutgoingsScreen extends StatelessWidget {
-  const OutgoingsScreen({super.key});
+class FundsScreen extends StatelessWidget {
+  const FundsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class OutgoingsScreen extends StatelessWidget {
             style: AppTypography.headingMedium.copyWith(color: AppColors.gold)),
       ),
       body: Center(
-        child: Text('Outgoings — coming soon',
+        child: Text('Funds — coming soon',
             style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim)),
       ),
     );

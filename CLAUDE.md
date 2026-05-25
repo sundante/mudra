@@ -94,6 +94,7 @@ dart format .                        # format all Dart files
 - Never mark a phase complete unless `flutter analyze` is clean and the app runs on both simulators
 - One phase at a time — do not start Phase N+1 until Phase N is fully checked off
 - If a task is blocked, mark it `[!]` and note the blocker in the session log
+- After completing any phase's code, always prompt the user to hot reload (`r` in the terminal or save in IDE) and verify on both simulators before marking items `[x]`
 
 Detailed phase-by-phase code prompts: `vibes/5-26-mudra_flutter_prompt.md`
 
@@ -108,6 +109,29 @@ Claude Code agents live in `.claude/agents/`. Invoke them for specialized work:
 | `ui-designer` | Theme, design tokens, custom widgets, animations |
 | `test-writer` | Writing widget tests, golden tests, integration tests |
 | `feature-builder` | Scaffolding a complete new feature end-to-end |
+
+## Isar Data Safety (REQUIRED)
+
+Isar v3 bypasses Dart null safety at runtime. Non-nullable `double`/`int`/`String`/`enum`
+fields can return null for records written by older schema versions.
+
+Rules (enforced on every new model and every widget):
+
+1. **Every Isar model MUST include a Safe extension** at the bottom of its file:
+   ```dart
+   extension MySafe on MyModel {
+     double get safeAmount   => ((amount as dynamic) as double?) ?? 0.0;
+     int    get safeDate     => ((date as dynamic) as int?) ?? 0;
+     String get safeName     => ((name as dynamic) as String?) ?? '';
+     MyEnum get safeField    => ((field as dynamic) as MyEnum?) ?? MyEnum.fallback;
+   }
+   ```
+
+2. **Providers**: use local `safeDouble`/`safeInt` helpers in all `_compute()` folds.
+
+3. **Widgets**: NEVER read `.amount`, `.balance`, `.debitDate`, or any primitive
+   field directly on an Isar object. Always use the safe extension getters.
+   Widgets must receive pre-typed `double`/`String` primitives — never raw Isar objects.
 
 ## Conventions to Avoid
 
