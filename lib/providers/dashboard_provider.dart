@@ -69,16 +69,18 @@ class CategoryGroup {
 
 class DashboardData {
   const DashboardData({
+    required this.openingLiquidBalance,
     required this.bankBalance,
     required this.ccOutstanding,
-    required this.futureCommitted,
-    required this.monthRunway,
-    required this.runwayPercent,
+    required this.creditsReceivedToDay,
+    required this.debitsFiredToDay,
+    required this.remainingCommittedAfterDay,
+    required this.simulatedBalanceOnDay,
+    required this.monthEndBalanceFromDay,
+    required this.dayBalancePercent,
     required this.selectedDay,
-    required this.creditsTotal,
     required this.receivedCredits,
     required this.pendingCredits,
-    required this.alreadyFired,
     required this.firedGroups,
     required this.futureRows,
     required this.liquidRows,
@@ -94,20 +96,22 @@ class DashboardData {
   });
 
   // Formula components
+  final double openingLiquidBalance;
   final double bankBalance;
   final double ccOutstanding;
-  final double futureCommitted;
-  final double monthRunway;
-  final double runwayPercent;
+  final double creditsReceivedToDay;
+  final double debitsFiredToDay;
+  final double remainingCommittedAfterDay;
+  final double simulatedBalanceOnDay;
+  final double monthEndBalanceFromDay;
+  final double dayBalancePercent;
   final int selectedDay;
 
   // Credits (pre-typed rows, no raw Isar objects)
-  final double creditsTotal;
   final List<CreditRow> receivedCredits;
   final List<CreditRow> pendingCredits;
 
   // Debits fired as of selectedDay
-  final double alreadyFired;
   final List<CategoryGroup> firedGroups;
 
   // Commitments after selectedDay
@@ -127,10 +131,15 @@ class DashboardData {
   final List<({OutgoingRow outgoing, int daysUntil})> debitRadar;
   final String currency;
 
+  double get monthRunway => monthEndBalanceFromDay;
+  double get futureCommitted => remainingCommittedAfterDay;
+  double get creditsTotal => creditsReceivedToDay;
+  double get alreadyFired => debitsFiredToDay;
+
   // Computed state
   RunwayState get gaugeState {
-    if (runwayPercent > 60) return RunwayState.comfortable;
-    if (runwayPercent >= 30) return RunwayState.watchOut;
+    if (dayBalancePercent > 60) return RunwayState.comfortable;
+    if (dayBalancePercent >= 30) return RunwayState.watchOut;
     return RunwayState.tight;
   }
 
@@ -148,16 +157,18 @@ class DashboardData {
   bool get isOvercommitted => monthRunway < 0;
 
   static const empty = DashboardData(
+    openingLiquidBalance: 0,
     bankBalance: 0,
     ccOutstanding: 0,
-    futureCommitted: 0,
-    monthRunway: 0,
-    runwayPercent: 0,
+    creditsReceivedToDay: 0,
+    debitsFiredToDay: 0,
+    remainingCommittedAfterDay: 0,
+    simulatedBalanceOnDay: 0,
+    monthEndBalanceFromDay: 0,
+    dayBalancePercent: 0,
     selectedDay: 1,
-    creditsTotal: 0,
     receivedCredits: [],
     pendingCredits: [],
-    alreadyFired: 0,
     firedGroups: [],
     futureRows: [],
     liquidRows: [],
@@ -202,34 +213,31 @@ class DashboardNotifier extends _$DashboardNotifier {
   ) {
     // Isar v3 safe helpers — cast to dynamic first to avoid static analysis
     // warnings on non-nullable fields that can be null at runtime.
-    double safeDouble(dynamic v) => (v as double?) ?? 0.0;
-    int safeInt(dynamic v) => (v as int?) ?? 0;
+    final today = DateTime.now().day;
 
     // ── Cash in Accounts ────────────────────────────────────────────────
     final liquidAccounts = accounts.where((a) =>
-        a.accountType == AccountType.personal &&
-        !a.isCreditCard &&
-        a.includeInLiquid);
+        a.safeAccountType == AccountType.personal &&
+        !a.safeIsCreditCard &&
+        a.safeIncludeInLiquid);
 
-    final bankBalance =
-        liquidAccounts.fold(0.0, (s, a) => s + a.safeBalance);
+    final bankBalance = liquidAccounts.fold(0.0, (s, a) => s + a.safeBalance);
 
     final liquidRows = liquidAccounts
-        .map((a) =>
-            AccountRow(nickname: a.safeNickname, balance: a.safeBalance))
+        .map(
+            (a) => AccountRow(nickname: a.safeNickname, balance: a.safeBalance))
         .toList();
 
-    final fdTotal =
-        accounts.fold(0.0, (s, a) => s + a.safeFdAmount);
+    final fdTotal = accounts.fold(0.0, (s, a) => s + a.safeFdAmount);
 
     // ── CC Outstanding ──────────────────────────────────────────────────
     final ccOutstanding = accounts
-        .where((a) => a.isCreditCard)
+        .where((a) => a.safeIsCreditCard)
         .fold(0.0, (s, a) => s + a.safeBalance);
 
     // ── Credits split by selectedDay ────────────────────────────────────
     final receivedCredits = credits
-        .where((c) => c.isActive && c.safeCreditDate <= selectedDay)
+        .where((c) => c.safeIsActive && c.safeCreditDate <= selectedDay)
         .map((c) => CreditRow(
               name: c.safeName,
               category: c.safeCategory,
@@ -240,7 +248,7 @@ class DashboardNotifier extends _$DashboardNotifier {
         .toList();
 
     final pendingCredits = credits
-        .where((c) => c.isActive && c.safeCreditDate > selectedDay)
+        .where((c) => c.safeIsActive && c.safeCreditDate > selectedDay)
         .map((c) => CreditRow(
               name: c.safeName,
               category: c.safeCategory,
@@ -250,33 +258,39 @@ class DashboardNotifier extends _$DashboardNotifier {
             ))
         .toList();
 
-    final creditsTotal =
+    final creditsReceivedToDay =
         receivedCredits.fold(0.0, (s, c) => s + c.amount);
+    final creditsReceivedToToday = credits
+        .where((c) => c.safeIsActive && c.safeCreditDate <= today)
+        .fold(0.0, (s, c) => s + c.safeAmount);
 
     // ── Outgoings split by selectedDay ──────────────────────────────────
     final firedOutgoings = outgoings
-        .where((o) => o.isActive && o.safeDebitDate <= selectedDay)
+        .where((o) => o.safeIsActive && o.safeDebitDate <= selectedDay)
         .toList();
 
     final futureOutgoings = outgoings
-        .where((o) => o.isActive && o.safeDebitDate > selectedDay)
+        .where((o) => o.safeIsActive && o.safeDebitDate > selectedDay)
         .toList()
       ..sort((a, b) => a.safeDebitDate.compareTo(b.safeDebitDate));
 
-    final alreadyFired =
+    final debitsFiredToDay =
         firedOutgoings.fold(0.0, (s, o) => s + o.safeAmount);
-    final futureCommitted =
+    final debitsFiredToToday = outgoings
+        .where((o) => o.safeIsActive && o.safeDebitDate <= today)
+        .fold(0.0, (s, o) => s + o.safeAmount);
+    final remainingCommittedAfterDay =
         futureOutgoings.fold(0.0, (s, o) => s + o.safeAmount);
 
     // Group fired outgoings by category (pre-typed rows, no raw Isar)
     final groupMap = <OutgoingCategory, List<OutgoingRow>>{};
     for (final o in firedOutgoings) {
       groupMap.putIfAbsent(o.safeCategory, () => []).add(OutgoingRow(
-        name: o.safeName,
-        amount: o.safeAmount,
-        type: o.safeType,
-        debitDate: o.safeDebitDate,
-      ));
+            name: o.safeName,
+            amount: o.safeAmount,
+            type: o.safeType,
+            debitDate: o.safeDebitDate,
+          ));
     }
     final firedGroups = groupMap.entries
         .map((e) => CategoryGroup(
@@ -296,27 +310,33 @@ class DashboardNotifier extends _$DashboardNotifier {
         .toList();
 
     // ── Core Formula ────────────────────────────────────────────────────
-    final monthRunway = bankBalance - ccOutstanding - futureCommitted;
-    final runwayPercent = bankBalance > 0
-        ? (monthRunway / bankBalance * 100).clamp(0.0, 100.0)
+    final openingLiquidBalance =
+        bankBalance - creditsReceivedToToday + debitsFiredToToday;
+    final simulatedBalanceOnDay =
+        openingLiquidBalance + creditsReceivedToDay - debitsFiredToDay;
+    final monthEndBalanceFromDay =
+        simulatedBalanceOnDay - remainingCommittedAfterDay - ccOutstanding;
+    final dayBalancePercent = openingLiquidBalance > 0
+        ? (simulatedBalanceOnDay / openingLiquidBalance * 100).clamp(0.0, 100.0)
         : 0.0;
 
     // ── Overall / Net Worth ─────────────────────────────────────────────
     final investmentsTotal =
-        platforms.fold(0.0, (s, p) => s + safeDouble(p.currentValue));
+        platforms.fold(0.0, (s, p) => s + p.safeCurrentValue);
     final totalAssets = bankBalance + fdTotal + investmentsTotal;
 
     final personalDebts = debts
-        .where((d) => d.direction == DebtDirection.iOwe && !d.isSettled)
-        .fold(0.0, (s, d) => s + safeDouble(d.amount));
+        .where((d) => d.safeDirection == DebtDirection.iOwe && !d.safeIsSettled)
+        .fold(0.0, (s, d) => s + d.safeAmount);
     final totalLiabilities = ccOutstanding + personalDebts;
     final netWorth = totalAssets - totalLiabilities;
 
     // ── Debit Radar (until end of month, real-time — not shifted by selectedDay)
-    final daysInMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+    final daysInMonth =
+        DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
     final daysUntilEndOfMonth = daysInMonth - DateTime.now().day;
     final radar = outgoings
-        .where((o) => o.isActive)
+        .where((o) => o.safeIsActive)
         .map((o) => (
               outgoing: OutgoingRow(
                 name: o.safeName,
@@ -324,23 +344,25 @@ class DashboardNotifier extends _$DashboardNotifier {
                 type: o.safeType,
                 debitDate: o.safeDebitDate,
               ),
-              daysUntil: DateHelpers.daysUntilDebit(safeInt(o.debitDate)),
+              daysUntil: DateHelpers.daysUntilDebit(o.safeDebitDate),
             ))
         .where((item) => item.daysUntil <= daysUntilEndOfMonth)
         .toList()
       ..sort((a, b) => a.daysUntil.compareTo(b.daysUntil));
 
     return DashboardData(
+      openingLiquidBalance: openingLiquidBalance,
       bankBalance: bankBalance,
       ccOutstanding: ccOutstanding,
-      futureCommitted: futureCommitted,
-      monthRunway: monthRunway,
-      runwayPercent: runwayPercent,
+      creditsReceivedToDay: creditsReceivedToDay,
+      debitsFiredToDay: debitsFiredToDay,
+      remainingCommittedAfterDay: remainingCommittedAfterDay,
+      simulatedBalanceOnDay: simulatedBalanceOnDay,
+      monthEndBalanceFromDay: monthEndBalanceFromDay,
+      dayBalancePercent: dayBalancePercent,
       selectedDay: selectedDay,
-      creditsTotal: creditsTotal,
       receivedCredits: receivedCredits,
       pendingCredits: pendingCredits,
-      alreadyFired: alreadyFired,
       firedGroups: firedGroups,
       futureRows: futureRows,
       liquidRows: liquidRows,
@@ -349,10 +371,10 @@ class DashboardNotifier extends _$DashboardNotifier {
       netWorth: netWorth,
       totalAssets: totalAssets,
       totalLiabilities: totalLiabilities,
-      fixedItemsCount: outgoings.where((o) => o.isActive).length,
-      accountsCount: accounts.where((a) => !a.isDeleted).length,
+      fixedItemsCount: outgoings.where((o) => o.safeIsActive).length,
+      accountsCount: accounts.where((a) => !a.safeIsDeleted).length,
       debitRadar: radar,
-      currency: ((settings.baseCurrency as dynamic) as String?) ?? 'INR',
+      currency: settings.safeBaseCurrency,
     );
   }
 }

@@ -115,9 +115,7 @@ class _FuelGaugeRingState extends State<FuelGaugeRing>
                   ),
                   const SizedBox(height: 4),
                   SectionLabel(
-                    widget.isOvercommitted
-                        ? 'overcommitted this month'
-                        : 'available this month',
+                    'projected month end',
                     color: widget.isOvercommitted
                         ? AppColors.red
                         : AppColors.inkDim,

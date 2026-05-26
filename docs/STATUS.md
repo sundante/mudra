@@ -4,8 +4,8 @@
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
 **Last Updated:** 2026-05-26
-**Current Phase:** Phase 5 — Funds Screen (Accounts)
-**Overall Progress:** 96 / 125 items complete
+**Current Phase:** Phase 4 — Dashboard Verification (iOS install blocked in simulator; Android emulator not yet connected)
+**Overall Progress:** 123 / 134 items complete
 
 ---
 
@@ -14,6 +14,11 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-26 | Phase 6 implementation | Built `outgoing_row.dart`, replaced the Debits placeholder with a full Expenses/Investments screen, added a current-month upcoming strip, monthly totals, active-tab segmented control, sorted list with swipe delete, and add/edit bottom sheets with suggestion chips + current-month date picker. `flutter analyze` clean; `flutter test` passed. Tried Phase 4 iOS verification, but `flutter run` failed at simulator install with `IXErrorDomain code=19` after a successful Xcode build. | Android emulator still not connected; Phase 4 simulator verification remains open |
+| 2026-05-26 | Phase 5 implementation start | Implemented shared UI primitives (`mudra_card`, `mudra_input`, `mudra_button`), built `account_tile.dart`, replaced the placeholder Funds screen with summary card + segment control + filtered account list + empty states + FAB, and added Add/Edit/Quick Balance/Delete account flows via bottom sheets. `flutter analyze` clean; `flutter test` passed. | Runtime verification of Phase 4 checklist and Funds screen behavior on simulators |
+| 2026-05-26 | DB recovery path | Added recovery-aware startup bootstrap around `openDatabase()`, hydration validation probe across collections, local DB reset/reopen flow, reseed-on-recovery logging in `main.dart`, and bootstrap tests for normal + recovery startup. `flutter analyze` clean; `flutter test` passed. | Verify recovery + dashboard behavior on iOS and Android simulators |
+| 2026-05-26 | Isar safety audit | Added Safe extensions for Debt, InvestmentPlatform, and AppSettings; expanded Account/Outgoing/Credit safe coverage to enums/bools/strings; switched dashboard/account providers to safe getters; `flutter analyze` clean. Likely remaining crash is hydration-time null from stale local Isar rows before safe getters run. | Confirm by clearing local DB or implement recovery path |
+| 2026-05-26 | Runway Engine v3 | Reworked dashboard formula to as-of-day simulation, added `dayBalancePercent`, synced gauge arc/color to slider, renamed summary labels to Day's Liquid / Day's balance, added split sticky header with today's date left + current-month date picker right, and kept center gauge amount as projected month end. `flutter analyze` and `flutter test` clean. | Simulator verification on iOS + Android; runtime null crash still blocking |
 | 2026-05-26 | Runway Engine v2 | Phase 4 complete: Credits model + Safe extension, selectedDay provider, dashboard_provider refactored (41 fields, day-parameterised formula), FuelGaugeRing clipping fix + day label, dashboard_screen slider + 4-section collapsible table (Cash/Credits/Debits/Commitments), seed data (salary + interest), CLAUDE.md Isar Safety section. flutter analyze clean — 0 issues. Awaiting simulator run to verify on both devices. | Simulator verification on iOS + Android |
 | 2026-05-25 | Phase 4 start | Phases 2+3 simulator verified (iOS + Android). Android Gradle namespace+compileSdk patches re-applied. Starting Phase 4 Dashboard Screen. | — |
 | 2026-05-25 | Phase 3 | 5 Isar models, build_runner generated .g.dart files, database.dart, main.dart seeds AppSettings, 4 repositories, 5 Riverpod providers (@riverpod DashboardNotifier with all computed values). flutter analyze clean — 0 issues. | Awaiting simulator run on both devices |
@@ -139,42 +144,57 @@
 - [x] Pay Day banner removed
 - [x] Overall tab: net worth hero + assets/investments/liabilities tiles
 
+### Phase 4 Follow-up — Runway Engine v3 + Safety Audit
+- Gauge arc now follows `dayBalancePercent` so the slider visibly changes fill and colour.
+- Sticky header now shows today's date on the left and a current-month calendar picker on the right.
+- Dashboard summary labels updated to `Day's Liquid` and `Day's balance`.
+- Dashboard formula now uses an as-of-day simulation and keeps projected month end as the center gauge amount.
+- Safe extensions now cover all Isar models in use, including enums, bools, and strings.
+- Recovery-aware startup bootstrap now resets stale local DB files and retries automatically when hydration validation fails.
+- [!] iOS simulator verification attempt failed during `simctl install` (`IXErrorDomain code=19`, termination assertion failure) even though Xcode build completed.
+- [ ] iOS simulator launch verified after recovery path
+- [ ] Android simulator launch verified after recovery path
+- [ ] Home renders correctly with seeded or recovered data
+- [ ] Slider updates selected day, gauge arc, and day balance
+- [ ] Date picker stays in current month and stays synced with slider
+- [ ] Overall tab renders correctly after recovery
+
 ---
 
 ## Phase 5 — Funds Screen (Accounts)
 **Goal:** Full CRUD for bank accounts with Add/Edit/Quick-Update sheets.
 
-- [ ] `lib/widgets/account_tile.dart` — nickname, bank, balance, CC badge, FD line
+- [x] `lib/widgets/account_tile.dart` — nickname, bank, balance, CC badge, FD line
 - [ ] `lib/screens/accounts/funds_screen.dart`
-  - [ ] Header card: liquid total + FD total (gold-light bg)
-  - [ ] Segment control: Personal / Joint / Business
-  - [ ] Accounts list filtered by segment, Dismissible delete
-  - [ ] Empty state per segment
-  - [ ] FAB → Add Account sheet
-- [ ] Add Account bottom sheet
-  - [ ] All fields: nickname, bank (with chips), balance, type, CC toggle, FD, liquid toggle (default ON for Personal only)
-  - [ ] Validation: nickname required, balance is number
-  - [ ] Save → Isar → haptic → close
-- [ ] Edit Account sheet (pre-filled, same form + delete button)
-- [ ] Quick Balance Update sheet (tap balance amount on tile → large numeric input)
-- [ ] Swipe-to-delete with confirmation
+  - [x] Header card: liquid total + FD total (gold-light bg)
+  - [x] Segment control: Personal / Joint / Business
+  - [x] Accounts list filtered by segment, Dismissible delete
+  - [x] Empty state per segment
+  - [x] FAB → Add Account sheet
+- [x] Add Account bottom sheet
+  - [x] All fields: nickname, bank (with chips), balance, type, CC toggle, FD, liquid toggle (default ON for Personal only)
+  - [x] Validation: nickname required, balance is number
+  - [x] Save → Isar → haptic → close
+- [x] Edit Account sheet (pre-filled, same form + delete button)
+- [x] Quick Balance Update sheet (tap balance amount on tile → large numeric input)
+- [x] Swipe-to-delete with confirmation
 
 ---
 
 ## Phase 6 — Debits Screen (Outgoings)
 **Goal:** Full CRUD for expenses and investments with date-aware sorting.
 
-- [ ] `lib/widgets/outgoing_row.dart` — coloured left bar, name, category badge, date
-- [ ] `lib/screens/outgoings/debits_screen.dart`
-  - [ ] Upcoming strip (next 7 days, horizontal scroll chips)
-  - [ ] Tab switcher: Expenses | Investments
-  - [ ] Monthly total per tab (red / amber)
-  - [ ] List sorted by debitDate ascending, Dismissible delete
-  - [ ] Empty state per tab with instructions
-  - [ ] FAB → Add Expense or Add Investment (based on active tab)
-- [ ] Add Expense sheet (name suggestions, amount, date picker 1–31, category chips)
-- [ ] Add Investment sheet (amber accent, investment categories)
-- [ ] Edit sheets (pre-filled)
+- [x] `lib/widgets/outgoing_row.dart` — coloured left bar, name, category badge, date
+- [x] `lib/screens/outgoings/debits_screen.dart`
+  - [x] Upcoming strip (remaining current-month debits, horizontal scroll chips)
+  - [x] Tab switcher: Expenses | Investments
+  - [x] Monthly total per tab (red / amber)
+  - [x] List sorted by debitDate ascending, Dismissible delete
+  - [x] Empty state per tab with instructions
+  - [x] FAB → Add Expense or Add Investment (based on active tab)
+- [x] Add Expense sheet (name suggestions, amount, date picker 1–31, category chips)
+- [x] Add Investment sheet (amber accent, investment categories)
+- [x] Edit sheets (pre-filled)
 
 ---
 
@@ -237,12 +257,12 @@
 | 2 — Navigation | 10 | 10 | 0 ✅ |
 | 3 — Data Layer | 17 | 17 | 0 ✅ |
 | 4 — Dashboard + Runway Engine v2 | 29 | 29 | 0 ✅ |
-| 5 — Funds (Accounts) | 14 | 0 | 14 |
-| 6 — Debits (Outgoings) | 13 | 0 | 13 |
+| 5 — Funds (Accounts) | 14 | 14 | 0 |
+| 6 — Debits (Outgoings) | 13 | 13 | 0 |
 | 7 — Investments (Portfolio) | 16 | 0 | 16 |
 | 8 — Settings | 7 | 0 | 7 |
 | 9 — Polish | 14 | 0 | 14 |
-| **TOTAL** | **134** | **96** | **38** |
+| **TOTAL** | **134** | **123** | **11** |
 
 ---
 

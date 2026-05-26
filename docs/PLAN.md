@@ -53,9 +53,10 @@ All forms open as **bottom sheets**, never full-screen routes.
 ### Home Screen — Two Tabs
 
 **"This Month"** — What's my financial health right now?
-- Fuel gauge ring (balanceForMonth / liquidTotal, animated, green/amber/red)
-- Liquid total + Committed split row
-- 7-day debit radar (upcoming fixed debits)
+- Sticky header with today's date on the left and a current-month date picker on the right
+- Fuel gauge ring with projected month-end amount and selected-day arc %
+- Day's Liquid + Day's balance split row
+- Monthly debit radar (upcoming fixed debits within the current month)
 
 **"Overall"** — What does my full picture look like?
 - Net Worth hero (Cormorant Garamond, large, colour-coded)
@@ -106,16 +107,20 @@ baseCurrency, monthlyIncome, payDate (1–31)
 ## Key Computed Values (DashboardData)
 
 ```
-liquidTotal      = SUM(balance) WHERE personal + includeInLiquid + NOT creditCard
-fdTotal          = SUM(fdAmount) across ALL accounts
-fixedCommitted   = SUM(amount) WHERE isActive AND debitDate >= today.day
-balanceForMonth  = liquidTotal - fixedCommitted
-balancePercent   = (balanceForMonth / liquidTotal * 100).clamp(0, 100)
-investmentsTotal = SUM(platform.currentValue)
-totalAssets      = liquidTotal + fdTotal + investmentsTotal
-totalLiabilities = SUM(cc.balance) + SUM(debt.amount WHERE iOwe + !settled)
-netWorth         = totalAssets - totalLiabilities
-debitRadar       = outgoings WHERE daysUntilDebit <= 7, sorted by daysUntil
+liquidTotal               = SUM(balance) WHERE personal + includeInLiquid + NOT creditCard
+fdTotal                   = SUM(fdAmount) across ALL accounts
+openingLiquidBalance      = liquidTotal - creditsReceivedToToday + debitsFiredToToday
+creditsReceivedToDay      = SUM(credits WHERE creditDate <= selectedDay AND isActive)
+debitsFiredToDay          = SUM(outgoings WHERE debitDate <= selectedDay AND isActive)
+remainingCommittedAfterDay= SUM(outgoings WHERE debitDate > selectedDay AND isActive)
+simulatedBalanceOnDay     = openingLiquidBalance + creditsReceivedToDay - debitsFiredToDay
+projectedMonthEnd         = simulatedBalanceOnDay - remainingCommittedAfterDay - ccOutstanding
+dayBalancePercent         = (simulatedBalanceOnDay / openingLiquidBalance * 100).clamp(0, 100)
+investmentsTotal          = SUM(platform.currentValue)
+totalAssets               = liquidTotal + fdTotal + investmentsTotal
+totalLiabilities          = SUM(cc.balance) + SUM(debt.amount WHERE iOwe + !settled)
+netWorth                  = totalAssets - totalLiabilities
+debitRadar                = outgoings due later this month, sorted by debitDate
 ```
 
 ---
@@ -242,7 +247,7 @@ dev_dependencies:
   flutter_test: {sdk: flutter}
   flutter_lints: ^4.0.0
   isar_generator: ^3.1.0+1
-  riverpod_generator: ^2.4.3
+  riverpod_generator: 2.4.0
   build_runner: ^2.4.11
   custom_lint: ^0.6.7
   riverpod_lint: ^2.3.13
@@ -260,7 +265,7 @@ dev_dependencies:
 | US-04 | Add a fixed monthly expense with debit date | Outgoings |
 | US-05 | Add a fixed monthly investment (SIP, PPF) with debit date | Outgoings |
 | US-06 | See BalanceForTheMonth — what I can actually spend | Dashboard |
-| US-07 | See which debits are coming in the next 7 days | Dashboard |
+| US-07 | See which debits are still coming this month | Dashboard |
 | US-08 | Set monthly income to anchor the fuel gauge | Settings |
 
 ## P1 User Stories (Strong MVP)

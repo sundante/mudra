@@ -7,12 +7,16 @@ import 'data/seed_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final isar = await openDatabase();
+  final bootstrap = await bootstrapDatabase();
+  final isar = bootstrap.isar;
 
   // Fresh install: seed demo data so the app is never empty on first launch
   final accountCount = await isar.accounts.count();
   if (accountCount == 0) {
     await seedDemoData(isar);
+  }
+  if (bootstrap.didRecover) {
+    debugPrint('Mudra DB was recovered and reseeded on startup.');
   }
 
   runApp(

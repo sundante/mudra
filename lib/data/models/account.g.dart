@@ -38,43 +38,48 @@ const AccountSchema = CollectionSchema(
       name: r'bankName',
       type: IsarType.string,
     ),
-    r'createdAt': PropertySchema(
+    r'categoryLabel': PropertySchema(
       id: 4,
+      name: r'categoryLabel',
+      type: IsarType.string,
+    ),
+    r'createdAt': PropertySchema(
+      id: 5,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'fdAmount': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'fdAmount',
       type: IsarType.double,
     ),
     r'includeInLiquid': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'includeInLiquid',
       type: IsarType.bool,
     ),
     r'isCreditCard': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'isCreditCard',
       type: IsarType.bool,
     ),
     r'isDeleted': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'isDeleted',
       type: IsarType.bool,
     ),
     r'nickname': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'nickname',
       type: IsarType.string,
     ),
     r'sortOrder': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'sortOrder',
       type: IsarType.long,
     ),
     r'uid': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'uid',
       type: IsarType.string,
     )
@@ -119,6 +124,12 @@ int _accountEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.categoryLabel;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.nickname.length * 3;
   bytesCount += 3 + object.uid.length * 3;
   return bytesCount;
@@ -134,14 +145,15 @@ void _accountSerialize(
   writer.writeDouble(offsets[1], object.balance);
   writer.writeDateTime(offsets[2], object.balanceUpdatedAt);
   writer.writeString(offsets[3], object.bankName);
-  writer.writeDateTime(offsets[4], object.createdAt);
-  writer.writeDouble(offsets[5], object.fdAmount);
-  writer.writeBool(offsets[6], object.includeInLiquid);
-  writer.writeBool(offsets[7], object.isCreditCard);
-  writer.writeBool(offsets[8], object.isDeleted);
-  writer.writeString(offsets[9], object.nickname);
-  writer.writeLong(offsets[10], object.sortOrder);
-  writer.writeString(offsets[11], object.uid);
+  writer.writeString(offsets[4], object.categoryLabel);
+  writer.writeDateTime(offsets[5], object.createdAt);
+  writer.writeDouble(offsets[6], object.fdAmount);
+  writer.writeBool(offsets[7], object.includeInLiquid);
+  writer.writeBool(offsets[8], object.isCreditCard);
+  writer.writeBool(offsets[9], object.isDeleted);
+  writer.writeString(offsets[10], object.nickname);
+  writer.writeLong(offsets[11], object.sortOrder);
+  writer.writeString(offsets[12], object.uid);
 }
 
 Account _accountDeserialize(
@@ -157,15 +169,16 @@ Account _accountDeserialize(
   object.balance = reader.readDouble(offsets[1]);
   object.balanceUpdatedAt = reader.readDateTimeOrNull(offsets[2]);
   object.bankName = reader.readStringOrNull(offsets[3]);
-  object.createdAt = reader.readDateTime(offsets[4]);
-  object.fdAmount = reader.readDouble(offsets[5]);
+  object.categoryLabel = reader.readStringOrNull(offsets[4]);
+  object.createdAt = reader.readDateTime(offsets[5]);
+  object.fdAmount = reader.readDouble(offsets[6]);
   object.id = id;
-  object.includeInLiquid = reader.readBool(offsets[6]);
-  object.isCreditCard = reader.readBool(offsets[7]);
-  object.isDeleted = reader.readBool(offsets[8]);
-  object.nickname = reader.readString(offsets[9]);
-  object.sortOrder = reader.readLong(offsets[10]);
-  object.uid = reader.readString(offsets[11]);
+  object.includeInLiquid = reader.readBool(offsets[7]);
+  object.isCreditCard = reader.readBool(offsets[8]);
+  object.isDeleted = reader.readBool(offsets[9]);
+  object.nickname = reader.readString(offsets[10]);
+  object.sortOrder = reader.readLong(offsets[11]);
+  object.uid = reader.readString(offsets[12]);
   return object;
 }
 
@@ -186,20 +199,22 @@ P _accountDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
       return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -678,6 +693,155 @@ extension AccountQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'bankName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'categoryLabel',
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition>
+      categoryLabelIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'categoryLabel',
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition>
+      categoryLabelGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'categoryLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition> categoryLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterFilterCondition>
+      categoryLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'categoryLabel',
         value: '',
       ));
     });
@@ -1249,6 +1413,18 @@ extension AccountQuerySortBy on QueryBuilder<Account, Account, QSortBy> {
     });
   }
 
+  QueryBuilder<Account, Account, QAfterSortBy> sortByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterSortBy> sortByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<Account, Account, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -1396,6 +1572,18 @@ extension AccountQuerySortThenBy
     });
   }
 
+  QueryBuilder<Account, Account, QAfterSortBy> thenByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Account, Account, QAfterSortBy> thenByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<Account, Account, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -1532,6 +1720,14 @@ extension AccountQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Account, Account, QDistinct> distinctByCategoryLabel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryLabel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Account, Account, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
@@ -1613,6 +1809,12 @@ extension AccountQueryProperty
   QueryBuilder<Account, String?, QQueryOperations> bankNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'bankName');
+    });
+  }
+
+  QueryBuilder<Account, String?, QQueryOperations> categoryLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryLabel');
     });
   }
 

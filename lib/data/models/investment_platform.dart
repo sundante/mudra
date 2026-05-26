@@ -29,3 +29,14 @@ enum AssetType {
   gold,
   other,
 }
+
+extension InvestmentPlatformSafe on InvestmentPlatform {
+  String get safeUid => ((uid as dynamic) as String?) ?? '';
+  String get safePlatformName => ((platformName as dynamic) as String?) ?? '';
+  AssetType get safeAssetType =>
+      ((assetType as dynamic) as AssetType?) ?? AssetType.other;
+  double get safeInvestedAmount =>
+      ((investedAmount as dynamic) as double?) ?? 0.0;
+  double get safeCurrentValue => ((currentValue as dynamic) as double?) ?? 0.0;
+  bool get safeIsDeleted => ((isDeleted as dynamic) as bool?) ?? false;
+}

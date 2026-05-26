@@ -17,6 +17,28 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/fuel_gauge_ring.dart';
 
+const _monthShortNames = <String>[
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _formatExactMonthDate(int day) {
+  final now = DateTime.now();
+  final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+  final safeDay = day.clamp(1, daysInMonth);
+  return '$safeDay ${_monthShortNames[now.month - 1]}';
+}
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -45,8 +67,8 @@ class DashboardScreen extends ConsumerWidget {
               surfaceTintColor: Colors.transparent,
               title: Text(
                 'Mudra',
-                style: AppTypography.headingMedium
-                    .copyWith(color: AppColors.gold),
+                style:
+                    AppTypography.headingMedium.copyWith(color: AppColors.gold),
               ),
               actions: [
                 IconButton(
@@ -94,11 +116,29 @@ class _ThisMonthTab extends ConsumerStatefulWidget {
 }
 
 class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
+  Future<void> _pickSimulationDate(
+      BuildContext context, int selectedDay) async {
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year, now.month, selectedDay),
+      firstDate: firstDay,
+      lastDate: lastDay,
+      helpText: 'Select simulation day',
+    );
+    if (picked == null || !mounted) return;
+    ref.read(selectedDayProvider.notifier).state = picked.day;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dashboard = widget.dashboard;
     final selectedDay = ref.watch(selectedDayProvider);
-    final today = DateTime.now().day;
+    final now = DateTime.now();
+    final today = now.day;
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
 
     final radarItems = dashboard.debitRadar;
     final showSeeAll = radarItems.length > 5;
@@ -114,20 +154,42 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
             child: Container(
               color: AppColors.background,
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.screenH,
-                  vertical: AppSpacing.md),
-              child: Column(
+                  horizontal: AppSpacing.screenH, vertical: AppSpacing.md),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    _formatDateHeader(),
-                    style: AppTypography.labelMedium
-                        .copyWith(color: AppColors.inkDim),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatDateHeader(now),
+                        style: AppTypography.labelMedium
+                            .copyWith(color: AppColors.inkDim),
+                      ),
+                      Text(
+                        _formatMonth(now),
+                        style: AppTypography.headingSmall
+                            .copyWith(color: AppColors.gold),
+                      ),
+                    ],
                   ),
-                  Text(
-                    _formatMonth(),
-                    style: AppTypography.headingSmall
-                        .copyWith(color: AppColors.gold),
+                  OutlinedButton.icon(
+                    onPressed: () => _pickSimulationDate(context, selectedDay),
+                    icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                    label: Text(_formatPickerLabel(now, selectedDay)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.gold,
+                      side: const BorderSide(color: AppColors.border),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: AppTypography.labelMedium,
+                    ),
                   ),
                 ],
               ),
@@ -137,13 +199,12 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
           // ── Fuel Gauge ──────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenH,
-                vertical: AppSpacing.screenV),
+                horizontal: AppSpacing.screenH, vertical: AppSpacing.screenV),
             child: Column(
               children: [
                 Center(
                   child: FuelGaugeRing(
-                    percentage: dashboard.runwayPercent,
+                    percentage: dashboard.dayBalancePercent,
                     runway: dashboard.monthRunway,
                     currency: dashboard.currency,
                     arcColor: dashboard.gaugeColor,
@@ -186,8 +247,8 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 2,
-                    thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 7),
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 7),
                     overlayShape:
                         const RoundSliderOverlayShape(overlayRadius: 14),
                     activeTrackColor: dashboard.gaugeColor,
@@ -198,8 +259,8 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                   child: Slider(
                     value: selectedDay.toDouble(),
                     min: 1,
-                    max: 31,
-                    divisions: 30,
+                    max: daysInMonth.toDouble(),
+                    divisions: daysInMonth - 1,
                     onChanged: (v) => ref
                         .read(selectedDayProvider.notifier)
                         .state = v.round(),
@@ -208,7 +269,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
 
                 const SizedBox(height: AppSpacing.lg),
 
-                // ── LIQUID | AFTER DEBITS ─────────────────────────────────
+                // ── CURRENT LIQUID | SIMULATED DAY ───────────────────────
                 IntrinsicHeight(
                   child: Row(
                     children: [
@@ -216,7 +277,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const SectionLabel('liquid'),
+                            const SectionLabel("day's liquid"),
                             const SizedBox(height: 4),
                             AmountDisplay(
                               amount: dashboard.bankBalance,
@@ -232,10 +293,10 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const SectionLabel('after debits'),
+                            const SectionLabel("day's balance"),
                             const SizedBox(height: 4),
                             AmountDisplay(
-                              amount: dashboard.monthRunway,
+                              amount: dashboard.simulatedBalanceOnDay,
                               currency: dashboard.currency,
                               style: AppTypography.monoMedium
                                   .copyWith(color: dashboard.gaugeColor),
@@ -255,10 +316,8 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
           // ── Runway Table ─────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenH,
-                vertical: AppSpacing.screenV),
-            child: _RunwayTable(
-                dashboard: dashboard, selectedDay: selectedDay),
+                horizontal: AppSpacing.screenH, vertical: AppSpacing.screenV),
+            child: _RunwayTable(dashboard: dashboard, selectedDay: selectedDay),
           ),
 
           const Divider(color: AppColors.border),
@@ -286,8 +345,8 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                   onTap: () => context.go('/outgoings'),
                   child: Text(
                     '${dashboard.fixedItemsCount}',
-                    style: AppTypography.monoLarge
-                        .copyWith(color: AppColors.ink),
+                    style:
+                        AppTypography.monoLarge.copyWith(color: AppColors.ink),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -296,8 +355,8 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                   onTap: () => context.go('/accounts'),
                   child: Text(
                     '${dashboard.accountsCount}',
-                    style: AppTypography.monoLarge
-                        .copyWith(color: AppColors.ink),
+                    style:
+                        AppTypography.monoLarge.copyWith(color: AppColors.ink),
                   ),
                 ),
               ],
@@ -309,8 +368,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
           // ── Until End of Month ──────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenH,
-                vertical: AppSpacing.screenV),
+                horizontal: AppSpacing.screenH, vertical: AppSpacing.screenV),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -346,8 +404,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
             padding: const EdgeInsets.only(bottom: AppSpacing.screenV),
             child: Text(
               'Pull to refresh',
-              style: AppTypography.monoXSmall
-                  .copyWith(color: AppColors.inkDim),
+              style: AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
               textAlign: TextAlign.center,
             ),
           ),
@@ -356,24 +413,39 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
     );
   }
 
-  String _formatDateHeader() {
-    final now = DateTime.now();
-    final weekday = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][now.weekday - 1];
+  String _formatDateHeader(DateTime now) {
+    final weekday =
+        ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][now.weekday - 1];
     return '$weekday, ${now.day}';
   }
 
-  String _formatMonth() {
-    final now = DateTime.now();
-    const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-                    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+  String _formatMonth(DateTime now) {
+    const months = [
+      'JANUARY',
+      'FEBRUARY',
+      'MARCH',
+      'APRIL',
+      'MAY',
+      'JUNE',
+      'JULY',
+      'AUGUST',
+      'SEPTEMBER',
+      'OCTOBER',
+      'NOVEMBER',
+      'DECEMBER'
+    ];
     return months[now.month - 1];
+  }
+
+  String _formatPickerLabel(DateTime now, int selectedDay) {
+    final weekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final selectedDate = DateTime(now.year, now.month, selectedDay);
+    return '${weekday[selectedDate.weekday - 1]}, $selectedDay';
   }
 }
 
-
 class _RunwayTable extends StatelessWidget {
-  const _RunwayTable(
-      {required this.dashboard, required this.selectedDay});
+  const _RunwayTable({required this.dashboard, required this.selectedDay});
 
   final DashboardData dashboard;
   final int selectedDay;
@@ -393,19 +465,24 @@ class _RunwayTable extends StatelessWidget {
         children: [
           // Cash in Accounts
           _TableSection(
-            title: 'Cash in Accounts',
-            total: dashboard.bankBalance,
+            title: 'Opening Liquid',
+            subtitle: 'derived month baseline',
+            total: dashboard.openingLiquidBalance,
             prefix: '',
             totalColor: AppColors.ink,
-            body: _AccountsBody(rows: dashboard.liquidRows,
-                currency: dashboard.currency),
+            body: _OpeningBalanceBody(
+              currentLiquidBalance: dashboard.bankBalance,
+              openingLiquidBalance: dashboard.openingLiquidBalance,
+              rows: dashboard.liquidRows,
+              currency: dashboard.currency,
+            ),
           ),
 
           const Divider(color: Color(0xFFE4E0D8), height: 1),
 
           // Credits
           _TableSection(
-            title: 'Credits',
+            title: 'Credits Received',
             subtitle: 'as of Day $selectedDay',
             total: dashboard.creditsTotal,
             prefix: '+ ',
@@ -421,21 +498,20 @@ class _RunwayTable extends StatelessWidget {
 
           // Debits
           _TableSection(
-            title: 'Debits',
+            title: 'Debits Fired',
             subtitle: 'as of Day $selectedDay',
             total: dashboard.alreadyFired,
             prefix: '− ',
             totalColor: AppColors.inkDim,
             body: _DebitsBody(
-                groups: dashboard.firedGroups,
-                currency: dashboard.currency),
+                groups: dashboard.firedGroups, currency: dashboard.currency),
           ),
 
           const Divider(color: Color(0xFFE4E0D8), height: 1),
 
           // Commitments
           _TableSection(
-            title: 'Commitments',
+            title: 'Remaining Commitments',
             subtitle: 'after Day $selectedDay',
             total: commitmentsTotal,
             prefix: '− ',
@@ -448,7 +524,7 @@ class _RunwayTable extends StatelessWidget {
             isLast: true,
           ),
 
-          // Result row
+          // Result rows
           Container(
             decoration: BoxDecoration(
               color: dashboard.isOvercommitted
@@ -461,20 +537,41 @@ class _RunwayTable extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                Text(
-                  'Month runway',
-                  style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600, color: AppColors.ink),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Balance on Day $selectedDay',
+                      style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600, color: AppColors.ink),
+                    ),
+                    AmountDisplay(
+                      amount: dashboard.simulatedBalanceOnDay,
+                      currency: dashboard.currency,
+                      style: AppTypography.monoMedium.copyWith(
+                          fontWeight: FontWeight.w600, color: AppColors.ink),
+                    ),
+                  ],
                 ),
-                AmountDisplay(
-                  amount: dashboard.monthRunway,
-                  currency: dashboard.currency,
-                  style: AppTypography.monoMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: dashboard.gaugeColor),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Projected Month End',
+                      style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600, color: AppColors.ink),
+                    ),
+                    AmountDisplay(
+                      amount: dashboard.monthRunway,
+                      currency: dashboard.currency,
+                      style: AppTypography.monoMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: dashboard.gaugeColor),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -592,26 +689,51 @@ class _TableSectionState extends State<_TableSection> {
 
 // ─── Section Bodies ───────────────────────────────────────────────────────
 
-class _AccountsBody extends StatelessWidget {
-  const _AccountsBody({required this.rows, required this.currency});
+class _OpeningBalanceBody extends StatelessWidget {
+  const _OpeningBalanceBody({
+    required this.currentLiquidBalance,
+    required this.openingLiquidBalance,
+    required this.rows,
+    required this.currency,
+  });
+
+  final double currentLiquidBalance;
+  final double openingLiquidBalance;
   final List<AccountRow> rows;
   final String currency;
 
   @override
   Widget build(BuildContext context) {
-    if (rows.isEmpty) {
-      return Text('No liquid accounts',
-          style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim));
-    }
     return Column(
-      children: rows
-          .map((r) => _SimpleRow(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SimpleRow(
+          label: 'Current liquid total',
+          amount: currentLiquidBalance,
+          currency: currency,
+          color: AppColors.ink,
+        ),
+        _SimpleRow(
+          label: 'Derived opening balance',
+          amount: openingLiquidBalance,
+          currency: currency,
+          color: AppColors.inkDim,
+        ),
+        if (rows.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Current account balances',
+            style: AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
+          ),
+          const SizedBox(height: 2),
+          ...rows.map((r) => _SimpleRow(
                 label: r.nickname,
                 amount: r.balance,
                 currency: currency,
-                color: AppColors.ink,
-              ))
-          .toList(),
+                color: AppColors.inkDim,
+              )),
+        ],
+      ],
     );
   }
 }
@@ -654,7 +776,8 @@ class _CreditsBody extends StatelessWidget {
       children: [
         ...received.map((c) => _SimpleRow(
               label: c.name,
-              sublabel: _categoryLabel(c.category),
+              sublabel:
+                  '${_formatExactMonthDate(c.creditDate)} · ${_categoryLabel(c.category)}',
               amount: c.amount,
               currency: currency,
               color: AppColors.green,
@@ -662,11 +785,12 @@ class _CreditsBody extends StatelessWidget {
         if (pending.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text('Upcoming',
-              style: AppTypography.monoXSmall
-                  .copyWith(color: AppColors.inkDim)),
+              style:
+                  AppTypography.monoXSmall.copyWith(color: AppColors.inkDim)),
           ...pending.map((c) => _SimpleRow(
                 label: c.name,
-                sublabel: 'Day ${c.creditDate} · ${_categoryLabel(c.category)}',
+                sublabel:
+                    '${_formatExactMonthDate(c.creditDate)} · ${_categoryLabel(c.category)}',
                 amount: c.amount,
                 currency: currency,
                 color: AppColors.inkDim,
@@ -735,6 +859,8 @@ class _DebitsBody extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 12),
                 child: _SimpleRow(
                   label: r.name,
+                  sublabel:
+                      '${_formatExactMonthDate(r.debitDate)} · ${r.type == OutgoingType.investment ? 'investment' : 'expense'}',
                   amount: r.amount,
                   currency: currency,
                   color: AppColors.inkDim,
@@ -756,20 +882,6 @@ class _CommitmentsBody extends StatelessWidget {
   final List<OutgoingRow> futureRows;
   final String currency;
 
-  String _daySuffix(int day) {
-    if (day >= 11 && day <= 13) return 'th';
-    switch (day % 10) {
-      case 1:
-        return 'st';
-      case 2:
-        return 'nd';
-      case 3:
-        return 'rd';
-      default:
-        return 'th';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (ccOutstanding == 0 && futureRows.isEmpty) {
@@ -779,8 +891,7 @@ class _CommitmentsBody extends StatelessWidget {
               size: 14, color: AppColors.green),
           const SizedBox(width: 8),
           Text('No commitments remaining',
-              style:
-                  AppTypography.bodySmall.copyWith(color: AppColors.green)),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.green)),
         ],
       );
     }
@@ -799,7 +910,8 @@ class _CommitmentsBody extends StatelessWidget {
           final isInv = r.type == OutgoingType.investment;
           return _SimpleRow(
             label: r.name,
-            sublabel: 'Debits on ${r.debitDate}${_daySuffix(r.debitDate)}',
+            sublabel:
+                '${_formatExactMonthDate(r.debitDate)} · ${isInv ? 'investment' : 'expense'}',
             amount: r.amount,
             currency: currency,
             color: isInv ? AppColors.amber : AppColors.red,
@@ -845,10 +957,8 @@ class _SimpleRow extends StatelessWidget {
                   label,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontStyle:
-                        italic ? FontStyle.italic : FontStyle.normal,
-                    fontWeight:
-                        bold ? FontWeight.w600 : FontWeight.normal,
+                    fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+                    fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
                 if (sublabel != null)
@@ -944,16 +1054,14 @@ class _RadarItem extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: chipBg,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   _debitLabel(daysUntil),
-                  style:
-                      AppTypography.monoXSmall.copyWith(color: chipText),
+                  style: AppTypography.monoXSmall.copyWith(color: chipText),
                 ),
               ),
             ],
@@ -987,7 +1095,6 @@ class Sticky extends StatelessWidget {
     );
   }
 }
-
 
 class _OverallTab extends StatelessWidget {
   const _OverallTab({required this.dashboard});
@@ -1037,8 +1144,8 @@ class _OverallTab extends StatelessWidget {
                 child: AmountDisplay(
                   amount: dashboard.investmentsTotal,
                   currency: dashboard.currency,
-                  style: AppTypography.monoLarge
-                      .copyWith(color: AppColors.amber),
+                  style:
+                      AppTypography.monoLarge.copyWith(color: AppColors.amber),
                   compact: true,
                 ),
               ),
@@ -1049,8 +1156,7 @@ class _OverallTab extends StatelessWidget {
                 child: AmountDisplay(
                   amount: dashboard.totalLiabilities,
                   currency: dashboard.currency,
-                  style: AppTypography.monoLarge
-                      .copyWith(color: AppColors.red),
+                  style: AppTypography.monoLarge.copyWith(color: AppColors.red),
                   compact: true,
                 ),
               ),
@@ -1108,8 +1214,8 @@ class _BreakdownRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: AppTypography.bodyMedium
-                  .copyWith(color: AppColors.inkDim)),
+              style:
+                  AppTypography.bodyMedium.copyWith(color: AppColors.inkDim)),
           AmountDisplay(
             amount: amount,
             currency: currency,
@@ -1125,9 +1231,7 @@ class _BreakdownRow extends StatelessWidget {
 
 class _StatTile extends StatelessWidget {
   const _StatTile(
-      {required this.label,
-      required this.child,
-      required this.onTap});
+      {required this.label, required this.child, required this.onTap});
   final String label;
   final Widget child;
   final VoidCallback onTap;

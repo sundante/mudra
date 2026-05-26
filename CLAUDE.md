@@ -95,6 +95,7 @@ dart format .                        # format all Dart files
 - One phase at a time — do not start Phase N+1 until Phase N is fully checked off
 - If a task is blocked, mark it `[!]` and note the blocker in the session log
 - After completing any phase's code, always prompt the user to hot reload (`r` in the terminal or save in IDE) and verify on both simulators before marking items `[x]`
+- Product planning rule: Mudra is month-first. All planning, runway, debit forecasting, and UX framing should default to the current month, not a 7-day or weekly window, unless the user explicitly asks for a shorter horizon.
 
 Detailed phase-by-phase code prompts: `vibes/5-26-mudra_flutter_prompt.md`
 
@@ -127,11 +128,19 @@ Rules (enforced on every new model and every widget):
    }
    ```
 
-2. **Providers**: use local `safeDouble`/`safeInt` helpers in all `_compute()` folds.
+2. **Safe extensions must cover all persisted non-nullable fields used by the app**:
+   `String`, `double`, `int`, `bool`, and `enum` fields all need safe getters if they are read outside write code.
 
-3. **Widgets**: NEVER read `.amount`, `.balance`, `.debitDate`, or any primitive
+3. **Providers / repositories**: prefer model safe getters over raw Isar fields whenever reading persisted values.
+   Do not assume non-nullable schema fields are safe at runtime.
+
+4. **Widgets**: NEVER read `.amount`, `.balance`, `.debitDate`, or any primitive
    field directly on an Isar object. Always use the safe extension getters.
    Widgets must receive pre-typed `double`/`String` primitives — never raw Isar objects.
+
+5. **Important caveat**: safe getters do not prevent hydration-time crashes from stale local data.
+   Generated Isar deserializers can still throw `"Null" is not a subtype ...` before your getter runs if an old row contains null in a non-nullable stored field.
+   If that happens, confirm with a local DB reset and then implement an app-level recovery path if needed.
 
 ## Conventions to Avoid
 

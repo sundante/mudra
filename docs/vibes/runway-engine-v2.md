@@ -1,5 +1,9 @@
 # Runway Engine v2 — Codex Hand-off
 
+> **Status**: Historical hand-off. The current codebase has moved beyond this spec.
+> Runway Engine v3 now uses an as-of-day simulation, a current-month date picker in the sticky header,
+> and a gauge arc driven by selected-day balance percent rather than the original projected-month-end ratio.
+
 > **Context**: This document describes the next major dashboard update for Mudra.
 > It is a hand-off for implementation. Execute steps in order.
 > Run `flutter analyze` after every step. Run `dart run build_runner build` after Step 1.
