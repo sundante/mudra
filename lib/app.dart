@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_typography.dart';
+import 'data/models/app_settings.dart';
+import 'providers/settings_provider.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/accounts/funds_screen.dart';
-import 'screens/outgoings/debits_screen.dart';
+import 'screens/debts/debts_screen.dart';
 import 'screens/portfolio/investments_screen.dart';
-import 'screens/settings/settings_screen.dart';
+import 'screens/net/net_screen.dart';
+import 'screens/profile/profile_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
@@ -25,15 +28,19 @@ final _router = GoRouter(
           GoRoute(path: '/accounts', builder: (c, s) => const FundsScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/outgoings', builder: (c, s) => const DebitsScreen()),
+          GoRoute(path: '/debts', builder: (c, s) => const DebtsScreen()),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(path: '/portfolio', builder: (c, s) => const InvestmentsScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
+          GoRoute(path: '/net', builder: (c, s) => const NetScreen()),
         ]),
       ],
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (c, s) => const ProfileScreen(),
     ),
   ],
 );
@@ -52,13 +59,47 @@ class MudraApp extends ConsumerWidget {
   }
 }
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull;
+    final name = settings?.safeUserName ?? '';
+    final initials = _initials(name);
+
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: Text(
+          'Mudra',
+          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => context.push('/profile'),
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                color: AppColors.gold,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                initials,
+                style: AppTypography.labelSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -85,33 +126,30 @@ class ScaffoldWithNavBar extends StatelessWidget {
               label: 'Funds',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_outlined),
-              activeIcon: Icon(Icons.receipt_long),
-              label: 'Debits',
+              icon: Icon(Icons.account_balance_outlined),
+              activeIcon: Icon(Icons.account_balance),
+              label: 'Debts',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.show_chart_outlined),
               activeIcon: Icon(Icons.show_chart),
-              label: 'Investments',
+              label: 'Invests',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'Settings',
+              icon: Icon(Icons.donut_large_outlined),
+              activeIcon: Icon(Icons.donut_large),
+              label: 'Net',
             ),
           ],
         ),
       ),
     );
   }
-}
 
-// Shared app bar used by all placeholder screens
-AppBar mudraAppBar(BuildContext context) {
-  return AppBar(
-    title: Text(
-      'Mudra',
-      style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
-    ),
-  );
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
 }

@@ -8,14 +8,15 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/database.dart';
 import '../../data/models/app_settings.dart';
+import '../../data/seed_data.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/common/mudra_button.dart';
 import '../../widgets/common/mudra_card.dart';
 import '../../widgets/common/mudra_input.dart';
 import '../../widgets/common/section_label.dart';
 
-class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,27 +25,35 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: AppColors.inkDim),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
-          'Settings',
+          'Profile',
           style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
         ),
       ),
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Could not load settings')),
-        data: (settings) => _SettingsBody(settings: settings),
+        error: (_, __) => const Center(child: Text('Could not load profile')),
+        data: (settings) => _ProfileBody(settings: settings),
       ),
     );
   }
 }
 
-class _SettingsBody extends ConsumerWidget {
-  const _SettingsBody({required this.settings});
+class _ProfileBody extends ConsumerWidget {
+  const _ProfileBody({required this.settings});
 
   final AppSettings settings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final initials = _initials(settings.safeUserName);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenH,
@@ -53,6 +62,54 @@ class _SettingsBody extends ConsumerWidget {
         AppSpacing.xxl,
       ),
       children: [
+        // ── Avatar + Name ──────────────────────────────────────────────
+        Center(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () => _openNameSheet(context, ref, settings),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: AppColors.gold,
+                  child: Text(
+                    initials.isEmpty ? 'M' : initials,
+                    style: AppTypography.displaySmall.copyWith(
+                      color: Colors.white,
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              GestureDetector(
+                onTap: () => _openNameSheet(context, ref, settings),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      settings.safeUserName.isEmpty
+                          ? 'Add your name'
+                          : settings.safeUserName,
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: settings.safeUserName.isEmpty
+                            ? AppColors.inkDim
+                            : AppColors.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(Icons.edit_outlined,
+                        size: 16, color: AppColors.inkDim),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+
+        // ── Finance Anchors ───────────────────────────────────────────
         const SectionLabel('income & schedule'),
         const SizedBox(height: AppSpacing.sm),
         MudraCard(
@@ -69,7 +126,8 @@ class _SettingsBody extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       CurrencyFormatter.format(
-                          settings.safeMonthlyIncome, settings.safeBaseCurrency),
+                          settings.safeMonthlyIncome,
+                          settings.safeBaseCurrency),
                       style: AppTypography.monoMedium
                           .copyWith(color: AppColors.green),
                     ),
@@ -105,14 +163,20 @@ class _SettingsBody extends ConsumerWidget {
             ],
           ),
         ),
+
         const SizedBox(height: AppSpacing.lg),
+
+        // ── Currency ──────────────────────────────────────────────────
         const SectionLabel('currency'),
         const SizedBox(height: AppSpacing.sm),
         _CurrencyChips(
           selected: settings.safeBaseCurrency,
           onSelect: (currency) => _saveCurrency(ref, settings, currency),
         ),
+
         const SizedBox(height: AppSpacing.lg),
+
+        // ── Danger Zone ───────────────────────────────────────────────
         const SectionLabel('data'),
         const SizedBox(height: AppSpacing.sm),
         MudraCard(
@@ -128,7 +192,7 @@ class _SettingsBody extends ConsumerWidget {
                             .copyWith(color: AppColors.red)),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Permanently delete all accounts, debits, and investments',
+                      'Permanently delete all accounts, debts, and investments',
                       style: AppTypography.bodySmall
                           .copyWith(color: AppColors.inkDim),
                     ),
@@ -139,9 +203,39 @@ class _SettingsBody extends ConsumerWidget {
             ],
           ),
         ),
+
         const SizedBox(height: AppSpacing.xxl),
-        _Footer(currency: settings.safeBaseCurrency),
+        const _Footer(),
       ],
+    );
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(' ').where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+  }
+
+  Future<void> _openNameSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings settings,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _NameSheet(
+        initial: settings.safeUserName,
+        onSave: (name) async {
+          final updated = await ref.read(settingsRepoProvider).get();
+          updated.userName = name;
+          await ref.read(settingsRepoProvider).save(updated);
+          ref.invalidate(settingsProvider);
+          await HapticFeedback.lightImpact();
+        },
+      ),
     );
   }
 
@@ -211,7 +305,7 @@ class _SettingsBody extends ConsumerWidget {
             style: AppTypography.bodyLarge
                 .copyWith(color: AppColors.ink, fontWeight: FontWeight.w600)),
         content: Text(
-          'This will permanently delete all accounts, debits, investments, and debts.',
+          'This will permanently delete all accounts, debts, investments, and debts.',
           style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
         ),
         actions: [
@@ -253,14 +347,12 @@ class _SettingsBody extends ConsumerWidget {
         ],
       ),
     );
-    if (step2 != true) return;
+    if (step2 != true || !context.mounted) return;
 
     await HapticFeedback.vibrate();
     final isar = ref.read(isarProvider);
     await clearAllData(isar);
-
-    // Re-seed default settings
-    await ref.read(settingsRepoProvider).save(AppSettings());
+    await seedDemoData(isar);
     ref.invalidate(settingsProvider);
   }
 }
@@ -320,9 +412,7 @@ class _CurrencyChips extends StatelessWidget {
 }
 
 class _Footer extends StatelessWidget {
-  const _Footer({required this.currency});
-
-  final String currency;
+  const _Footer();
 
   @override
   Widget build(BuildContext context) {
@@ -344,6 +434,107 @@ class _Footer extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// ── Sheets ────────────────────────────────────────────────────────────────────
+
+class _NameSheet extends StatefulWidget {
+  const _NameSheet({required this.initial, required this.onSave});
+
+  final String initial;
+  final Future<void> Function(String) onSave;
+
+  @override
+  State<_NameSheet> createState() => _NameSheetState();
+}
+
+class _NameSheetState extends State<_NameSheet> {
+  late final TextEditingController _controller;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH,
+          AppSpacing.lg,
+          AppSpacing.screenH,
+          AppSpacing.screenV,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Your Name',
+                      style: AppTypography.headingMedium
+                          .copyWith(color: AppColors.gold)),
+                ),
+                IconButton(
+                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, color: AppColors.inkDim),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            MudraInput(
+              label: 'Name',
+              controller: _controller,
+              hintText: 'What should we call you?',
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: MudraButton(
+                    label: 'Cancel',
+                    variant: MudraButtonVariant.secondary,
+                    onPressed:
+                        _saving ? null : () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: MudraButton(
+                    label: _saving ? 'Saving...' : 'Save',
+                    onPressed: _saving ? null : _submit,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    setState(() => _saving = true);
+    await widget.onSave(_controller.text.trim());
+    if (mounted) Navigator.of(context).pop();
   }
 }
 
@@ -416,7 +607,8 @@ class _IncomeSheetState extends State<_IncomeSheet> {
             ),
             const SizedBox(height: AppSpacing.lg),
             MudraInput(
-              label: 'Income amount (${CurrencyFormatter.symbol(widget.currency)})',
+              label:
+                  'Income amount (${CurrencyFormatter.symbol(widget.currency)})',
               controller: _controller,
               hintText: '0.00',
               keyboardType:
@@ -532,21 +724,18 @@ class _PayDateSheetState extends State<_PayDateSheet> {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color:
-                        isSelected ? AppColors.gold : AppColors.surface,
+                    color: isSelected ? AppColors.gold : AppColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                     border: Border.all(
-                      color:
-                          isSelected ? AppColors.gold : AppColors.border,
+                      color: isSelected ? AppColors.gold : AppColors.border,
                     ),
                   ),
                   child: Text(
                     '$day',
                     style: AppTypography.monoSmall.copyWith(
                       color: isSelected ? Colors.white : AppColors.ink,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ),

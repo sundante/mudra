@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import '../models/debt.dart';
+import '../models/investment_holding.dart';
 import '../models/investment_platform.dart';
 
 class InvestmentRepository {
@@ -10,6 +11,9 @@ class InvestmentRepository {
       .filter()
       .isDeletedEqualTo(false)
       .watch(fireImmediately: true);
+
+  Stream<List<InvestmentHolding>> watchHoldings() =>
+      _isar.investmentHoldings.where().watch(fireImmediately: true);
 
   Stream<List<Debt>> watchDebts() =>
       _isar.debts.where().watch(fireImmediately: true);
@@ -26,6 +30,14 @@ class InvestmentRepository {
         await _isar.investmentPlatforms.put(p);
       }
     });
+  }
+
+  Future<void> saveHolding(InvestmentHolding holding) async {
+    await _isar.writeTxn(() => _isar.investmentHoldings.put(holding));
+  }
+
+  Future<void> deleteHolding(int id) async {
+    await _isar.writeTxn(() => _isar.investmentHoldings.delete(id));
   }
 
   Future<void> saveDebt(Debt debt) async {

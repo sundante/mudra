@@ -78,9 +78,9 @@ class DashboardScreen extends ConsumerWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.settings_outlined,
+                  icon: const Icon(Icons.person_outline,
                       color: AppColors.inkDim),
-                  onPressed: () => context.go('/settings'),
+                  onPressed: () => context.push('/profile'),
                 ),
               ],
               bottom: TabBar(
@@ -358,7 +358,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                     const SizedBox(width: AppSpacing.sm),
                     _StatTile(
                       label: 'FIXED ITEMS',
-                      onTap: () => context.go('/outgoings'),
+                      onTap: () => context.go('/debts'),
                       child: Text(
                         '${dashboard.fixedItemsCount}',
                         style: AppTypography.monoLarge
@@ -405,7 +405,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                           )),
                       if (showSeeAll)
                         TextButton(
-                          onPressed: () => context.go('/outgoings'),
+                          onPressed: () => context.go('/debts'),
                           child: Text(
                             'See all in Debits',
                             style: AppTypography.labelMedium
@@ -956,6 +956,12 @@ class _DebitsBody extends StatelessWidget {
         return 'EPF';
       case OutgoingCategory.nps:
         return 'NPS';
+      case OutgoingCategory.loanEmi:
+        return 'Loan EMI';
+      case OutgoingCategory.policyPremium:
+        return 'Premium';
+      case OutgoingCategory.familyPayment:
+        return 'Family';
       case OutgoingCategory.other:
         return 'Other';
     }
@@ -1240,17 +1246,20 @@ class _OverallTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
-            child: Column(
-              children: [
-                AmountDisplay(
-                  amount: dashboard.netWorth,
-                  currency: dashboard.currency,
-                  style: AppTypography.displayMedium,
-                  coloured: true,
-                ),
-                const SizedBox(height: 4),
-                const SectionLabel('net worth'),
-              ],
+            child: GestureDetector(
+              onTap: () => context.go('/net'),
+              child: Column(
+                children: [
+                  AmountDisplay(
+                    amount: dashboard.netWorth,
+                    currency: dashboard.currency,
+                    style: AppTypography.displayMedium,
+                    coloured: true,
+                  ),
+                  const SizedBox(height: 4),
+                  const SectionLabel('net worth'),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),

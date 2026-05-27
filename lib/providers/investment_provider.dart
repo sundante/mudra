@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../data/models/debt.dart';
+import '../data/models/investment_holding.dart';
 import '../data/models/investment_platform.dart';
 import '../data/repositories/investment_repository.dart';
 
@@ -9,6 +10,9 @@ final investmentRepoProvider = Provider<InvestmentRepository>((ref) =>
 
 final platformsStreamProvider = StreamProvider<List<InvestmentPlatform>>((ref) =>
     ref.watch(investmentRepoProvider).watchPlatforms());
+
+final holdingsStreamProvider = StreamProvider<List<InvestmentHolding>>((ref) =>
+    ref.watch(investmentRepoProvider).watchHoldings());
 
 final debtsStreamProvider = StreamProvider<List<Debt>>((ref) =>
     ref.watch(investmentRepoProvider).watchDebts());

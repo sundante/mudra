@@ -43,12 +43,15 @@ enum OutgoingType { expense, investment }
 
 enum OutgoingCategory {
   loan,
+  loanEmi,
   insurance,
+  policyPremium,
   utility,
   subscription,
   sip,
   ppf,
   epf,
   nps,
+  familyPayment,
   other,
 }

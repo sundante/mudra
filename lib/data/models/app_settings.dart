@@ -8,6 +8,7 @@ class AppSettings {
   String baseCurrency = 'INR';
   double monthlyIncome = 0.0;
   int payDate = 1;
+  String userName = '';
 }
 
 extension AppSettingsSafe on AppSettings {
@@ -16,4 +17,5 @@ extension AppSettingsSafe on AppSettings {
   double get safeMonthlyIncome =>
       ((monthlyIncome as dynamic) as double?) ?? 0.0;
   int get safePayDate => ((payDate as dynamic) as int?) ?? 1;
+  String get safeUserName => ((userName as dynamic) as String?) ?? '';
 }

@@ -8,6 +8,7 @@ import 'models/account.dart';
 import 'models/app_settings.dart';
 import 'models/credit.dart';
 import 'models/debt.dart';
+import 'models/investment_holding.dart';
 import 'models/investment_platform.dart';
 import 'models/outgoing.dart';
 import 'models/variable_expense.dart';
@@ -82,6 +83,7 @@ Future<Isar> openDatabase() async {
       AccountSchema,
       OutgoingSchema,
       InvestmentPlatformSchema,
+      InvestmentHoldingSchema,
       DebtSchema,
       AppSettingsSchema,
       CreditSchema,
@@ -107,6 +109,11 @@ Future<void> validateDatabase(Isar isar) async {
   platform?.safeUid;
   platform?.safePlatformName;
   platform?.safeAssetType;
+
+  final holding = await isar.investmentHoldings.where().findFirst();
+  holding?.safeUid;
+  holding?.safeSchemeName;
+  holding?.safeAssetType;
 
   final debt = await isar.debts.where().findFirst();
   debt?.safeUid;
@@ -157,6 +164,7 @@ Future<void> clearAllData(Isar isar) async {
     await isar.accounts.clear();
     await isar.outgoings.clear();
     await isar.investmentPlatforms.clear();
+    await isar.investmentHoldings.clear();
     await isar.debts.clear();
     await isar.credits.clear();
     await isar.variableExpenses.clear();
