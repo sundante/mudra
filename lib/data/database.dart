@@ -145,6 +145,17 @@ Future<void> resetDatabaseFiles() async {
   }
 }
 
+Future<void> clearAllData(Isar isar) async {
+  await isar.writeTxn(() async {
+    await isar.accounts.clear();
+    await isar.outgoings.clear();
+    await isar.investmentPlatforms.clear();
+    await isar.debts.clear();
+    await isar.credits.clear();
+    await isar.appSettings.clear();
+  });
+}
+
 final isarProvider = Provider<Isar>((ref) {
   throw UnimplementedError('isarProvider must be overridden in main');
 });

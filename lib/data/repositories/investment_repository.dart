@@ -35,4 +35,14 @@ class InvestmentRepository {
   Future<void> deleteDebt(int id) async {
     await _isar.writeTxn(() => _isar.debts.delete(id));
   }
+
+  Future<void> settleDebt(int id) async {
+    await _isar.writeTxn(() async {
+      final debt = await _isar.debts.get(id);
+      if (debt != null) {
+        debt.isSettled = true;
+        await _isar.debts.put(debt);
+      }
+    });
+  }
 }

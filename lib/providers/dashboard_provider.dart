@@ -89,6 +89,7 @@ class DashboardData {
     required this.netWorth,
     required this.totalAssets,
     required this.totalLiabilities,
+    required this.debtsIOwe,
     required this.fixedItemsCount,
     required this.accountsCount,
     required this.debitRadar,
@@ -126,6 +127,7 @@ class DashboardData {
   final double netWorth;
   final double totalAssets;
   final double totalLiabilities;
+  final double debtsIOwe;
   final int fixedItemsCount;
   final int accountsCount;
   final List<({OutgoingRow outgoing, int daysUntil})> debitRadar;
@@ -177,6 +179,7 @@ class DashboardData {
     netWorth: 0,
     totalAssets: 0,
     totalLiabilities: 0,
+    debtsIOwe: 0,
     fixedItemsCount: 0,
     accountsCount: 0,
     debitRadar: [],
@@ -325,10 +328,10 @@ class DashboardNotifier extends _$DashboardNotifier {
         platforms.fold(0.0, (s, p) => s + p.safeCurrentValue);
     final totalAssets = bankBalance + fdTotal + investmentsTotal;
 
-    final personalDebts = debts
+    final debtsIOwe = debts
         .where((d) => d.safeDirection == DebtDirection.iOwe && !d.safeIsSettled)
         .fold(0.0, (s, d) => s + d.safeAmount);
-    final totalLiabilities = ccOutstanding + personalDebts;
+    final totalLiabilities = ccOutstanding + debtsIOwe;
     final netWorth = totalAssets - totalLiabilities;
 
     // ── Debit Radar (until end of month, real-time — not shifted by selectedDay)
@@ -371,6 +374,7 @@ class DashboardNotifier extends _$DashboardNotifier {
       netWorth: netWorth,
       totalAssets: totalAssets,
       totalLiabilities: totalLiabilities,
+      debtsIOwe: debtsIOwe,
       fixedItemsCount: outgoings.where((o) => o.safeIsActive).length,
       accountsCount: accounts.where((a) => !a.safeIsDeleted).length,
       debitRadar: radar,

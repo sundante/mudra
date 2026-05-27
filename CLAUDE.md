@@ -15,26 +15,40 @@
 
 ## Architecture
 
-Clean Architecture with feature-based folder structure:
+Flat feature structure (actual layout — agents must use these paths):
 
 ```
 lib/
-├── main.dart
-├── core/                        # shared utilities, constants, theme, router
-│   ├── theme/
-│   ├── router/
-│   └── utils/
-└── features/
-    └── <feature_name>/
-        ├── data/                # repositories (impl), data sources, models
-        ├── domain/              # entities, repository interfaces, use cases
-        └── presentation/        # pages, widgets, controllers/notifiers
+├── main.dart                          # app entry, Isar init, ProviderScope
+├── app.dart                           # MudraApp, GoRouter, ScaffoldWithNavBar
+├── core/
+│   ├── theme/                         # app_colors, app_typography, app_theme
+│   ├── constants/                     # spacing
+│   └── utils/                        # currency_formatter, date_helpers
+├── data/
+│   ├── models/                        # Isar @collection models + Safe extensions
+│   ├── repositories/                  # CRUD + watchAll() streams
+│   └── database.dart                  # openDatabase(), isarProvider
+├── providers/                         # all Riverpod providers
+├── screens/
+│   ├── dashboard/
+│   ├── accounts/                      # tab label: Funds
+│   ├── outgoings/                     # tab label: Debits
+│   ├── portfolio/                     # tab label: Investments
+│   └── settings/
+└── widgets/
+    ├── common/                        # mudra_button, mudra_input, mudra_card, amount_display, section_label, empty_state
+    ├── fuel_gauge_ring.dart
+    ├── account_tile.dart
+    ├── outgoing_row.dart
+    ├── debit_radar_item.dart
+    └── platform_card.dart
 ```
 
-Rules:
-- `domain/` has zero Flutter imports — pure Dart only
-- `data/` depends on `domain/`, never on `presentation/`
-- `presentation/` depends on `domain/` use cases only, never directly on `data/`
+Layer rules (enforce even in flat structure):
+- Models in `data/models/` — pure Dart, no Flutter imports in business logic
+- Providers in `providers/` — no direct widget/screen imports
+- Screens depend on providers/use cases only, never directly on repositories
 - Dependency injection via Riverpod providers; no service locator
 
 ## State Management (Riverpod 2.0)
