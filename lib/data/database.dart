@@ -10,6 +10,7 @@ import 'models/credit.dart';
 import 'models/debt.dart';
 import 'models/investment_platform.dart';
 import 'models/outgoing.dart';
+import 'models/variable_expense.dart';
 
 const mudraDbName = 'mudra_db';
 
@@ -84,6 +85,7 @@ Future<Isar> openDatabase() async {
       DebtSchema,
       AppSettingsSchema,
       CreditSchema,
+      VariableExpenseSchema,
     ],
     name: mudraDbName,
     directory: dir.path,
@@ -115,6 +117,11 @@ Future<void> validateDatabase(Isar isar) async {
   credit?.safeUid;
   credit?.safeName;
   credit?.safeCategory;
+
+  final variableExpense = await isar.variableExpenses.where().findFirst();
+  variableExpense?.safeUid;
+  variableExpense?.safeCategory;
+  variableExpense?.safeAmount;
 
   final settings = await isar.appSettings.get(1);
   settings?.safeBaseCurrency;
@@ -152,6 +159,7 @@ Future<void> clearAllData(Isar isar) async {
     await isar.investmentPlatforms.clear();
     await isar.debts.clear();
     await isar.credits.clear();
+    await isar.variableExpenses.clear();
     await isar.appSettings.clear();
   });
 }

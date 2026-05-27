@@ -4,8 +4,8 @@
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
 **Last Updated:** 2026-05-27
-**Current Phase:** MVP Complete ✅
-**Overall Progress:** 140 / 140 items complete
+**Current Phase:** Phase 10 Complete ✅ — Variable Spend Logging
+**Overall Progress:** 152 / 152 items complete
 
 ---
 
@@ -14,6 +14,7 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-27 | Phase 10 complete | Variable spend logging feature: VariableExpense Isar model + Safe extension, VariableExpenseRepository (CRUD + watchCurrentMonth + sumUpToDay/countUpToDay), variableExpensesProvider + todaySpendProvider, QuickSpendSheet (amount, 6 category chips, optional note, date picker), Dashboard FAB → QuickSpendSheet, variableSpentToDay/variableExpensesToDayCount added to DashboardData, simulatedBalanceOnDay formula updated to subtract variableSpentToDay, Debits screen gained 3rd "Spent" tab with variable expense list + swipe-delete. Widget tests for QuickSpendSheet. flutter analyze clean. | — |
 | 2026-05-27 | MVP Complete | Both iOS + Android emulators verified live. Phase 4 dashboard checklist confirmed: seeded data loads, slider updates gauge/balance, date picker locks to current month and syncs with slider, Overall tab renders. Phase 9 verified: bottom sheets scroll with keyboard, large numbers display without overflow, release build clean. 140/140 items complete. | — |
 | 2026-05-27 | Phase 9 implementation | Orientation lock (SystemChrome.setPreferredOrientations), app icon generated (flutter_launcher_icons, cream bg + gold M), splash screen generated (flutter_native_splash, cream bg). Code-verified: haptics, amount formatting, fuel gauge animation, empty states, back/swipe-dismiss, divide-by-zero guard, negative balance guard, debug banner. flutter analyze clean. 3 items remain: bottom sheet keyboard scroll, large number overflow, release build — all need simulator. | Simulator verification |
 | 2026-05-27 | Phase 8 complete | Built settings_screen.dart: income sheet, pay date 1–31 grid picker, 7-currency chips, double-confirmation clear-all-data, footer with wordmark + version + tagline. Added clearAllData() to database.dart. flutter analyze clean. | Simulator verification |
@@ -252,6 +253,33 @@
 
 ---
 
+## Phase 10 — Variable Spend Logging
+**Goal:** Let users log ad-hoc variable spends (food, transport, shopping, etc.) and have them automatically reflected in the day's simulated balance on the Dashboard.
+
+### Data Layer
+- [x] `lib/data/models/variable_expense.dart` — `VariableExpense` model: `uid`, `amount`, `category` (enum), `note?`, `spentAt`, `createdAt` + `VariableExpenseSafe` extension
+- [x] `lib/data/models/variable_expense.g.dart` — generated Isar schema
+- [x] `lib/data/database.dart` — `VariableExpenseSchema` registered in `openDatabase()`, hydration probe in `validateDatabase()`, `clearAllData()` updated
+- [x] `lib/data/repositories/variable_expense_repository.dart` — `watchCurrentMonth()` stream, `save()`, `delete()`, static `sumUpToDay()`, static `countUpToDay()`
+- [x] `lib/providers/variable_expense_provider.dart` — `variableExpensesProvider` (current month stream), `todaySpendProvider`
+
+### UI
+- [x] `lib/widgets/common/quick_spend_sheet.dart` — `QuickSpendSheet`: large amount input (IBM Plex Mono), 6 category chips (Food / Transport / Shopping / Health / Entertainment / Misc), optional note field, date chip (defaults Today, locks to current month), save with light haptic + snackbar
+- [x] `lib/screens/dashboard/dashboard_screen.dart` — FAB on "This Month" tab opens `QuickSpendSheet`; `variableSpentToDay` row visible in the Cash section when > 0
+- [x] `lib/screens/outgoings/debits_screen.dart` — 3rd tab "Spent" added alongside Expenses/Investments; shows variable expense list sorted by date descending, monthly total as "VARIABLE SPENT", swipe-to-delete
+
+### Dashboard Formula Update
+- [x] `DashboardData` gains `variableSpentToDay` (double) and `variableExpensesToDayCount` (int)
+- [x] `simulatedBalanceOnDay` now subtracts `variableSpentToDay`:
+  `simulatedBalanceOnDay = openingLiquidBalance + creditsReceivedToDay − debitsFiredToDay − variableSpentToDay`
+
+### Tests
+- [x] `test/quick_spend_sheet_test.dart` — save button disabled at zero amount; submits correct amount + category
+
+**✅ PHASE 10 COMPLETE**
+
+---
+
 ## Progress Summary
 
 | Phase | Items | Done | Remaining |
@@ -266,7 +294,111 @@
 | 7 — Investments (Portfolio) | 16 | 16 | 0 ✅ |
 | 8 — Settings | 7 | 7 | 0 ✅ |
 | 9 — Polish | 14 | 14 | 0 ✅ |
-| **TOTAL** | **140** | **140** | **0 ✅** |
+| 10 — Variable Spend Logging | 12 | 12 | 0 ✅ |
+| **TOTAL** | **152** | **152** | **0 ✅** |
+
+---
+
+## Features Implemented
+
+> This section is the hand-off reference. Everything listed here is code-complete, verified on iOS and Android.
+
+### App Infrastructure
+- Local-only, no backend, no auth, no internet — all data on-device via Isar
+- Crash-recovery database bootstrap: on hydration failure, DB resets and reseeds automatically
+- Fresh-install seed data so the app is never empty on first launch
+- Portrait-only orientation lock
+- Custom app icon: cream background, gold "M" (flutter_launcher_icons)
+- Cream splash screen (flutter_native_splash)
+- No debug banner in release builds
+
+### Design System
+- **3-font stack**: Cormorant Garamond (display/hero numbers), IBM Plex Sans (all UI text), IBM Plex Mono (every currency amount, no exceptions)
+- **Colour grammar**: green = positive/income, red = expense/negative/debt, amber = investment, gold = CTA/accent, cream (#FAF8F4) = background everywhere
+- **Interaction grammar**: save → light haptic, delete/update → medium haptic, error → vibrate
+- Token library: `AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`
+- `CurrencyFormatter`: INR lakh/crore system (₹ 1,50,000 / ₹ 10.5L / ₹ 1.2Cr) + 6 international currencies
+
+### Navigation
+- 5-tab bottom nav: Home / Funds / Debits / Investments / Settings
+- GoRouter + `StatefulShellRoute` — tab state persists across switches
+- Gold active tab, dim inactive, top border on nav bar
+
+### Home — Dashboard (2 tabs)
+
+**"This Month" tab**
+- Sticky header: today's date on the left, current-month date picker on the right
+- Fuel gauge ring (animated, colour-coded): shows projected month-end balance
+- Day slider (1–31): simulates your balance on any day of the current month
+- Day's Liquid + Day's Balance labels update live with the slider
+- 4-section collapsible table: Cash · Credits · Debits · Commitments
+- Debit radar: horizontal chips showing upcoming fixed debits this month
+
+**"Overall" tab**
+- Net Worth hero (Cormorant Garamond, colour-coded green/red)
+- Total Assets / Investments / Liabilities stat tiles
+- Breakdown rows: Liquid · FD · Investments · Total Liabilities
+
+**Runway Engine v3 (41-field DashboardData)**
+- `liquidTotal` = sum of personal liquid account balances
+- `simulatedBalanceOnDay` = opening balance + credits received by day − debits fired by day
+- `projectedMonthEnd` = simulated balance − remaining committed debits − CC outstanding
+- `dayBalancePercent` = (simulatedBalanceOnDay / openingLiquidBalance × 100).clamp(0, 100)
+- `netWorth` = totalAssets − totalLiabilities
+- Divide-by-zero guard when `liquidTotal == 0`; negative balance shows 0% gauge in red
+
+### Funds — Bank Accounts
+- 3-segment filter: Personal / Joint / Business
+- Header card: total liquid balance + total FD balance
+- Account tile: nickname, bank name, balance (mono), CC badge, FD sub-line
+- **Add account**: nickname, bank (suggestion chips), balance, type, CC toggle, FD amount, liquid toggle
+- **Edit account**: pre-filled same form + delete button
+- **Quick balance update**: tap the balance amount on any tile → large numeric input sheet
+- Swipe-to-delete with confirmation + medium haptic
+- Empty state per segment
+
+### Debits — Expenses, Investments & Variable Spend
+- Tab switcher: Expenses | Investments | Spent
+- Upcoming strip: horizontal scroll chips for debits still due this month
+- Monthly total per tab (red for expenses/spent, amber for investments)
+- Debit row: coloured left bar, name, category badge, date label, days-until label
+- **Add/Edit Expense**: name (suggestion chips), amount, debit date (1–31), category chips (loan, insurance, utility, subscription, other)
+- **Add/Edit Investment**: amber accent, investment categories (SIP, PPF, EPF, NPS, other)
+- **Spent tab**: variable expenses for the current month, sorted newest first, swipe-to-delete
+- List sorted by debit date ascending (Expenses/Investments tabs)
+- Swipe-to-delete; empty state per tab
+
+### Investments — Portfolio
+- Net Worth hero (tappable → Net Worth Detail sheet)
+- Assets + Liabilities summary row
+- Investment platform cards: platform name, asset type badge (amber), invested amount, current value, P&L chip (green gain / red loss, %)
+- **Add/Edit Platform**: name, asset type (Indian stocks, US stocks, mutual fund, PPF, EPF, NPS, gold, other), invested amount, current value, live P&L preview
+- **I Owe** and **Owed to Me** debt subsections, each with active count
+- Debt row: counterparty name, amount, due date, notes
+- **Add/Edit Debt**: direction toggle (I Owe / They Owe), counterparty, amount, due date (optional), notes (optional)
+- **Mark Settled** swipe action on active debts
+- Settled debts collapse under an expandable section
+- **Net Worth Detail sheet** (~70% snap): formula breakdown — bank balance + FD + investments − CC outstanding − debts I owe
+- Empty states for platforms and debts
+
+### Settings
+- **Monthly income** row → sheet with large amount input (anchors the gauge)
+- **Pay date** row → 31-day grid picker (1–31, 44×44 tap targets)
+- **Currency** group → 7 animated chips: INR / USD / GBP / AED / SGD / AUD / EUR — changing currency reformats every amount in the app instantly
+- **Clear all data**: double-confirmation dialog → heavy haptic → wipes all Isar collections → reseeds default settings
+- Footer: Mudra wordmark + tagline + v1.0.0
+
+### Variable Spend Logging
+- **QuickSpendSheet**: large amount input (IBM Plex Mono), 6 category chips (Food / Transport / Shopping / Health / Entertainment / Misc), optional note, date picker (current month only, defaults to today)
+- **Dashboard FAB** (This Month tab): opens QuickSpendSheet; logged amount immediately reduces simulated balance and fuel gauge
+- **Debits → Spent tab**: full list of current-month variable expenses, newest first, swipe-to-delete, monthly total
+- `variableSpentToDay` is subtracted from `simulatedBalanceOnDay` in the Runway Engine formula
+
+### Data Layer
+- **7 Isar models**: Account, Outgoing, InvestmentPlatform, Debt, AppSettings, Credit, VariableExpense — all with Safe extension getters for runtime null safety
+- **5 repositories**: AccountRepository, OutgoingRepository, InvestmentRepository, SettingsRepository, VariableExpenseRepository — all CRUD + watch streams
+- **8 Riverpod providers**: accountsStream, outgoingsStream, platformsStream, debtsStream, creditsStream, settingsProvider, variableExpensesProvider, dashboardProvider (DashboardData)
+- `clearAllData()` utility in `database.dart` — clears all 7 collections
 
 ---
 

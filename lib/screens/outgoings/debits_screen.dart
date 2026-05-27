@@ -10,8 +10,10 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/date_helpers.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/outgoing.dart';
+import '../../data/models/variable_expense.dart';
 import '../../providers/outgoing_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/variable_expense_provider.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/mudra_button.dart';
@@ -51,6 +53,8 @@ const _investmentCategories = <OutgoingCategory>[
   OutgoingCategory.other,
 ];
 
+enum _DebitsView { expenses, investments, spent }
+
 class DebitsScreen extends ConsumerStatefulWidget {
   const DebitsScreen({super.key});
 
@@ -59,13 +63,19 @@ class DebitsScreen extends ConsumerStatefulWidget {
 }
 
 class _DebitsScreenState extends ConsumerState<DebitsScreen> {
-  OutgoingType _selectedType = OutgoingType.expense;
+  _DebitsView _selectedView = _DebitsView.expenses;
 
   @override
   Widget build(BuildContext context) {
     final outgoings = ref.watch(outgoingsStreamProvider).valueOrNull ?? [];
+    final variableExpenses =
+        ref.watch(variableExpensesProvider).valueOrNull ?? [];
     final settings = ref.watch(settingsProvider).valueOrNull ?? AppSettings();
     final currency = settings.safeBaseCurrency;
+    final isSpent = _selectedView == _DebitsView.spent;
+    final selectedType = _selectedView == _DebitsView.investments
+        ? OutgoingType.investment
+        : OutgoingType.expense;
 
     final viewData = outgoings
         .map(_OutgoingView.fromOutgoing)
@@ -73,15 +83,20 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
         .toList();
 
     final filtered =
-        viewData.where((item) => item.type == _selectedType).toList()
+        viewData.where((item) => item.type == selectedType).toList()
           ..sort((a, b) {
             final byDay = a.debitDate.compareTo(b.debitDate);
             if (byDay != 0) return byDay;
             return a.name.toLowerCase().compareTo(b.name.toLowerCase());
           });
 
-    final monthlyTotal =
-        filtered.fold<double>(0, (sum, item) => sum + item.amount);
+    final spent = variableExpenses
+        .map(_VariableExpenseView.fromExpense)
+        .toList()
+      ..sort((a, b) => b.spentAt.compareTo(a.spentAt));
+    final monthlyTotal = isSpent
+        ? spent.fold<double>(0, (sum, item) => sum + item.amount)
+        : filtered.fold<double>(0, (sum, item) => sum + item.amount);
 
     final upcoming = filtered.where((item) => item.daysUntil <= 7).toList()
       ..sort((a, b) {
@@ -90,12 +105,15 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
         return a.debitDate.compareTo(b.debitDate);
       });
 
-    final totalLabel = _selectedType == OutgoingType.expense
-        ? 'MONTHLY EXPENSES'
-        : 'MONTHLY INVESTMENTS';
-    final summaryColor =
-        _selectedType == OutgoingType.expense ? AppColors.red : AppColors.amber;
-    final summaryBg = _selectedType == OutgoingType.expense
+    final totalLabel = switch (_selectedView) {
+      _DebitsView.expenses => 'MONTHLY EXPENSES',
+      _DebitsView.investments => 'MONTHLY INVESTMENTS',
+      _DebitsView.spent => 'VARIABLE SPENT',
+    };
+    final summaryColor = isSpent || selectedType == OutgoingType.expense
+        ? AppColors.red
+        : AppColors.amber;
+    final summaryBg = isSpent || selectedType == OutgoingType.expense
         ? AppColors.redLight
         : AppColors.amberLight;
 
@@ -107,13 +125,15 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
           style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () =>
-            _openOutgoingSheet(context, defaultType: _selectedType),
-        backgroundColor: AppColors.gold,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: isSpent
+          ? null
+          : FloatingActionButton(
+              onPressed: () =>
+                  _openOutgoingSheet(context, defaultType: selectedType),
+              backgroundColor: AppColors.gold,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add),
+            ),
       body: SafeArea(
         child: Column(
           children: [
@@ -127,43 +147,46 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SectionLabel(
-                    'upcoming in 7 days',
-                    color: upcoming.isEmpty ? AppColors.inkDim : AppColors.gold,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (upcoming.isEmpty)
-                    MudraCard(
-                      color: AppColors.surfaceAlt,
-                      child: Text(
-                        'No ${_typeLabel(_selectedType).toLowerCase()} debits due this week.',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.inkDim),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 110,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: upcoming.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(width: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final item = upcoming[index];
-                          return _UpcomingChipCard(
-                            item: item,
-                            currency: currency,
-                            onTap: () => _openOutgoingSheet(
-                              context,
-                              initial: item,
-                              defaultType: item.type,
-                            ),
-                          );
-                        },
-                      ),
+                  if (!isSpent) ...[
+                    SectionLabel(
+                      'upcoming in 7 days',
+                      color:
+                          upcoming.isEmpty ? AppColors.inkDim : AppColors.gold,
                     ),
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (upcoming.isEmpty)
+                      MudraCard(
+                        color: AppColors.surfaceAlt,
+                        child: Text(
+                          'No ${_typeLabel(selectedType).toLowerCase()} debits due this week.',
+                          style: AppTypography.bodySmall
+                              .copyWith(color: AppColors.inkDim),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 110,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: upcoming.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: AppSpacing.sm),
+                          itemBuilder: (context, index) {
+                            final item = upcoming[index];
+                            return _UpcomingChipCard(
+                              item: item,
+                              currency: currency,
+                              onTap: () => _openOutgoingSheet(
+                                context,
+                                initial: item,
+                                defaultType: item.type,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   MudraCard(
                     color: summaryBg,
                     child: Row(
@@ -179,8 +202,9 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _SummaryMeta(
-                            label: 'ACTIVE ITEMS',
-                            value: filtered.length.toString(),
+                            label: isSpent ? 'LOGGED ITEMS' : 'ACTIVE ITEMS',
+                            value: (isSpent ? spent.length : filtered.length)
+                                .toString(),
                             color: AppColors.ink,
                           ),
                         ),
@@ -190,21 +214,25 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
                   const SizedBox(height: AppSpacing.md),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: SegmentedButton<OutgoingType>(
+                    child: SegmentedButton<_DebitsView>(
                       segments: const [
                         ButtonSegment(
-                          value: OutgoingType.expense,
+                          value: _DebitsView.expenses,
                           label: Text('Expenses'),
                         ),
                         ButtonSegment(
-                          value: OutgoingType.investment,
+                          value: _DebitsView.investments,
                           label: Text('Investments'),
                         ),
+                        ButtonSegment(
+                          value: _DebitsView.spent,
+                          label: Text('Spent'),
+                        ),
                       ],
-                      selected: <OutgoingType>{_selectedType},
+                      selected: <_DebitsView>{_selectedView},
                       onSelectionChanged: (selection) {
                         setState(() {
-                          _selectedType = selection.first;
+                          _selectedView = selection.first;
                         });
                       },
                       style: ButtonStyle(
@@ -233,84 +261,94 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
               ),
             ),
             Expanded(
-              child: filtered.isEmpty
-                  ? ListView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenH),
-                      children: [
-                        EmptyState(
-                          icon: _selectedType == OutgoingType.expense
-                              ? '🧾'
-                              : '📈',
-                          title:
-                              'No ${_typeLabel(_selectedType).toLowerCase()} debits yet',
-                          message: _selectedType == OutgoingType.expense
-                              ? 'Add scheduled expenses like EMIs, insurance, utilities, and subscriptions.'
-                              : 'Add auto-investments like SIP, PPF, EPF, or NPS contributions.',
-                          action: MudraButton(
-                            label: _selectedType == OutgoingType.expense
-                                ? 'Add expense'
-                                : 'Add investment',
-                            onPressed: () => _openOutgoingSheet(
-                              context,
-                              defaultType: _selectedType,
-                            ),
-                            expand: false,
-                            icon: Icons.add,
-                          ),
-                        ),
-                      ],
+              child: isSpent
+                  ? _SpentList(
+                      expenses: spent,
+                      currency: currency,
+                      onDelete: (expense) =>
+                          _confirmAndDeleteExpense(context, expense),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.screenH,
-                        0,
-                        AppSpacing.screenH,
-                        AppSpacing.xxl,
-                      ),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: AppSpacing.md),
-                      itemBuilder: (context, index) {
-                        final item = filtered[index];
-                        final accentColor = item.type == OutgoingType.expense
-                            ? AppColors.red
-                            : AppColors.amber;
-                        return Dismissible(
-                          key: ValueKey(item.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.redLight,
-                              borderRadius: BorderRadius.circular(AppRadius.md),
+                  : filtered.isEmpty
+                      ? ListView(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.screenH),
+                          children: [
+                            EmptyState(
+                              icon: selectedType == OutgoingType.expense
+                                  ? '🧾'
+                                  : '📈',
+                              title:
+                                  'No ${_typeLabel(selectedType).toLowerCase()} debits yet',
+                              message: selectedType == OutgoingType.expense
+                                  ? 'Add scheduled expenses like EMIs, insurance, utilities, and subscriptions.'
+                                  : 'Add auto-investments like SIP, PPF, EPF, or NPS contributions.',
+                              action: MudraButton(
+                                label: selectedType == OutgoingType.expense
+                                    ? 'Add expense'
+                                    : 'Add investment',
+                                onPressed: () => _openOutgoingSheet(
+                                  context,
+                                  defaultType: selectedType,
+                                ),
+                                expand: false,
+                                icon: Icons.add,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: AppColors.red,
-                            ),
+                          ],
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenH,
+                            0,
+                            AppSpacing.screenH,
+                            AppSpacing.xxl,
                           ),
-                          confirmDismiss: (_) => _confirmDelete(context, item),
-                          onDismissed: (_) => _deleteOutgoing(item.id),
-                          child: OutgoingRow(
-                            name: item.name,
-                            categoryLabel: _categoryLabel(item.category),
-                            debitDate: item.debitDate,
-                            daysUntil: item.daysUntil,
-                            amount: item.amount,
-                            currency: currency,
-                            accentColor: accentColor,
-                            onTap: () => _openOutgoingSheet(
-                              context,
-                              initial: item,
-                              defaultType: item.type,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: AppSpacing.md),
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            final accentColor =
+                                item.type == OutgoingType.expense
+                                    ? AppColors.red
+                                    : AppColors.amber;
+                            return Dismissible(
+                              key: ValueKey(item.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: AppColors.redLight,
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.md),
+                                ),
+                                child: const Icon(
+                                  Icons.delete_outline,
+                                  color: AppColors.red,
+                                ),
+                              ),
+                              confirmDismiss: (_) =>
+                                  _confirmDelete(context, item),
+                              onDismissed: (_) => _deleteOutgoing(item.id),
+                              child: OutgoingRow(
+                                name: item.name,
+                                categoryLabel: _categoryLabel(item.category),
+                                debitDate: item.debitDate,
+                                daysUntil: item.daysUntil,
+                                amount: item.amount,
+                                currency: currency,
+                                accentColor: accentColor,
+                                onTap: () => _openOutgoingSheet(
+                                  context,
+                                  initial: item,
+                                  defaultType: item.type,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),
@@ -358,6 +396,49 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
   Future<void> _deleteOutgoing(int id) async {
     await ref.read(outgoingRepoProvider).delete(id);
     await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> _deleteVariableExpense(int id) async {
+    await ref.read(variableExpenseRepoProvider).delete(id);
+    await HapticFeedback.mediumImpact();
+  }
+
+  Future<void> _confirmAndDeleteExpense(
+    BuildContext context,
+    _VariableExpenseView expense,
+  ) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(
+              'Delete ${expense.category.label} spend?',
+              style: AppTypography.bodyLarge.copyWith(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              'This removes the logged spend from your runway calculation.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete',
+                    style: TextStyle(color: AppColors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (confirmed) {
+      await _deleteVariableExpense(expense.id);
+    }
   }
 
   Future<bool> _confirmDelete(
@@ -417,6 +498,212 @@ class _DebitsScreenState extends ConsumerState<DebitsScreen> {
         OutgoingCategory.nps => 'NPS',
         OutgoingCategory.other => 'Other',
       };
+}
+
+class _SpentList extends StatelessWidget {
+  const _SpentList({
+    required this.expenses,
+    required this.currency,
+    required this.onDelete,
+  });
+
+  final List<_VariableExpenseView> expenses;
+  final String currency;
+  final Future<void> Function(_VariableExpenseView expense) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    if (expenses.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+        children: const [
+          EmptyState(
+            icon: '💸',
+            title: 'Nothing logged yet',
+            message: 'Tap + on the home screen to log your first spend.',
+          ),
+        ],
+      );
+    }
+
+    final total =
+        expenses.fold<double>(0, (sum, expense) => sum + expense.amount);
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        0,
+        AppSpacing.screenH,
+        AppSpacing.xxl,
+      ),
+      itemCount: expenses.length + 1,
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+      itemBuilder: (context, index) {
+        if (index == expenses.length) {
+          return Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: MudraCard(
+              color: AppColors.redLight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SectionLabel('monthly total'),
+                  AmountDisplay(
+                    amount: total,
+                    currency: currency,
+                    style: AppTypography.monoMedium.copyWith(
+                      color: AppColors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        final expense = expenses[index];
+        return Dismissible(
+          key: ValueKey('variable-expense-${expense.id}'),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.redLight,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(Icons.delete_outline, color: AppColors.red),
+          ),
+          confirmDismiss: (_) async {
+            await onDelete(expense);
+            return false;
+          },
+          child: _SpentRow(expense: expense, currency: currency),
+        );
+      },
+    );
+  }
+}
+
+class _SpentRow extends StatelessWidget {
+  const _SpentRow({required this.expense, required this.currency});
+
+  final _VariableExpenseView expense;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return MudraCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 4,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppColors.red,
+              borderRadius: BorderRadius.circular(AppRadius.full),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${expense.category.emoji} ${expense.category.label}',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (expense.note.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    expense.note,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _dateLabel(expense.spentAt),
+                style:
+                    AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AmountDisplay(
+                amount: expense.amount,
+                currency: currency,
+                style: AppTypography.monoSmall.copyWith(
+                  color: AppColors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime spentAt) {
+    final today = DateTime.now();
+    final date = DateTime(spentAt.year, spentAt.month, spentAt.day);
+    final todayDate = DateTime(today.year, today.month, today.day);
+    if (date == todayDate) return 'Today';
+    if (date == todayDate.subtract(const Duration(days: 1))) {
+      return 'Yesterday';
+    }
+    const months = <String>[
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${spentAt.day} ${months[spentAt.month - 1]}';
+  }
+}
+
+class _VariableExpenseView {
+  const _VariableExpenseView({
+    required this.id,
+    required this.amount,
+    required this.category,
+    required this.note,
+    required this.spentAt,
+  });
+
+  final int id;
+  final double amount;
+  final VariableCategory category;
+  final String note;
+  final DateTime spentAt;
+
+  factory _VariableExpenseView.fromExpense(VariableExpense expense) {
+    return _VariableExpenseView(
+      id: expense.id,
+      amount: expense.safeAmount,
+      category: expense.safeCategory,
+      note: expense.safeNote,
+      spentAt: expense.safeSpentAt,
+    );
+  }
 }
 
 class _SummaryStat extends StatelessWidget {

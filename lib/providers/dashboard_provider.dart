@@ -7,12 +7,15 @@ import '../data/models/credit.dart';
 import '../data/models/debt.dart';
 import '../data/models/investment_platform.dart';
 import '../data/models/outgoing.dart';
+import '../data/models/variable_expense.dart';
+import '../data/repositories/variable_expense_repository.dart';
 import 'account_provider.dart';
 import 'credit_provider.dart';
 import 'investment_provider.dart';
 import 'outgoing_provider.dart';
 import 'selected_day_provider.dart';
 import 'settings_provider.dart';
+import 'variable_expense_provider.dart';
 
 part 'dashboard_provider.g.dart';
 
@@ -74,6 +77,8 @@ class DashboardData {
     required this.ccOutstanding,
     required this.creditsReceivedToDay,
     required this.debitsFiredToDay,
+    required this.variableSpentToDay,
+    required this.variableExpensesToDayCount,
     required this.remainingCommittedAfterDay,
     required this.simulatedBalanceOnDay,
     required this.monthEndBalanceFromDay,
@@ -102,6 +107,8 @@ class DashboardData {
   final double ccOutstanding;
   final double creditsReceivedToDay;
   final double debitsFiredToDay;
+  final double variableSpentToDay;
+  final int variableExpensesToDayCount;
   final double remainingCommittedAfterDay;
   final double simulatedBalanceOnDay;
   final double monthEndBalanceFromDay;
@@ -164,6 +171,8 @@ class DashboardData {
     ccOutstanding: 0,
     creditsReceivedToDay: 0,
     debitsFiredToDay: 0,
+    variableSpentToDay: 0,
+    variableExpensesToDayCount: 0,
     remainingCommittedAfterDay: 0,
     simulatedBalanceOnDay: 0,
     monthEndBalanceFromDay: 0,
@@ -198,11 +207,13 @@ class DashboardNotifier extends _$DashboardNotifier {
     final platforms = ref.watch(platformsStreamProvider).valueOrNull ?? [];
     final debts = ref.watch(debtsStreamProvider).valueOrNull ?? [];
     final credits = ref.watch(creditsStreamProvider).valueOrNull ?? [];
+    final variableExpenses =
+        ref.watch(variableExpensesProvider).valueOrNull ?? [];
     final settings = ref.watch(settingsProvider).valueOrNull ?? AppSettings();
     final selectedDay = ref.watch(selectedDayProvider);
 
-    return _compute(
-        accounts, outgoings, platforms, debts, credits, settings, selectedDay);
+    return _compute(accounts, outgoings, platforms, debts, credits,
+        variableExpenses, settings, selectedDay);
   }
 
   DashboardData _compute(
@@ -211,6 +222,7 @@ class DashboardNotifier extends _$DashboardNotifier {
     List<InvestmentPlatform> platforms,
     List<Debt> debts,
     List<Credit> credits,
+    List<VariableExpense> variableExpenses,
     AppSettings settings,
     int selectedDay,
   ) {
@@ -284,6 +296,10 @@ class DashboardNotifier extends _$DashboardNotifier {
         .fold(0.0, (s, o) => s + o.safeAmount);
     final remainingCommittedAfterDay =
         futureOutgoings.fold(0.0, (s, o) => s + o.safeAmount);
+    final variableSpentToDay =
+        VariableExpenseRepository.sumUpToDay(variableExpenses, selectedDay);
+    final variableExpensesToDayCount =
+        VariableExpenseRepository.countUpToDay(variableExpenses, selectedDay);
 
     // Group fired outgoings by category (pre-typed rows, no raw Isar)
     final groupMap = <OutgoingCategory, List<OutgoingRow>>{};
@@ -315,8 +331,10 @@ class DashboardNotifier extends _$DashboardNotifier {
     // ── Core Formula ────────────────────────────────────────────────────
     final openingLiquidBalance =
         bankBalance - creditsReceivedToToday + debitsFiredToToday;
-    final simulatedBalanceOnDay =
-        openingLiquidBalance + creditsReceivedToDay - debitsFiredToDay;
+    final simulatedBalanceOnDay = openingLiquidBalance +
+        creditsReceivedToDay -
+        debitsFiredToDay -
+        variableSpentToDay;
     final monthEndBalanceFromDay =
         simulatedBalanceOnDay - remainingCommittedAfterDay - ccOutstanding;
     final dayBalancePercent = openingLiquidBalance > 0
@@ -359,6 +377,8 @@ class DashboardNotifier extends _$DashboardNotifier {
       ccOutstanding: ccOutstanding,
       creditsReceivedToDay: creditsReceivedToDay,
       debitsFiredToDay: debitsFiredToDay,
+      variableSpentToDay: variableSpentToDay,
+      variableExpensesToDayCount: variableExpensesToDayCount,
       remainingCommittedAfterDay: remainingCommittedAfterDay,
       simulatedBalanceOnDay: simulatedBalanceOnDay,
       monthEndBalanceFromDay: monthEndBalanceFromDay,
