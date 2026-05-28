@@ -62,9 +62,11 @@ Key differentiators vs the reference:
 
 ### Screen 8 — Quick Actions
 - 2×3 grid of action tiles (icon + label + optional sublabel)
-- Actions: Track Spending, Future Savings, Invest Extra, Track Score, Understand Money
+- Current Home quick actions are a compact shortcut grid for financial work:
+  Spending, Funds, Debts, Invests, Net Worth
+- App Map is intentionally not in Quick Actions; it lives only in Profile
 - "Ask Suguna" AI assistant entry point
-- **Status**: not built
+- **Status**: partially built — shortcut grid exists; assistant entry pending
 
 ---
 
@@ -75,7 +77,7 @@ Key differentiators vs the reference:
 | 1 | Semi-donut (half ring) | Asset allocation | ✅ Built (`AssetAllocationDonut`) |
 | 2 | Fuel gauge ring (240°) | Month runway | ✅ Built (`FuelGaugeRing`) |
 | 3 | Monthly bar chart | Spend / income trends | ⬜ Pending |
-| 4 | Income flow tree | Income source breakdown | ⬜ Pending |
+| 4 | Flow board | App/user-flow map | ✅ Built (`MapScreen` + generated `APP_MAP.html`) |
 | 5 | Stacked horizontal bar | Budget split | ⬜ Pending |
 | 6 | Sparkline (area fill) | Net worth / spend trend | ⬜ Pending |
 | 7 | Full donut (55% hole) | Category breakdown | ✅ Built (same widget, full ring mode) |
@@ -89,7 +91,8 @@ Key differentiators vs the reference:
 |--------|-------------|--------|
 | Spending Insights | Dedicated spend tracking screen with sparkline + category breakdown | ⬜ Pending |
 | Reports / Transfers | Monthly bar chart + transaction history | ⬜ Pending |
-| Quick Actions | 2×3 grid of shortcuts from home screen | ⬜ Pending |
+| Quick Actions | Home shortcut grid for core finance destinations | ✅ Built |
+| Profile Settings | Identity-first profile page with app map/account actions; finance settings deferred | ✅ Built |
 | Budget Categories | Per-category progress bars + spend limits | ⬜ Pending |
 
 ---
@@ -104,3 +107,6 @@ Key differentiators vs the reference:
 | 2026-05-27 | Added timeline filter bar (1M/3M/6M/1Y/All) to Investments screen |
 | 2026-05-27 | Compacted all list rows (account tiles, holding rows, outgoing rows, platform cards) |
 | 2026-05-27 | Added fade page transitions (220ms) across all routes |
+| 2026-05-28 | Rebuilt App Map as a compact horizontal flow board with shared JSON source and generated HTML map |
+| 2026-05-28 | Profile simplified to identity/navigation/account/data actions; income, pay date, and currency removed from Profile |
+| 2026-05-28 | Home This Month now leads with the fuel gauge only; the gold Month Runway hero was removed and gauge colour is value-based (0 grey, positive green, negative red) |

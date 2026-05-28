@@ -4,7 +4,7 @@
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
 **Last Updated:** 2026-05-28
-**Current Phase:** Phase 12 In Progress — US-002 Guest Mode And Guided Onboarding
+**Current Phase:** Phase 14 Complete — Flow Map And Profile/Home UX Refinements
 **Overall Progress:** Core implementation complete; configured auth/device verification pending
 
 ---
@@ -14,16 +14,17 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-28 | Flow map + profile/home UX refinements | Rebuilt App Map as a compact flow-board driven by `assets/maps/mudra_app_map.json`, regenerated `docs/vibes/APP_MAP.html`, and added map widget coverage. Removed App Map from Home quick actions so it lives only in Profile. Simplified Profile to identity/navigation/account/data actions only; removed income, pay date, and currency controls from Profile. Removed the gold Month Runway hero from Home → This Month so the gauge is the primary visual. Gauge colour now follows projected month-end runway directly: grey at 0, green above 0, red below 0. `flutter analyze` clean; `flutter test` passing. | — |
 | 2026-05-28 | Dev mode hardening | Full security audit and air-gap for dev builds. Bundled Cormorant Garamond, IBM Plex Sans, IBM Plex Mono as local assets — removed all google_fonts CDN calls from `app_typography.dart`, `amount_display.dart`, `mudra_hero_card.dart`; added `GoogleFonts.config.allowRuntimeFetching = false` guard. Switched `openDatabase()` and `resetDatabaseFiles()` to `getApplicationSupportDirectory()` (iOS iCloud backup excluded by default). Hidden Google/Apple social buttons when Supabase not configured. Added `Dev: Skip auth` + `Dev Tools` entry on WelcomeScreen (debug only). New `lib/screens/dev/dev_tools_screen.dart` with DB info, Clear all data, and Delete DB + reset. `flutter analyze` clean. | Install on real device to verify fonts + Dev Tools flow |
 | 2026-05-28 | Auth screen layout fix | Fixed `WelcomeScreen` rendering assertion (`!semantics.parentDataDirty`) caused by `Spacer()` widgets + two-button `Row` in Copilot-added debug block. Replaced `Column` + `Spacer` with `SingleChildScrollView` + fixed padding. Consolidated debug buttons into one `Dev: Skip auth` button. | — |
 | 2026-05-28 | Dev bypass added (Copilot) | Added `signInAsDebug()` method to `AppSessionController` and debug bypass buttons on WelcomeScreen. Also added `SetupWizardScreen`, `GuestHandoffScreen`, `GuidedTourOverlay`, and their providers for the US-002 onboarding flow. | — |
-| 2026-05-28 | US-002 bug fix | Fixed guest mode router redirect: `AppSessionStage.guest` now redirects all auth paths (including `/welcome`) to `/`; previously only `/loading` was redirected, leaving the user stuck on the welcome screen. Renamed "Enter as Guest" → "Use as Guest" in `WelcomeScreen`. | — |
+| 2026-05-28 | US-002 bug fix | Fixed guest mode router redirect: `AppSessionStage.guest` now redirects all auth paths (including `/welcome`) to `/`; previously only `/loading` was redirected, leaving the user stuck on the welcome screen. Standardized the guest CTA to "Use as Guest" in `WelcomeScreen`. | — |
 | 2026-05-28 | US-001 implementation | Added canonical user story, Supabase auth repository/session gate, Welcome/Register/Login/Verify/Reset/Legacy/Setup screens, protected routing, per-user Isar stores, legacy attach/start-fresh, Profile sign-out, `hasCompletedSetup`, mobile deep links/identity, and white native splash configuration. `flutter analyze` clean; `flutter test` passed; Android debug APK builds. | Configure Supabase/Google/Apple consoles and manually verify real auth on iOS + Android |
 | 2026-05-27 | Phase 10 complete | Variable spend logging feature: VariableExpense Isar model + Safe extension, VariableExpenseRepository (CRUD + watchCurrentMonth + sumUpToDay/countUpToDay), variableExpensesProvider + todaySpendProvider, QuickSpendSheet (amount, 6 category chips, optional note, date picker), Dashboard FAB → QuickSpendSheet, variableSpentToDay/variableExpensesToDayCount added to DashboardData, simulatedBalanceOnDay formula updated to subtract variableSpentToDay, Debts screen includes the "VARIABLE SPENT" monthly log with swipe-delete. Widget tests for QuickSpendSheet. flutter analyze clean. | — |
 | 2026-05-27 | MVP Complete | Both iOS + Android emulators verified live. Phase 4 dashboard checklist confirmed: seeded data loads, slider updates gauge/balance, date picker locks to current month and syncs with slider, Overall tab renders. Phase 9 verified: bottom sheets scroll with keyboard, large numbers display without overflow, release build clean. 140/140 items complete. | — |
 | 2026-05-27 | Phase 9 implementation | Orientation lock (SystemChrome.setPreferredOrientations), app icon generated (flutter_launcher_icons, cream bg + gold M), splash screen generated (flutter_native_splash, cream bg). Code-verified: haptics, amount formatting, fuel gauge animation, empty states, back/swipe-dismiss, divide-by-zero guard, negative balance guard, debug banner. flutter analyze clean. 3 items remain: bottom sheet keyboard scroll, large number overflow, release build — all need simulator. | Simulator verification |
-| 2026-05-27 | Phase 8 complete | Built settings_screen.dart: income sheet, pay date 1–31 grid picker, 7-currency chips, double-confirmation clear-all-data, footer with wordmark + version + tagline. Added clearAllData() to database.dart. flutter analyze clean. | Simulator verification |
-| 2026-05-27 | Phase 7 complete + Phase 8 start | Verified Phase 7 fully implemented: platform_card.dart, investments_screen.dart with Net Worth hero, platforms list, I Owe/Owed To Me debt sections with settled collapse, Add+Edit sheets for platforms and debts, Net Worth Detail sheet. flutter analyze clean. STATUS.md totals corrected (140 total items). Starting Phase 8 — Settings Screen. | — |
+| 2026-05-27 | Phase 8 complete | Built the first Profile/settings shell with finance anchors, data management, and footer. Added `clearAllData()` to database.dart. `flutter analyze` clean. Phase 14 later simplified Profile to identity/navigation/account actions only. | Simulator verification |
+| 2026-05-27 | Phase 7 complete + Phase 8 start | Verified Phase 7 fully implemented: platform_card.dart, investments_screen.dart with Net Worth hero, platforms list, I Owe/Owed To Me debt sections with settled collapse, Add+Edit sheets for platforms and debts, Net Worth Detail sheet. `flutter analyze` clean. STATUS.md totals corrected (140 total items). Starting Phase 8 — Profile/settings foundation. | — |
 | 2026-05-27 | Status reconciliation | Updated memory (was React Native — now Flutter), fixed STATUS.md header to Phase 7, corrected progress table for Phases 5+6, updated CLAUDE.md folder tree to match actual lib/ layout, fixed agent path references. | — |
 | 2026-05-26 | Phase 6 implementation | Built `outgoing_row.dart`, replaced the Debits placeholder with a full Expenses/Investments screen, added a current-month upcoming strip, monthly totals, active-tab segmented control, sorted list with swipe delete, and add/edit bottom sheets with suggestion chips + current-month date picker. `flutter analyze` clean; `flutter test` passed. Tried Phase 4 iOS verification, but `flutter run` failed at simulator install with `IXErrorDomain code=19` after a successful Xcode build. | Android emulator still not connected; Phase 4 simulator verification remains open |
 | 2026-05-26 | Phase 5 implementation start | Implemented shared UI primitives (`mudra_card`, `mudra_input`, `mudra_button`), built `account_tile.dart`, replaced the placeholder Funds screen with summary card + segment control + filtered account list + empty states + FAB, and added Add/Edit/Quick Balance/Delete account flows via bottom sheets. `flutter analyze` clean; `flutter test` passed. | Runtime verification of Phase 4 checklist and Funds screen behavior on simulators |
@@ -89,7 +90,7 @@
 - [x] `lib/screens/accounts/accounts_screen.dart` — placeholder
 - [x] `lib/screens/outgoings/outgoings_screen.dart` — placeholder
 - [x] `lib/screens/portfolio/portfolio_screen.dart` — placeholder
-- [x] `lib/screens/settings/settings_screen.dart` — placeholder
+- [x] `lib/screens/profile/profile_screen.dart` — placeholder/profile entry
 - [x] Tab switching works on both simulators
 - [x] App bar: "Mudra" wordmark in Cormorant Garamond, gold
 
@@ -225,16 +226,19 @@
 
 ---
 
-## Phase 8 — Settings Screen
-**Goal:** Income, pay date, currency, data management.
+## Phase 8 — Profile / Settings Foundation
+**Goal:** Account/profile shell, initial finance anchors, and data management.
 
-- [x] `lib/screens/settings/settings_screen.dart`
-  - [x] Monthly income row → sheet with large amount input
-  - [x] Pay date row → sheet with 1–31 day picker
-  - [x] Currency group → sheet with flag chips (INR/USD/GBP/AED/SGD/AUD/EUR)
-  - [x] Currency change reformats all amounts app-wide
+- [x] `lib/screens/profile/profile_screen.dart`
+  - [x] Editable display name and initials avatar
+  - [x] App Map entry
+  - [x] Sign out action
   - [x] "Clear all data" with double-confirmation dialog → heavy haptic
-  - [x] Footer: Mudra wordmark, version, tagline
+  - [x] Footer: Mudra wordmark, privacy tagline, version
+
+> Current product direction: Profile is now profile/settings-only. Income,
+> pay date, and currency controls were removed from Profile in Phase 14; the
+> stored fields remain for setup and dashboard calculations.
 
 ---
 
@@ -314,7 +318,7 @@
 
 ### Router & Auth
 - [x] `lib/app.dart` — `AppSessionStage.guest` redirect fixed: auth paths (including `/welcome`) now redirect to `/`
-- [x] `lib/screens/auth/auth_screens.dart` — "Enter as Guest" renamed to "Use as Guest"
+- [x] `lib/screens/auth/auth_screens.dart` — guest CTA standardized as "Use as Guest"
 
 ### Guest Session (Implemented)
 - [x] `AppSessionStage.guest` added to `AppSessionController`
@@ -384,6 +388,30 @@
 
 ---
 
+## Phase 14 — Flow Map And Profile/Home UX Refinements
+**Goal:** Make app structure visible without clutter and simplify Profile/Home around their core jobs.
+
+### App Map
+- [x] `assets/maps/mudra_app_map.json` — shared source of truth for the in-app map and HTML map
+- [x] `lib/screens/map/map_screen.dart` — compact horizontal flow-board renderer with tap-to-expand nodes, decision diamonds, curved connectors, and a single Expand all / Collapse all toggle
+- [x] `tool/generate_app_map_html.dart` — generates self-contained `docs/vibes/APP_MAP.html` from shared JSON
+- [x] `test/map_screen_test.dart` — root-only default, node expansion, expand-all, collapse-all coverage
+
+### Profile
+- [x] App Map removed from Home quick actions; Profile is now the only app entry point for `/map`
+- [x] Profile now shows identity, App Map, sign out, clear local data, and footer only
+- [x] Removed Profile income, pay-date, and currency controls/sheets
+- [x] Profile copy softened away from finance dashboards: "local app data", "private by default"
+
+### Home
+- [x] Removed the gold `MONTH RUNWAY` hero card from Home → This Month
+- [x] This Month now leads with the fuel gauge as the primary visual
+- [x] Gauge colour is value-based: grey at projected month end = 0, green when > 0, red when < 0
+
+**✅ PHASE 14 COMPLETE — `flutter analyze` clean, `flutter test` passing**
+
+---
+
 ## Progress Summary
 
 | Phase | Items | Done | Remaining |
@@ -396,13 +424,14 @@
 | 5 — Funds (Accounts) | 14 | 14 | 0 ✅ |
 | 6 — Debits (Outgoings) | 13 | 13 | 0 ✅ |
 | 7 — Investments (Portfolio) | 16 | 16 | 0 ✅ |
-| 8 — Settings | 7 | 7 | 0 ✅ |
+| 8 — Profile / Settings Foundation | 5 | 5 | 0 ✅ |
 | 9 — Polish | 14 | 14 | 0 ✅ |
 | 10 — Variable Spend Logging | 12 | 12 | 0 ✅ |
 | 11 — US-001 Authentication | 15 | 12 | 3 verification items |
-| 12 — US-002 Guest Mode | 12 | 8 | 6 verification items |
+| 12 — US-002 Guest Mode | 14 | 8 | 6 verification items |
 | 13 — Dev Mode Hardening | 18 | 14 | 4 deferred to prod hardening |
-| **TOTAL** | **197** | **186** | **13 items** |
+| 14 — Flow Map + UX Refinements | 11 | 11 | 0 ✅ |
+| **TOTAL** | **208** | **195** | **13 items** |
 
 ---
 
@@ -437,7 +466,7 @@
 
 **"This Month" tab**
 - Sticky header: today's date on the left, current-month date picker on the right
-- Fuel gauge ring (animated, colour-coded): shows projected month-end balance
+- Fuel gauge ring (animated): shows projected month-end balance; grey at 0, green above 0, red below 0
 - Day slider (1–31): simulates your balance on any day of the current month
 - Day's Liquid + Day's Balance labels update live with the slider
 - 4-section collapsible table: Cash · Credits · Debits · Commitments
@@ -454,7 +483,7 @@
 - `projectedMonthEnd` = simulated balance − remaining committed debits − CC outstanding
 - `dayBalancePercent` = (simulatedBalanceOnDay / openingLiquidBalance × 100).clamp(0, 100)
 - `netWorth` = totalAssets − totalLiabilities
-- Divide-by-zero guard when `liquidTotal == 0`; negative balance shows 0% gauge in red
+- Divide-by-zero guard when `liquidTotal == 0`; projected month-end value drives gauge colour
 
 ### Funds — Bank Accounts
 - 3-segment filter: Personal / Joint / Business
@@ -490,13 +519,12 @@
 - **Net Worth Detail sheet** (~70% snap): formula breakdown — bank balance + FD + investments − CC outstanding − debts I owe
 - Empty states for platforms and debts
 
-### Settings
-- **Monthly income** row → sheet with large amount input (anchors the gauge)
-- **Pay date** row → 31-day grid picker (1–31, 44×44 tap targets)
-- **Currency** group → 7 animated chips: INR / USD / GBP / AED / SGD / AUD / EUR — changing currency reformats every amount in the app instantly
-- **Clear all data**: double-confirmation dialog → heavy haptic → wipes the signed-in user's collections and retains an empty configured workspace
+### Profile
+- Identity header with editable display name and initials avatar
+- **App Map**: opens the compact flow-board map; this is the only in-app entry point to `/map`
 - **Sign out**: closes access to the active local store and returns to Welcome
-- Footer: Mudra wordmark + tagline + v1.0.0
+- **Clear all data**: double-confirmation dialog → heavy haptic → wipes the signed-in user's collections and retains an empty configured workspace
+- Footer: Mudra wordmark + "private by default." + v1.0.0
 
 ### Variable Spend Logging
 - **QuickSpendSheet**: large amount input (IBM Plex Mono), 6 category chips (Food / Transport / Shopping / Health / Entertainment / Misc), optional note, date picker (current month only, defaults to today)

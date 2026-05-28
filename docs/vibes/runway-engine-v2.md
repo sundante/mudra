@@ -208,8 +208,8 @@ final int accountsCount;
 final String currency;
 
 // ─── Computed ─────────────────────────────────────────────────────────────
-RunwayState get gaugeState { ... }   // >60 comfortable, 30–60 watchOut, <30 tight
-Color get gaugeColor { ... }         // const Color(0xFF2A6B4F/A05A10/A83226)
+RunwayState get gaugeState { ... }   // retained as percent-derived context
+Color get gaugeColor { ... }         // monthRunway > 0 green, == 0 grey, < 0 red
 bool get isOvercommitted => monthRunway < 0;
 ```
 
@@ -426,7 +426,7 @@ Container (white, border, radius 10)
   Divider
   _TableSection — Commitments         (red, '− ', CC first then future outgoings)
   Divider
-  Result row — Month runway           (tinted bg, gaugeColor, bold)
+  Result row — Projected Month End    (gaugeColor, bold)
 ```
 
 ### `_TableSection` widget
@@ -545,7 +545,7 @@ Rules (enforced on every new model and every widget):
 □ Pending credits (creditDate > selectedDay) appear greyed/italic
 □ Debits section expands with category groups (Loans, Insurance, Subscriptions)
 □ Commitments section: CC outstanding + future outgoings
-□ Month runway result row coloured with gaugeColor
+□ Projected month-end value coloured with gaugeColor
 □ No Pay Day banner visible
 □ Overall tab, quick stats tiles, Next 7 Days radar unchanged
 □ flutter analyze after all changes                          → 0 issues

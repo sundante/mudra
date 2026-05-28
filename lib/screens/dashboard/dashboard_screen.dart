@@ -82,8 +82,8 @@ class DashboardScreen extends ConsumerWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.person_outline,
-                      color: AppColors.inkDim),
+                  icon:
+                      const Icon(Icons.person_outline, color: AppColors.inkDim),
                   onPressed: () => context.push('/profile'),
                 ),
               ],
@@ -210,20 +210,6 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                       ),
                     ],
                   ),
-                ),
-              ),
-
-              // ── Month Runway Hero ────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenH, AppSpacing.md,
-                    AppSpacing.screenH, 0),
-                child: MudraHeroCard(
-                  label: 'MONTH RUNWAY',
-                  amount: CurrencyFormatter.compact(
-                      dashboard.monthRunway, dashboard.currency),
-                  sublabel:
-                      'of ${CurrencyFormatter.compact(dashboard.bankBalance, dashboard.currency)} liquid · Day $selectedDay',
                 ),
               ),
 
@@ -441,11 +427,6 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                           icon: Icons.donut_large_outlined,
                           label: 'Net Worth',
                           onTap: () => context.go('/net'),
-                        ),
-                        _QuickActionTile(
-                          icon: Icons.account_tree_outlined,
-                          label: 'App Map',
-                          onTap: () => context.push('/map'),
                         ),
                       ],
                     ),

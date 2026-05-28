@@ -10,7 +10,7 @@ value before committing to sign-up.
 
 US-001 closed the app behind authentication, which is the right privacy model
 for returning users but creates friction for first-time visitors. This story
-adds a no-commitment entry path — "Enter as Guest" — that lets anyone explore
+adds a no-commitment entry path — "Use as Guest" — that lets anyone explore
 the app using a pre-seeded demo profile (Rohan). The guest session is
 single-use and ephemeral: the demo data lives in a separate Isar store that is
 not associated with any Supabase account and is never persisted between

@@ -44,9 +44,13 @@ lib/
 ├── screens/
 │   ├── dashboard/
 │   ├── accounts/                      # tab label: Funds
-│   ├── outgoings/                     # tab label: Debits
+│   ├── debts/                         # tab label: Debts
+│   ├── map/                           # compact app/user-flow map
+│   ├── net/
+│   ├── onboarding/
 │   ├── portfolio/                     # tab label: Investments
-│   └── settings/
+│   ├── profile/                       # identity, app map, account actions
+│   └── spend/
 └── widgets/
     ├── common/                        # mudra_button, mudra_input, mudra_card, amount_display, section_label, empty_state
     ├── fuel_gauge_ring.dart
@@ -121,6 +125,8 @@ dart format .                        # format all Dart files
 - If a task is blocked, mark it `[!]` and note the blocker in the session log
 - After completing any phase's code, always prompt the user to hot reload (`r` in the terminal or save in IDE) and verify on both simulators before marking items `[x]`
 - Product planning rule: Mudra is month-first. All planning, runway, debit forecasting, and UX framing should default to the current month, not a 7-day or weekly window, unless the user explicitly asks for a shorter horizon.
+- Profile rule: Profile is identity/settings-oriented. Do not add income, pay date, outflow, currency, or other finance-editing controls back to Profile unless explicitly requested. App Map belongs in Profile only, not Home quick actions.
+- Home gauge rule: Home → This Month should lead with the fuel gauge, without the old gold Month Runway hero. Gauge color is based on projected month-end value: 0 grey, positive green, negative red.
 
 Detailed phase-by-phase code prompts: `vibes/5-26-mudra_flutter_prompt.md`
 

@@ -60,7 +60,8 @@ Dashboard → This Month
     │       └── [Tap Calendar Icon] → Date Picker (simulation day, current month only)
     │
     ├── Fuel Gauge Ring
-    │       └── Visual spend-vs-budget arc; updates with simulation day
+    │       └── Projected month-end amount; arc updates with simulation day
+    │           and colour follows runway value: grey at 0, green above 0, red below 0
     │
     ├── Day Slider  (Day 1–31, locked to current month)
     │       └── Drag to simulate balance on any day
@@ -260,9 +261,7 @@ Net Worth Screen
 ```
 Profile Screen  (accessible via profile icon in app bar on all protected tabs)
     ├── User Name  (display name, used for initials avatar)
-    ├── Base Currency  (7 options: INR · USD · EUR · GBP · JPY · AED · SGD)
-    ├── Pay Date  (grid 1–31, day salary/income is expected)
-    ├── App Map
+    ├── App Map  (only profile entry point; removed from Home quick actions)
     ├── [Sign Out]  → closes current user store → Welcome
     │
     └── Danger Zone
@@ -313,7 +312,7 @@ Bottom Nav
 | Debts | debts, appSettings | debts |
 | Investments | investmentHoldings, investmentPlatforms, appSettings | investmentHoldings, investmentPlatforms |
 | Net Worth | accounts, platforms, debts, outgoings, appSettings | — (read-only) |
-| Profile | appSettings | appSettings |
+| Profile | appSettings | appSettings (display name), session lifecycle, local data clear |
 
 ---
 
@@ -336,7 +335,7 @@ Bottom Nav
 | Timeline filter (1M–1Y) | Investments | ✅ Live |
 | Asset type donut | Investments | ✅ Live |
 | Net worth formula + breakdown | Net | ✅ Live |
-| User name + currency + pay date | Profile | ✅ Live |
+| User name + app map + account actions | Profile | ✅ Live |
 | Clear all data | Profile | ✅ Live |
 | First-launch authentication gate | Welcome / Auth / Setup | ✅ Code complete; provider/device verification pending |
 | Per-user local financial storage | App session / Database | ✅ Code complete; migration device verification pending |

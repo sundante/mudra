@@ -16,6 +16,8 @@ Version 2.0 · May 2026
 - Investment / neutral → `AppColors.amber` (#9A5510)
 - Primary CTA / accent → `AppColors.gold` (#8A6520)
 - Background → `AppColors.background` (#FFFFFF) — pure white across scaffolds
+- Dashboard fuel gauge → `AppColors.green` when projected month end is > 0,
+  `AppColors.inkDim` at exactly 0, and `AppColors.red` when < 0
 
 ### Typography Grammar
 - **Hero numbers / display headings** → Cormorant Garamond (`AppTypography.displayLarge` etc.)
@@ -74,6 +76,9 @@ id, uid, name, amount, creditDate (1–31), isActive, createdAt
 ```
 baseCurrency, monthlyIncome, payDate (1–31), userName, hasCompletedSetup
 ```
+> Profile currently exposes only `userName`, App Map, sign-out, and local data
+> actions. Finance settings remain in `AppSettings` for setup/dashboard logic,
+> but are not shown on the Profile page.
 
 ### VariableExpense
 ```
@@ -98,6 +103,7 @@ variableSpentToDay         = SUM(variableExpenses WHERE spentAt.day <= selectedD
 simulatedBalanceOnDay      = openingLiquidBalance + creditsReceivedToDay - debitsFiredToDay - variableSpentToDay
 projectedMonthEnd          = simulatedBalanceOnDay - remainingCommittedAfterDay - ccOutstanding
 dayBalancePercent          = (simulatedBalanceOnDay / openingLiquidBalance * 100).clamp(0, 100)
+gaugeColor                 = projectedMonthEnd > 0 ? green : projectedMonthEnd < 0 ? red : grey
 investmentsTotal           = SUM(platform.currentValue)
 totalAssets                = liquidTotal + fdTotal + investmentsTotal
 debtsIOwe                  = SUM(debt.amount WHERE iOwe + !settled)
@@ -126,7 +132,7 @@ debitRadar                 = outgoings due later this month, sorted by debitDate
 | US-05 | Add a fixed monthly investment (SIP, PPF) with debit date | Debits |
 | US-06 | See BalanceForTheMonth — what I can actually spend | Dashboard |
 | US-07 | See which debits are still coming this month | Dashboard |
-| US-08 | Set monthly income to anchor the fuel gauge | Settings |
+| US-08 | Set monthly income to anchor the fuel gauge | Onboarding / future settings |
 
 ### P1 — Strong MVP
 | # | Story |
@@ -135,7 +141,7 @@ debitRadar                 = outgoings due later this month, sorted by debitDate
 | US-10 | See net worth (assets − liabilities) |
 | US-11 | Add personal debts (what I owe, what others owe me) |
 | US-12 | Delete / edit any account, outgoing, or investment |
-| US-13 | Choose base currency (INR/USD/GBP/AED/SGD/AUD/EUR) |
+| US-13 | Choose base currency (INR/USD/GBP/AED/SGD/AUD/EUR) in setup/future settings |
 
 All P0 and P1 finance stories are implemented. US-001 introduces the
 authenticated entry gate before those protected experiences.
@@ -147,7 +153,9 @@ authenticated entry gate before those protected experiences.
 | Case | Implemented behaviour |
 |---|---|
 | `liquidTotal == 0` | Fuel gauge shows 0%, no divide-by-zero |
-| `balanceForMonth < 0` | Gauge shows 0%, amount displayed in red |
+| `projectedMonthEnd == 0` | Gauge amount and slider accents are grey |
+| `projectedMonthEnd > 0` | Gauge amount and slider accents are green |
+| `projectedMonthEnd < 0` | Gauge amount and slider accents are red |
 | No outgoings | `fixedCommitted = 0`, gauge full |
 | Very large numbers (₹ 10 Cr) | Compact lakh/crore formatting, no overflow |
 | Empty debit radar | "All clear" empty state |

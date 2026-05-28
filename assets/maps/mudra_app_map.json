@@ -962,20 +962,6 @@
           "color": "leaf"
         },
         {
-          "id": "profile-base-currency",
-          "label": "Base Currency",
-          "sub": "INR · USD · EUR · GBP · JPY · AED · SGD",
-          "kind": "screen",
-          "color": "leaf"
-        },
-        {
-          "id": "profile-pay-date",
-          "label": "Pay Date",
-          "sub": "Grid 1–31 picker",
-          "kind": "screen",
-          "color": "leaf"
-        },
-        {
           "id": "profile-app-map",
           "label": "App Map",
           "sub": "Navigate to /map screen",

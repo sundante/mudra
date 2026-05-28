@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../core/theme/app_colors.dart';
 import '../core/utils/date_helpers.dart';
 import '../data/models/account.dart';
 import '../data/models/app_settings.dart';
@@ -153,14 +154,9 @@ class DashboardData {
   }
 
   Color get gaugeColor {
-    switch (gaugeState) {
-      case RunwayState.comfortable:
-        return const Color(0xFF2A6B4F);
-      case RunwayState.watchOut:
-        return const Color(0xFFA05A10);
-      case RunwayState.tight:
-        return const Color(0xFFA83226);
-    }
+    if (monthRunway > 0) return AppColors.green;
+    if (monthRunway < 0) return AppColors.red;
+    return AppColors.inkDim;
   }
 
   bool get isOvercommitted => monthRunway < 0;
