@@ -4,7 +4,6 @@ import '../core/constants/spacing.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_typography.dart';
 import 'common/amount_display.dart';
-import 'common/mudra_card.dart';
 import 'common/section_label.dart';
 
 class OutgoingRow extends StatelessWidget {
@@ -31,76 +30,76 @@ class OutgoingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MudraCard(
+    return InkWell(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 4,
-            height: 48,
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: BorderRadius.circular(AppRadius.full),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: accentColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.ink,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      _Badge(
+                        label: categoryLabel,
+                        backgroundColor: AppColors.surfaceAlt,
+                        textColor: AppColors.inkDim,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      _Badge(
+                        label: 'Day $debitDate',
+                        backgroundColor: AppColors.goldLight,
+                        textColor: AppColors.gold,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AmountDisplay(
+                  amount: amount,
+                  currency: currency,
+                  style: AppTypography.monoSmall,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _Badge(
-                      label: categoryLabel,
-                      backgroundColor: AppColors.surfaceAlt,
-                      textColor: AppColors.inkDim,
-                    ),
-                    _Badge(
-                      label: 'Day $debitDate',
-                      backgroundColor: AppColors.goldLight,
-                      textColor: AppColors.gold,
-                    ),
-                  ],
-                ),
+                const SizedBox(height: 2),
+                SectionLabel(_daysUntilLabel(daysUntil)),
               ],
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              AmountDisplay(
-                amount: amount,
-                currency: currency,
-                style: AppTypography.monoMedium,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              SectionLabel(_daysUntilLabel(daysUntil), color: AppColors.inkDim),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  String _daysUntilLabel(int daysUntil) {
-    if (daysUntil == 0) return 'today';
-    if (daysUntil == 1) return 'tomorrow';
-    return 'in $daysUntil days';
+  String _daysUntilLabel(int d) {
+    if (d == 0) return 'today';
+    if (d == 1) return 'tomorrow';
+    return 'in $d days';
   }
 }
 
@@ -118,7 +117,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(AppRadius.full),

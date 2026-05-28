@@ -13,6 +13,7 @@ import '../../data/models/app_settings.dart';
 import '../../data/models/debt.dart';
 import '../../data/models/outgoing.dart';
 import '../../data/models/variable_expense.dart';
+import '../../providers/fab_trigger_provider.dart';
 import '../../providers/investment_provider.dart';
 import '../../providers/outgoing_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -137,6 +138,12 @@ class DebtsScreen extends ConsumerStatefulWidget {
 class _DebtsScreenState extends ConsumerState<DebtsScreen> {
   @override
   Widget build(BuildContext context) {
+    ref.listen(fabTriggerProvider, (_, next) {
+      if (next.$1 == 2 && mounted) {
+        _openOutgoingSheet(context, defaultType: OutgoingType.expense);
+      }
+    });
+
     final outgoings = ref.watch(outgoingsStreamProvider).valueOrNull ?? [];
     final debts = ref.watch(debtsStreamProvider).valueOrNull ?? [];
     final variableExpenses =
@@ -173,13 +180,6 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () =>
-            _openOutgoingSheet(context, defaultType: OutgoingType.expense),
-        backgroundColor: AppColors.gold,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -188,56 +188,21 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                 AppSpacing.screenH,
                 AppSpacing.screenV,
                 AppSpacing.screenH,
-                AppSpacing.md,
+                AppSpacing.sm,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Upcoming strip ──────────────────────────────
-                  SectionLabel(
-                    'upcoming in 7 days',
-                    color: upcoming.isEmpty ? AppColors.inkDim : AppColors.gold,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (upcoming.isEmpty)
-                    MudraCard(
-                      color: AppColors.surfaceAlt,
-                      child: Text(
-                        'All clear — nothing due this week.',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.inkDim),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 110,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: upcoming.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(width: AppSpacing.sm),
-                        itemBuilder: (context, i) => _UpcomingChip(
-                          item: upcoming[i],
-                          currency: currency,
-                          onTap: () => _openOutgoingSheet(context,
-                              initial: upcoming[i],
-                              defaultType: upcoming[i].type),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: AppSpacing.md),
-                  // ── Total committed ────────────────────────────
-                  MudraCard(
-                    color: AppColors.redLight,
-                    child: Row(
-                      children: [
-                        Expanded(
+                  // ── Summary stat row ────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: MudraCard.primary(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SectionLabel('total committed',
-                                  color: AppColors.inkDim),
-                              const SizedBox(height: AppSpacing.xs),
+                              const SectionLabel('committed'),
+                              const SizedBox(height: 4),
                               AmountDisplay(
                                 amount: totalCommitted,
                                 currency: currency,
@@ -247,22 +212,43 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                             ],
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const SectionLabel('items',
-                                color: AppColors.inkDim),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              '${activeItems.length}',
-                              style: AppTypography.monoMedium
-                                  .copyWith(color: AppColors.ink),
-                            ),
-                          ],
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: MudraCard.stat(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SectionLabel('items'),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${activeItems.length}',
+                                style: AppTypography.monoMedium
+                                    .copyWith(color: AppColors.ink),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // ── Upcoming featured card ──────────────────────
+                  if (upcoming.isEmpty)
+                    MudraCard(
+                      child: Text(
+                        'Nothing due in the next 7 days.',
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.inkDim),
+                      ),
+                    )
+                  else
+                    _UpcomingFeaturedCard(
+                      upcoming: upcoming,
+                      currency: currency,
+                      onTap: (item) => _openOutgoingSheet(context,
+                          initial: item, defaultType: item.type),
+                    ),
                 ],
               ),
             ),
@@ -472,9 +458,75 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
   }
 }
 
+// ── Upcoming featured card ────────────────────────────────────────────────────
+
+class _UpcomingFeaturedCard extends StatelessWidget {
+  const _UpcomingFeaturedCard({
+    required this.upcoming,
+    required this.currency,
+    required this.onTap,
+  });
+
+  final List<_OutgoingView> upcoming;
+  final String currency;
+  final void Function(_OutgoingView) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = upcoming.first;
+    final extra = upcoming.length - 1;
+    final color = _categoryColor(next.category);
+
+    return MudraCard.primary(
+      onTap: () => onTap(next),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('next due'),
+                const SizedBox(height: 4),
+                Text(
+                  next.name,
+                  style: AppTypography.bodyMedium
+                      .copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  next.daysUntil == 0
+                      ? 'Today · Day ${next.debitDate}'
+                      : next.daysUntil == 1
+                          ? 'Tomorrow · Day ${next.debitDate}'
+                          : 'in ${next.daysUntil} days · Day ${next.debitDate}',
+                  style:
+                      AppTypography.bodySmall.copyWith(color: AppColors.inkDim),
+                ),
+                if (extra > 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '+$extra more this week',
+                    style: AppTypography.monoXSmall
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          AmountDisplay(
+            amount: next.amount,
+            currency: currency,
+            style: AppTypography.monoMedium.copyWith(color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Group section (Outgoings) ─────────────────────────────────────────────────
 
-class _GroupSection extends StatelessWidget {
+class _GroupSection extends StatefulWidget {
   const _GroupSection({
     required this.label,
     required this.items,
@@ -494,97 +546,100 @@ class _GroupSection extends StatelessWidget {
   final Future<bool> Function(_OutgoingView) onConfirmDelete;
 
   @override
+  State<_GroupSection> createState() => _GroupSectionState();
+}
+
+class _GroupSectionState extends State<_GroupSection> {
+  static const _pageSize = 3;
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final total = items.fold<double>(0, (s, o) => s + o.amount);
+    if (widget.items.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    final total = widget.items.fold<double>(0, (s, o) => s + o.amount);
+    final visible = _expanded || widget.items.length <= _pageSize
+        ? widget.items
+        : widget.items.take(_pageSize).toList();
+    final hidden = widget.items.length - visible.length;
 
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.sm),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: ExpansionTile(
-            initiallyExpanded: items.isNotEmpty,
-            tilePadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            childrenPadding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
-            title: Row(
-              children: [
-                SectionLabel(label),
-                const SizedBox(width: AppSpacing.sm),
-                if (items.isNotEmpty)
+        child: MudraCard(
+          padding: const EdgeInsets.all(AppSpacing.cardPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SectionLabel(widget.label),
+                  const SizedBox(width: AppSpacing.sm),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
+                      color: widget.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     child: Text(
-                      '${items.length}',
-                      style: AppTypography.monoXSmall.copyWith(color: color),
+                      '${widget.items.length}',
+                      style: AppTypography.monoXSmall
+                          .copyWith(color: widget.color),
                     ),
                   ),
-              ],
-            ),
-            trailing: items.isEmpty
-                ? Text('—',
-                    style: AppTypography.monoSmall
-                        .copyWith(color: AppColors.inkDim))
-                : AmountDisplay(
+                  const Spacer(),
+                  AmountDisplay(
                     amount: total,
-                    currency: currency,
-                    style: AppTypography.monoSmall.copyWith(color: color),
+                    currency: widget.currency,
+                    style: AppTypography.monoSmall
+                        .copyWith(color: widget.color),
                   ),
-            children: items.isEmpty
-                ? [
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                      child: Text(
-                        'None added',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.inkDim),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...visible.map((item) => Dismissible(
+                    key: ValueKey('outgoing-${item.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.redLight,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
-                    )
-                  ]
-                : items.map((item) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Dismissible(
-                        key: ValueKey('outgoing-${item.id}'),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.redLight,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: const Icon(Icons.delete_outline,
-                              color: AppColors.red),
-                        ),
-                        confirmDismiss: (_) => onConfirmDelete(item),
-                        onDismissed: (_) => onDelete(item.id),
-                        child: OutgoingRow(
-                          name: item.name,
-                          categoryLabel: _categoryLabel(item.category),
-                          debitDate: item.debitDate,
-                          daysUntil: item.daysUntil,
-                          amount: item.amount,
-                          currency: currency,
-                          accentColor: color,
-                          onTap: () => onTap(item),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                      child: const Icon(Icons.delete_outline,
+                          color: AppColors.red, size: 18),
+                    ),
+                    confirmDismiss: (_) => widget.onConfirmDelete(item),
+                    onDismissed: (_) => widget.onDelete(item.id),
+                    child: OutgoingRow(
+                      name: item.name,
+                      categoryLabel: _categoryLabel(item.category),
+                      debitDate: item.debitDate,
+                      daysUntil: item.daysUntil,
+                      amount: item.amount,
+                      currency: widget.currency,
+                      accentColor: widget.color,
+                      onTap: () => widget.onTap(item),
+                    ),
+                  )),
+              if (hidden > 0)
+                TextButton(
+                  onPressed: () => setState(() => _expanded = true),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Show $hidden more',
+                    style: AppTypography.labelSmall
+                        .copyWith(color: AppColors.gold),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -607,40 +662,28 @@ class _VariableSpendSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (expenses.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
     final total =
-        expenses.fold<double>(0, (sum, expense) => sum + expense.safeAmount);
+        expenses.fold<double>(0, (sum, e) => sum + e.safeAmount);
 
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screenH,
-          AppSpacing.md,
+          0,
           AppSpacing.screenH,
           AppSpacing.sm,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: ExpansionTile(
-            initiallyExpanded: expenses.isNotEmpty,
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            childrenPadding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            title: Row(
-              children: [
-                const SectionLabel('VARIABLE SPENT'),
-                const SizedBox(width: AppSpacing.sm),
-                if (expenses.isNotEmpty)
+        child: MudraCard(
+          padding: const EdgeInsets.all(AppSpacing.cardPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const SectionLabel('VARIABLE SPENT'),
+                  const SizedBox(width: AppSpacing.sm),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -648,69 +691,39 @@ class _VariableSpendSection extends StatelessWidget {
                       color: AppColors.redLight,
                       borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
-                    child: Text(
-                      '${expenses.length}',
-                      style: AppTypography.monoXSmall
-                          .copyWith(color: AppColors.red),
-                    ),
+                    child: Text('${expenses.length}',
+                        style: AppTypography.monoXSmall
+                            .copyWith(color: AppColors.red)),
                   ),
-              ],
-            ),
-            trailing: expenses.isEmpty
-                ? Text(
-                    '-',
-                    style: AppTypography.monoSmall
-                        .copyWith(color: AppColors.inkDim),
-                  )
-                : AmountDisplay(
+                  const Spacer(),
+                  AmountDisplay(
                     amount: total,
                     currency: currency,
-                    style:
-                        AppTypography.monoSmall.copyWith(color: AppColors.red),
+                    style: AppTypography.monoSmall.copyWith(color: AppColors.red),
                   ),
-            children: expenses.isEmpty
-                ? [
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                      child: Text(
-                        'Nothing logged this month. Use + on Home to log spend.',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.inkDim),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...expenses.map((expense) => Dismissible(
+                    key: ValueKey('variable-expense-${expense.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.redLight,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
+                      child: const Icon(Icons.delete_outline,
+                          color: AppColors.red, size: 18),
                     ),
-                  ]
-                : expenses
-                    .map((expense) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: Dismissible(
-                            key: ValueKey('variable-expense-${expense.id}'),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.redLight,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.md),
-                              ),
-                              child: const Icon(
-                                Icons.delete_outline,
-                                color: AppColors.red,
-                              ),
-                            ),
-                            confirmDismiss: (_) =>
-                                _confirmDelete(context, expense),
-                            onDismissed: (_) => onDelete(expense.id),
-                            child: _VariableSpendRow(
-                              expense: expense,
-                              currency: currency,
-                            ),
-                          ),
-                        ))
-                    .toList(),
+                    confirmDismiss: (_) => _confirmDelete(context, expense),
+                    onDismissed: (_) => onDelete(expense.id),
+                    child: _VariableSpendRow(
+                        expense: expense, currency: currency),
+                  )),
+            ],
           ),
         ),
       ),
@@ -761,18 +774,19 @@ class _VariableSpendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MudraCard(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Container(
-            width: 4,
-            height: 44,
-            decoration: BoxDecoration(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
               color: AppColors.red,
-              borderRadius: BorderRadius.circular(AppRadius.full),
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             expense.safeCategory.emoji,
             style: AppTypography.bodyMedium,
@@ -869,75 +883,55 @@ class _DebtGroupSection extends StatelessWidget {
     final settled = debts.where((debt) => debt.safeIsSettled).toList();
     final total = active.fold<double>(0, (s, d) => s + d.safeAmount);
 
+    if (active.isEmpty && settled.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.sm),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: ExpansionTile(
-            initiallyExpanded: active.isNotEmpty,
-            tilePadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            childrenPadding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
-            title: Row(
-              children: [
-                SectionLabel(label),
-                const SizedBox(width: AppSpacing.sm),
-                if (active.isNotEmpty)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Text(
-                      '${active.length}',
-                      style: AppTypography.monoXSmall.copyWith(color: color),
-                    ),
-                  ),
-              ],
-            ),
-            trailing: active.isEmpty
-                ? Text('—',
-                    style: AppTypography.monoSmall
-                        .copyWith(color: AppColors.inkDim))
-                : AmountDisplay(
-                    amount: total,
-                    currency: currency,
-                    style: AppTypography.monoSmall.copyWith(color: color),
-                  ),
-            children: active.isEmpty && settled.isEmpty
-                ? [
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                      child: Text(
-                        'Nothing recorded',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.inkDim),
+        child: MudraCard(
+          padding: const EdgeInsets.all(AppSpacing.cardPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SectionLabel(label),
+                  if (active.isNotEmpty) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                       ),
+                      child: Text('${active.length}',
+                          style: AppTypography.monoXSmall
+                              .copyWith(color: color)),
                     ),
-                  ]
-                : [
-                    ...active.map((debt) => _debtTile(context, debt)),
-                    if (settled.isNotEmpty)
-                      ExpansionTile(
-                        initiallyExpanded: false,
-                        tilePadding: EdgeInsets.zero,
-                        title: SectionLabel('SETTLED (${settled.length})'),
-                        children: settled
-                            .map((debt) =>
-                                _debtTile(context, debt, isSettled: true))
-                            .toList(),
-                      ),
                   ],
+                  const Spacer(),
+                  if (active.isNotEmpty)
+                    AmountDisplay(
+                      amount: total,
+                      currency: currency,
+                      style: AppTypography.monoSmall.copyWith(color: color),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...active.map((debt) => _debtTile(context, debt)),
+              if (settled.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xs),
+                SectionLabel('SETTLED (${settled.length})'),
+                const SizedBox(height: AppSpacing.xs),
+                ...settled.map(
+                    (debt) => _debtTile(context, debt, isSettled: true)),
+              ],
+            ],
           ),
         ),
       ),
@@ -1108,68 +1102,6 @@ class _DebtRow extends StatelessWidget {
   }
 }
 
-// ── Upcoming chip ─────────────────────────────────────────────────────────────
-
-class _UpcomingChip extends StatelessWidget {
-  const _UpcomingChip({
-    required this.item,
-    required this.currency,
-    required this.onTap,
-  });
-
-  final _OutgoingView item;
-  final String currency;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _categoryColor(item.category);
-    final bg = color == AppColors.green
-        ? AppColors.greenLight
-        : color == AppColors.amber
-            ? AppColors.amberLight
-            : AppColors.redLight;
-
-    return SizedBox(
-      width: 170,
-      child: MudraCard(
-        color: bg,
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SectionLabel(
-              item.daysUntil == 0
-                  ? 'today'
-                  : item.daysUntil == 1
-                      ? 'tomorrow'
-                      : 'in ${item.daysUntil} days',
-              color: color,
-            ),
-            Text(
-              item.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodyMedium
-                  .copyWith(color: AppColors.ink, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              '${_categoryLabel(item.category)}  ·  Day ${item.debitDate}',
-              style: AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
-            ),
-            AmountDisplay(
-              amount: item.amount,
-              currency: currency,
-              style: AppTypography.monoSmall
-                  .copyWith(color: color, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── View models ───────────────────────────────────────────────────────────────
 
@@ -1475,7 +1407,6 @@ class _OutgoingEditorSheetState extends ConsumerState<_OutgoingEditorSheet> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 MudraCard(
-                  color: AppColors.surface,
                   child: Row(
                     children: [
                       Expanded(

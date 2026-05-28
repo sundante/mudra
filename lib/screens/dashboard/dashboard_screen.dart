@@ -19,11 +19,11 @@ import '../../core/utils/currency_formatter.dart';
 import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../providers/fab_trigger_provider.dart';
 import '../../widgets/common/mudra_card.dart';
 import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/common/quick_spend_sheet.dart';
-import '../../widgets/fuel_gauge_ring.dart';
 
 const _monthShortNames = <String>[
   'Jan',
@@ -144,6 +144,12 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(fabTriggerProvider, (_, next) {
+      if (next.$1 == 0 && mounted) {
+        _openQuickSpendSheet(context, widget.dashboard.currency);
+      }
+    });
+
     final dashboard = widget.dashboard;
     final selectedDay = ref.watch(selectedDayProvider);
     final now = DateTime.now();
@@ -213,123 +219,27 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 ),
               ),
 
-              // ── Fuel Gauge ──────────────────────────────────────────────────
+              // ── Projection Block ────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenH,
-                    vertical: AppSpacing.screenV),
-                child: Column(
-                  children: [
-                    Center(
-                      child: FuelGaugeRing(
-                        percentage: dashboard.dayBalancePercent,
-                        runway: dashboard.monthRunway,
-                        currency: dashboard.currency,
-                        arcColor: dashboard.gaugeColor,
-                        isOvercommitted: dashboard.isOvercommitted,
-                        selectedDay: selectedDay,
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.md),
-
-                    // ── Day Slider ────────────────────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenH),
-                      child: Row(
-                        children: [
-                          const SectionLabel('simulate day'),
-                          const Spacer(),
-                          Text(
-                            'Day $selectedDay',
-                            style: AppTypography.monoSmall
-                                .copyWith(color: AppColors.gold),
-                          ),
-                          if (selectedDay != today) ...[
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => ref
-                                  .read(selectedDayProvider.notifier)
-                                  .state = today,
-                              child: Text(
-                                'Reset',
-                                style: AppTypography.labelMedium
-                                    .copyWith(color: AppColors.inkDim),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 2,
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 7),
-                        overlayShape:
-                            const RoundSliderOverlayShape(overlayRadius: 14),
-                        activeTrackColor: dashboard.gaugeColor,
-                        inactiveTrackColor: AppColors.border,
-                        thumbColor: dashboard.gaugeColor,
-                        overlayColor: dashboard.gaugeColor.withAlpha(40),
-                      ),
-                      child: Slider(
-                        value: selectedDay.toDouble(),
-                        min: 1,
-                        max: daysInMonth.toDouble(),
-                        divisions: daysInMonth - 1,
-                        onChanged: (v) => ref
-                            .read(selectedDayProvider.notifier)
-                            .state = v.round(),
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // ── CURRENT LIQUID | SIMULATED DAY ───────────────────────
-                    IntrinsicHeight(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SectionLabel("day's liquid"),
-                                const SizedBox(height: 4),
-                                AmountDisplay(
-                                  amount: dashboard.bankBalance,
-                                  currency: dashboard.currency,
-                                  style: AppTypography.monoMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const VerticalDivider(
-                              color: AppColors.border, thickness: 1, width: 32),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SectionLabel("day's balance"),
-                                const SizedBox(height: 4),
-                                AmountDisplay(
-                                  amount: dashboard.simulatedBalanceOnDay,
-                                  currency: dashboard.currency,
-                                  style: AppTypography.monoMedium
-                                      .copyWith(color: dashboard.gaugeColor),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenH,
+                  AppSpacing.screenV,
+                  AppSpacing.screenH,
+                  0,
+                ),
+                child: _ProjectionBlock(
+                  dashboard: dashboard,
+                  selectedDay: selectedDay,
+                  today: today,
+                  daysInMonth: daysInMonth,
+                  onDayChanged: (d) =>
+                      ref.read(selectedDayProvider.notifier).state = d,
+                  onReset: () =>
+                      ref.read(selectedDayProvider.notifier).state = today,
                 ),
               ),
 
-              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Runway Table ─────────────────────────────────────────────────
               Padding(
@@ -340,50 +250,77 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                     dashboard: dashboard, selectedDay: selectedDay),
               ),
 
-              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Quick Stats ──────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenH, vertical: AppSpacing.md),
+                    horizontal: AppSpacing.screenH),
                 child: Row(
                   children: [
-                    _StatTile(
-                      label: 'NET WORTH',
-                      onTap: () => context.go('/portfolio'),
-                      child: AmountDisplay(
-                        amount: dashboard.netWorth,
-                        currency: dashboard.currency,
-                        style: AppTypography.monoLarge,
-                        coloured: true,
-                        compact: true,
+                    Expanded(
+                      child: MudraCard.stat(
+                        onTap: () => context.go('/net'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AmountDisplay(
+                              amount: dashboard.netWorth,
+                              currency: dashboard.currency,
+                              style: AppTypography.monoMedium,
+                              coloured: true,
+                              compact: true,
+                            ),
+                            const SizedBox(height: 2),
+                            const SectionLabel('NET WORTH'),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    _StatTile(
-                      label: 'FIXED ITEMS',
-                      onTap: () => context.go('/debts'),
-                      child: Text(
-                        '${dashboard.fixedItemsCount}',
-                        style: AppTypography.monoLarge
-                            .copyWith(color: AppColors.ink),
+                    Expanded(
+                      child: MudraCard.stat(
+                        onTap: () => context.go('/debts'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dashboard.fixedItemsCount}',
+                              style: AppTypography.monoMedium
+                                  .copyWith(color: AppColors.ink),
+                            ),
+                            const SizedBox(height: 2),
+                            const SectionLabel('FIXED ITEMS'),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    _StatTile(
-                      label: 'ACCOUNTS',
-                      onTap: () => context.go('/accounts'),
-                      child: Text(
-                        '${dashboard.accountsCount}',
-                        style: AppTypography.monoLarge
-                            .copyWith(color: AppColors.ink),
+                    Expanded(
+                      child: MudraCard.stat(
+                        onTap: () => context.go('/accounts'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dashboard.accountsCount}',
+                              style: AppTypography.monoMedium
+                                  .copyWith(color: AppColors.ink),
+                            ),
+                            const SizedBox(height: 2),
+                            const SectionLabel('ACCOUNTS'),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Quick Actions ────────────────────────────────────────────────
               Padding(
@@ -434,7 +371,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 ),
               ),
 
-              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Until End of Month ──────────────────────────────────────────
               Padding(
@@ -482,17 +419,6 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 ),
               ),
             ],
-          ),
-        ),
-        Positioned(
-          right: AppSpacing.screenH,
-          bottom: AppSpacing.md,
-          child: FloatingActionButton(
-            tooltip: 'Log spend',
-            backgroundColor: AppColors.gold,
-            foregroundColor: Colors.white,
-            onPressed: () => _openQuickSpendSheet(context, dashboard.currency),
-            child: const Icon(Icons.add),
           ),
         ),
       ],
@@ -1315,18 +1241,21 @@ class _OverallTab extends StatelessWidget {
                     label: 'ASSETS',
                     value: CurrencyFormatter.compact(
                         dashboard.totalAssets, dashboard.currency),
+                    color: AppColors.green,
                   ),
-                  Container(width: 1, height: 28, color: Colors.white24),
+                  Container(width: 1, height: 24, color: AppColors.border),
                   _HeroDashStat(
                     label: 'INVESTED',
                     value: CurrencyFormatter.compact(
                         dashboard.investmentsTotal, dashboard.currency),
+                    color: AppColors.amber,
                   ),
-                  Container(width: 1, height: 28, color: Colors.white24),
+                  Container(width: 1, height: 24, color: AppColors.border),
                   _HeroDashStat(
                     label: 'LIABILITIES',
                     value: CurrencyFormatter.compact(
                         dashboard.totalLiabilities, dashboard.currency),
+                    color: AppColors.red,
                   ),
                 ],
               ),
@@ -1353,49 +1282,73 @@ class _OverallTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Divider(color: AppColors.border),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              _StatTile(
-                label: 'ASSETS',
-                onTap: () => context.go('/accounts'),
-                child: AmountDisplay(
-                  amount: dashboard.totalAssets,
-                  currency: dashboard.currency,
-                  style: AppTypography.monoLarge,
-                  compact: true,
+              Expanded(
+                child: MudraCard.stat(
+                  onTap: () => context.go('/accounts'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AmountDisplay(
+                        amount: dashboard.totalAssets,
+                        currency: dashboard.currency,
+                        style: AppTypography.monoMedium,
+                        compact: true,
+                      ),
+                      const SizedBox(height: 2),
+                      const SectionLabel('ASSETS'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _StatTile(
-                label: 'INVESTED',
-                onTap: () => context.go('/portfolio'),
-                child: AmountDisplay(
-                  amount: dashboard.investmentsTotal,
-                  currency: dashboard.currency,
-                  style:
-                      AppTypography.monoLarge.copyWith(color: AppColors.amber),
-                  compact: true,
+              Expanded(
+                child: MudraCard.stat(
+                  onTap: () => context.go('/portfolio'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AmountDisplay(
+                        amount: dashboard.investmentsTotal,
+                        currency: dashboard.currency,
+                        style: AppTypography.monoMedium
+                            .copyWith(color: AppColors.amber),
+                        compact: true,
+                      ),
+                      const SizedBox(height: 2),
+                      const SectionLabel('INVESTED'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _StatTile(
-                label: 'LIABILITIES',
-                onTap: () => context.go('/portfolio'),
-                child: AmountDisplay(
-                  amount: dashboard.totalLiabilities,
-                  currency: dashboard.currency,
-                  style: AppTypography.monoLarge.copyWith(color: AppColors.red),
-                  compact: true,
+              Expanded(
+                child: MudraCard.stat(
+                  onTap: () => context.go('/portfolio'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AmountDisplay(
+                        amount: dashboard.totalLiabilities,
+                        currency: dashboard.currency,
+                        style: AppTypography.monoMedium
+                            .copyWith(color: AppColors.red),
+                        compact: true,
+                      ),
+                      const SizedBox(height: 2),
+                      const SectionLabel('LIABILITIES'),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const Divider(color: AppColors.border),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           const SectionLabel('assets breakdown'),
           const SizedBox(height: AppSpacing.md),
           _BreakdownRow(
@@ -1458,50 +1411,17 @@ class _BreakdownRow extends StatelessWidget {
   }
 }
 
-// ─── Shared Stat Tile ─────────────────────────────────────────────────────
-
-class _StatTile extends StatelessWidget {
-  const _StatTile(
-      {required this.label, required this.child, required this.onTap});
-  final String label;
-  final Widget child;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          highlightColor: AppColors.goldLight.withAlpha(120),
-          splashColor: AppColors.goldLight.withAlpha(80),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm, vertical: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                child,
-                const SizedBox(height: 4),
-                SectionLabel(label),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Hero Dash Stat (hero card bottom row) ─────────────────────────────────
 
 class _HeroDashStat extends StatelessWidget {
-  const _HeroDashStat({required this.label, required this.value});
+  const _HeroDashStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
   final String label;
   final String value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1510,23 +1430,13 @@ class _HeroDashStat extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              fontFamily: 'IBM Plex Mono',
-              fontSize: 13,
+            style: AppTypography.monoSmall.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: color,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'IBM Plex Mono',
-              fontSize: 8,
-              letterSpacing: 1.0,
-              color: Colors.white38,
-            ),
-          ),
+          SectionLabel(label),
         ],
       ),
     );
@@ -1548,7 +1458,6 @@ class _QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MudraCard(
-      elevation: true,
       padding: const EdgeInsets.all(AppSpacing.sm),
       onTap: onTap,
       child: Column(
@@ -1562,6 +1471,134 @@ class _QuickActionTile extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Projection Block ──────────────────────────────────────────────────────
+
+class _ProjectionBlock extends StatelessWidget {
+  const _ProjectionBlock({
+    required this.dashboard,
+    required this.selectedDay,
+    required this.today,
+    required this.daysInMonth,
+    required this.onDayChanged,
+    required this.onReset,
+  });
+
+  final DashboardData dashboard;
+  final int selectedDay;
+  final int today;
+  final int daysInMonth;
+  final ValueChanged<int> onDayChanged;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    final projected = dashboard.monthRunway;
+    final projectedColor = projected >= 0 ? AppColors.green : AppColors.red;
+    final now = DateTime.now();
+    final monthName = _monthShortNames[now.month - 1];
+    final daysLeft = daysInMonth - today;
+
+    return MudraCard.primary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SectionLabel('projected month end'),
+              if (selectedDay != today)
+                GestureDetector(
+                  onTap: onReset,
+                  child: Text(
+                    'Reset to today',
+                    style: AppTypography.monoXSmall
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          AmountDisplay(
+            amount: projected,
+            currency: dashboard.currency,
+            style: AppTypography.displaySmall.copyWith(color: projectedColor),
+            coloured: false,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$daysLeft days remaining · $monthName ${now.year}',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              const SectionLabel('simulate day'),
+              const Spacer(),
+              Text(
+                'Day $selectedDay',
+                style: AppTypography.monoXSmall.copyWith(color: AppColors.gold),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+              activeTrackColor: projectedColor,
+              inactiveTrackColor: AppColors.border,
+              thumbColor: projectedColor,
+              overlayColor: projectedColor.withAlpha(30),
+            ),
+            child: Slider(
+              value: selectedDay.toDouble(),
+              min: 1,
+              max: daysInMonth.toDouble(),
+              divisions: daysInMonth - 1,
+              onChanged: (v) => onDayChanged(v.round()),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('liquid now'),
+                    const SizedBox(height: 2),
+                    AmountDisplay(
+                      amount: dashboard.bankBalance,
+                      currency: dashboard.currency,
+                      style: AppTypography.monoSmall,
+                    ),
+                  ],
+                ),
+              ),
+              Container(width: 1, height: 28, color: AppColors.border),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionLabel('balance day $selectedDay'),
+                    const SizedBox(height: 2),
+                    AmountDisplay(
+                      amount: dashboard.simulatedBalanceOnDay,
+                      currency: dashboard.currency,
+                      style: AppTypography.monoSmall
+                          .copyWith(color: projectedColor),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

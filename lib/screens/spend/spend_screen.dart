@@ -154,7 +154,7 @@ class SpendScreen extends ConsumerWidget {
                   AppSpacing.screenH, AppSpacing.lg,
                   AppSpacing.screenH, 0),
               child: MudraCard(
-                elevation: true,
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -202,7 +202,7 @@ class SpendScreen extends ConsumerWidget {
                     AppSpacing.screenH, AppSpacing.md,
                     AppSpacing.screenH, 0),
                 child: MudraCard(
-                  elevation: true,
+  
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -227,7 +227,7 @@ class SpendScreen extends ConsumerWidget {
                   AppSpacing.screenH, AppSpacing.md,
                   AppSpacing.screenH, 0),
               child: MudraCard(
-                elevation: true,
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

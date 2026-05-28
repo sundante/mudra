@@ -105,20 +105,21 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
               ),
               child: Column(
                 children: [
-                  MudraCard(
-                    color: AppColors.goldLight,
-                    child: Row(
-                      children: [
-                        Expanded(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: MudraCard.primary(
                           child: _SummaryStat(
                             label: 'LIQUID',
                             amount: liquidTotal,
                             currency: currency,
-                            color: AppColors.ink,
+                            color: AppColors.green,
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: MudraCard.stat(
                           child: _SummaryStat(
                             label: 'FIXED DEPOSITS',
                             amount: fdTotal,
@@ -126,8 +127,8 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
                             color: AppColors.amber,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Align(

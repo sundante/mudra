@@ -13,6 +13,7 @@ import '../../widgets/common/mudra_hero_card.dart';
 import '../../data/models/investment_holding.dart';
 import '../../data/models/investment_platform.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../providers/fab_trigger_provider.dart';
 import '../../providers/investment_provider.dart';
 import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
@@ -39,6 +40,13 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(fabTriggerProvider, (_, next) {
+      if (next.$1 == 3 && mounted) {
+        _openAddSheet(context,
+            ref.read(platformsStreamProvider).valueOrNull ?? []);
+      }
+    });
+
     final dashboard = ref.watch(dashboardNotifierProvider);
     final platforms = (ref.watch(platformsStreamProvider).valueOrNull ?? [])
       ..sort((a, b) => a.safePlatformName
@@ -86,11 +94,6 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openAddSheet(context, platforms),
-        backgroundColor: AppColors.gold,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: CustomScrollView(
         slivers: [
           // ── Net Worth Hero ───────────────────────────────────────────
@@ -108,11 +111,11 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
                   sublabel: 'Tap for full breakdown',
                   bottom: Row(
                     children: [
-                      _HeroInvestStat(label: 'ASSETS', value: CurrencyFormatter.compact(dashboard.totalAssets, dashboard.currency)),
-                      Container(width: 1, height: 28, color: Colors.white24),
-                      _HeroInvestStat(label: 'INVESTED', value: CurrencyFormatter.compact(dashboard.investmentsTotal, dashboard.currency)),
-                      Container(width: 1, height: 28, color: Colors.white24),
-                      _HeroInvestStat(label: 'DEBTS', value: CurrencyFormatter.compact(dashboard.totalLiabilities, dashboard.currency)),
+                      _HeroInvestStat(label: 'ASSETS', value: CurrencyFormatter.compact(dashboard.totalAssets, dashboard.currency), color: AppColors.green),
+                      Container(width: 1, height: 24, color: AppColors.border),
+                      _HeroInvestStat(label: 'INVESTED', value: CurrencyFormatter.compact(dashboard.investmentsTotal, dashboard.currency), color: AppColors.amber),
+                      Container(width: 1, height: 24, color: AppColors.border),
+                      _HeroInvestStat(label: 'DEBTS', value: CurrencyFormatter.compact(dashboard.totalLiabilities, dashboard.currency), color: AppColors.red),
                     ],
                   ),
                 ),
@@ -144,21 +147,28 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
                     AppSpacing.sm, AppSpacing.screenH, AppSpacing.sm),
-                child: AssetAllocationDonut(
-                  currency: dashboard.currency,
-                  segments: AssetType.values
-                      .map((t) {
-                        final total = filteredHoldings
-                            .where((h) => h.safeAssetType == t)
-                            .fold<double>(0, (s, h) => s + h.safeCurrentValue);
-                        return DonutSegment(
-                          label: assetTypeLabel(t),
-                          value: total,
-                          color: _assetTypeColor(t),
-                        );
-                      })
-                      .where((s) => s.value > 0)
-                      .toList(),
+                child: MudraCard(
+                  padding: EdgeInsets.zero,
+                  child: SizedBox(
+                    height: 200,
+                    child: AssetAllocationDonut(
+                      currency: dashboard.currency,
+                      segments: AssetType.values
+                          .map((t) {
+                            final total = filteredHoldings
+                                .where((h) => h.safeAssetType == t)
+                                .fold<double>(
+                                    0, (s, h) => s + h.safeCurrentValue);
+                            return DonutSegment(
+                              label: assetTypeLabel(t),
+                              value: total,
+                              color: _assetTypeColor(t),
+                            );
+                          })
+                          .where((s) => s.value > 0)
+                          .toList(),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -531,54 +541,52 @@ class _AssetTypeGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-        childrenPadding: const EdgeInsets.fromLTRB(
-            AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
-        title: SectionLabel(assetTypeLabel(assetType).toUpperCase()),
-        trailing: AmountDisplay(
-          amount: groupTotal,
-          currency: currency,
-          style: AppTypography.monoSmall.copyWith(color: AppColors.amber),
-          compact: true,
-        ),
-        children: holdings
-            .map((h) => Dismissible(
-                  key: ValueKey('holding-${h.id}'),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.redLight,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child:
-                        const Icon(Icons.delete_outline, color: AppColors.red),
+    return MudraCard(
+      padding: const EdgeInsets.all(AppSpacing.cardPad),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SectionLabel(assetTypeLabel(assetType).toUpperCase()),
+              const Spacer(),
+              AmountDisplay(
+                amount: groupTotal,
+                currency: currency,
+                style: AppTypography.monoSmall.copyWith(color: AppColors.amber),
+                compact: true,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...holdings.map((h) => Dismissible(
+                key: ValueKey('holding-${h.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.redLight,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  confirmDismiss: (_) async {
-                    onDeleteHolding(h.id);
-                    return false;
-                  },
-                  child: HoldingRow(
-                    schemeName: h.safeSchemeName,
-                    platformName:
-                        platformMap[h.safePlatformId]?.safePlatformName ?? '—',
-                    investedAmount: h.safeInvestedAmount,
-                    currentValue: h.safeCurrentValue,
-                    currency: currency,
-                    onTap: () => onTapHolding(h),
-                  ),
-                ))
-            .toList(),
+                  child: const Icon(Icons.delete_outline,
+                      color: AppColors.red, size: 18),
+                ),
+                confirmDismiss: (_) async {
+                  onDeleteHolding(h.id);
+                  return false;
+                },
+                child: HoldingRow(
+                  schemeName: h.safeSchemeName,
+                  platformName:
+                      platformMap[h.safePlatformId]?.safePlatformName ?? '—',
+                  investedAmount: h.safeInvestedAmount,
+                  currentValue: h.safeCurrentValue,
+                  currency: currency,
+                  onTap: () => onTapHolding(h),
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -637,10 +645,15 @@ class _AddChoiceSheet extends StatelessWidget {
 // ── Hero Invest Stat ──────────────────────────────────────────────────────
 
 class _HeroInvestStat extends StatelessWidget {
-  const _HeroInvestStat({required this.label, required this.value});
+  const _HeroInvestStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final String value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -649,23 +662,13 @@ class _HeroInvestStat extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              fontFamily: 'IBM Plex Mono',
-              fontSize: 13,
+            style: AppTypography.monoSmall.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: color,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'IBM Plex Mono',
-              fontSize: 8,
-              letterSpacing: 1.0,
-              color: Colors.white38,
-            ),
-          ),
+          SectionLabel(label),
         ],
       ),
     );
@@ -981,11 +984,6 @@ class _HoldingEditorSheetState extends State<_HoldingEditorSheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             MudraCard(
-              color: pnl > 0
-                  ? AppColors.greenLight
-                  : pnl < 0
-                      ? AppColors.redLight
-                      : AppColors.surfaceAlt,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1192,11 +1190,6 @@ class _PlatformEditorSheetState extends State<_PlatformEditorSheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             MudraCard(
-              color: pnl > 0
-                  ? AppColors.greenLight
-                  : pnl < 0
-                      ? AppColors.redLight
-                      : AppColors.surfaceAlt,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -6,6 +6,7 @@ import 'models/credit.dart';
 import 'models/debt.dart';
 import 'models/investment_platform.dart';
 import 'models/outgoing.dart';
+import 'models/variable_expense.dart';
 
 // Demo profile: Rohan, 30, Software Engineer, Bangalore. ₹1.2L/month take-home.
 // Seeded only on fresh install (when accounts collection is empty).
@@ -226,5 +227,30 @@ Future<void> seedDemoData(Isar isar) async {
       ..createdAt = DateTime.now();
 
     await isar.credits.putAll([salary, interest]);
+
+    // ── Variable Expenses (May 2026) ─────────────────────────────────────────
+    final may = DateTime.now().year;
+
+    VariableExpense makeExp(double amt, VariableCategory cat, String note, int day) =>
+        VariableExpense()
+          ..uid = _uuid.v4()
+          ..amount = amt
+          ..category = cat
+          ..note = note
+          ..spentAt = DateTime(may, 5, day)
+          ..createdAt = DateTime(may, 5, day);
+
+    await isar.variableExpenses.putAll([
+      makeExp(1800, VariableCategory.food,          'Big Basket — monthly groceries', 2),
+      makeExp(380,  VariableCategory.food,          'Swiggy — dinner',                5),
+      makeExp(240,  VariableCategory.transport,     'Ola — airport drop',             7),
+      makeExp(799,  VariableCategory.health,        'Cult.fit — monthly membership',  8),
+      makeExp(2200, VariableCategory.shopping,      'Zara — summer shirt',            11),
+      makeExp(900,  VariableCategory.entertainment, 'PVR — movie tickets × 2',        14),
+      makeExp(650,  VariableCategory.health,        'Apollo Pharmacy',                17),
+      makeExp(1400, VariableCategory.shopping,      'Amazon — desk accessories',      19),
+      makeExp(180,  VariableCategory.transport,     'Auto — office commute',          22),
+      makeExp(320,  VariableCategory.misc,          'Stationery + notebooks',         25),
+    ]);
   });
 }

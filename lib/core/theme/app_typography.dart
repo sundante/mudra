@@ -51,39 +51,39 @@ class AppTypography {
   // Body — IBM Plex Sans (all UI text)
   static TextStyle get bodyLarge => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
-        height: 1.65,
+        height: 1.6,
       );
 
   static TextStyle get bodyMedium => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: FontWeight.w400,
-        height: 1.65,
+        height: 1.6,
       );
 
   static TextStyle get bodySmall => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: FontWeight.w400,
       );
 
   static TextStyle get labelLarge => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: FontWeight.w600,
       );
 
   static TextStyle get labelMedium => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
       );
 
   static TextStyle get labelSmall => const TextStyle(
         fontFamily: 'IBMPlexSans',
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: FontWeight.w500,
       );
 
@@ -102,28 +102,28 @@ class AppTypography {
 
   static TextStyle get monoMedium => const TextStyle(
         fontFamily: 'IBMPlexMono',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
       );
 
   static TextStyle get monoSmall => const TextStyle(
         fontFamily: 'IBMPlexMono',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
       );
 
   static TextStyle get monoXSmall => const TextStyle(
         fontFamily: 'IBMPlexMono',
-        fontSize: 10,
+        fontSize: 9.5,
         fontWeight: FontWeight.w400,
       );
 
-  // Section labels — IBM Plex Mono, uppercase tracking, always inkDim
+  // Section labels — IBM Plex Mono, uppercase tracking, gold
   static TextStyle get sectionLabel => const TextStyle(
         fontFamily: 'IBMPlexMono',
         fontSize: 9.5,
         fontWeight: FontWeight.w400,
         letterSpacing: 1.8,
-        color: AppColors.inkDim,
+        color: AppColors.gold,
       );
 }

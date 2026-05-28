@@ -3,8 +3,8 @@
 
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
-**Last Updated:** 2026-05-28
-**Current Phase:** Phase 14 Complete — Flow Map And Profile/Home UX Refinements
+**Last Updated:** 2026-05-29
+**Current Phase:** Phase 15 Complete — Design System v2 Restyle
 **Overall Progress:** Core implementation complete; configured auth/device verification pending
 
 ---
@@ -14,6 +14,7 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-29 | Design System v2 Restyle | Created `docs/DESIGN.md` master design reference. Tightened typography (body/label/mono scale −1–2px) and spacing (screenH 20→16, screenV 24→16, cardPad=12). Rewrote `MudraCard` (3 variants: default, `.stat`, `.primary` with 3px gold left border), `MudraHeroCard` (flat white, Cormorant gold number, no gradient). Replaced fuel gauge with `_ProjectionBlock` (green/red projected month-end + inline slider). Section labels default to gold. ExpansionTiles replaced with always-visible cards + "show N more" pattern across Debts, Investments, Net screens. `OutgoingRow` dot prefix. Centralized FAB via `fabTriggerProvider`. Updated `seed_data.dart` with 10 seeded variable expenses. `flutter analyze` clean; `flutter test` passing. | — |
 | 2026-05-28 | Flow map + profile/home UX refinements | Rebuilt App Map as a compact flow-board driven by `assets/maps/mudra_app_map.json`, regenerated `docs/vibes/APP_MAP.html`, and added map widget coverage. Removed App Map from Home quick actions so it lives only in Profile. Simplified Profile to identity/navigation/account/data actions only; removed income, pay date, and currency controls from Profile. Removed the gold Month Runway hero from Home → This Month so the gauge is the primary visual. Gauge colour now follows projected month-end runway directly: grey at 0, green above 0, red below 0. `flutter analyze` clean; `flutter test` passing. | — |
 | 2026-05-28 | Dev mode hardening | Full security audit and air-gap for dev builds. Bundled Cormorant Garamond, IBM Plex Sans, IBM Plex Mono as local assets — removed all google_fonts CDN calls from `app_typography.dart`, `amount_display.dart`, `mudra_hero_card.dart`; added `GoogleFonts.config.allowRuntimeFetching = false` guard. Switched `openDatabase()` and `resetDatabaseFiles()` to `getApplicationSupportDirectory()` (iOS iCloud backup excluded by default). Hidden Google/Apple social buttons when Supabase not configured. Added `Dev: Skip auth` + `Dev Tools` entry on WelcomeScreen (debug only). New `lib/screens/dev/dev_tools_screen.dart` with DB info, Clear all data, and Delete DB + reset. `flutter analyze` clean. | Install on real device to verify fonts + Dev Tools flow |
 | 2026-05-28 | Auth screen layout fix | Fixed `WelcomeScreen` rendering assertion (`!semantics.parentDataDirty`) caused by `Spacer()` widgets + two-button `Row` in Copilot-added debug block. Replaced `Column` + `Spacer` with `SingleChildScrollView` + fixed padding. Consolidated debug buttons into one `Dev: Skip auth` button. | — |
@@ -412,6 +413,29 @@
 
 ---
 
+## Phase 15 — Design System v2 Restyle
+**Goal:** Compact, professional visual language. Gold accents only, no filled tiles, no fuel gauge.
+
+- [x] `docs/DESIGN.md` created — master design system reference (philosophy, colour grammar, gold rules, typography, spacing, component catalog, anti-patterns)
+- [x] `lib/core/theme/app_typography.dart` — body/label/mono scale reduced 1–2px; `sectionLabel` default colour → `AppColors.gold`
+- [x] `lib/core/constants/spacing.dart` — `screenH` 20→16, `screenV` 24→16, new `cardPad = 12`
+- [x] `lib/widgets/common/section_label.dart` — default colour now gold (propagates to all screens)
+- [x] `lib/widgets/common/mudra_card.dart` — redesigned: default (neutral border), `.stat` (stat grid cell), `.primary` (3px gold left border); all white bg, 12px padding
+- [x] `lib/widgets/common/mudra_hero_card.dart` — flat white card, Cormorant 36px gold number, no gradient
+- [x] `lib/providers/fab_trigger_provider.dart` — `StateProvider<(int, int)>` for centralized FAB dispatch per tab
+- [x] `lib/screens/dashboard/dashboard_screen.dart` — fuel gauge removed; `_ProjectionBlock` (green/red projected month-end + day slider inline); stats → `MudraCard.stat`
+- [x] `lib/widgets/outgoing_row.dart` — 6×6 colour dot prefix, no left border bar, tighter padding
+- [x] `lib/screens/debts/debts_screen.dart` — `_UpcomingFeaturedCard` (MudraCard.primary); groups always-visible with "show N more"; FAB centralized
+- [x] `lib/screens/portfolio/investments_screen.dart` — donut in bounded `MudraCard`; asset type groups always-visible; FAB centralized
+- [x] `lib/screens/net/net_screen.dart` — formula → 3 `MudraCard.stat` in a row; sections always-visible
+- [x] `lib/screens/accounts/funds_screen.dart` — summary split into `MudraCard.primary` (liquid) + `MudraCard.stat` (FD)
+- [x] `lib/screens/spend/spend_screen.dart` — removed stale `elevation:` params
+- [x] `lib/data/seed_data.dart` — 10 variable expenses seeded (May 2026, all 6 categories)
+
+**✅ PHASE 15 COMPLETE — `flutter analyze` clean, `flutter test` passing**
+
+---
+
 ## Progress Summary
 
 | Phase | Items | Done | Remaining |
@@ -431,7 +455,8 @@
 | 12 — US-002 Guest Mode | 14 | 8 | 6 verification items |
 | 13 — Dev Mode Hardening | 18 | 14 | 4 deferred to prod hardening |
 | 14 — Flow Map + UX Refinements | 11 | 11 | 0 ✅ |
-| **TOTAL** | **208** | **195** | **13 items** |
+| 15 — Design System v2 Restyle | 15 | 15 | 0 ✅ |
+| **TOTAL** | **223** | **210** | **13 items** |
 
 ---
 

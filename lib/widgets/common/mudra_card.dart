@@ -3,37 +3,57 @@ import 'package:flutter/material.dart';
 import '../../core/constants/spacing.dart';
 import '../../core/theme/app_colors.dart';
 
+/// Standard card. White bg, grey border, 12px padding.
+///
+/// `.primary` — white bg, 3px gold left border, for the most important card per screen.
+/// `.stat`    — same as default, used for side-by-side stat grid cells.
 class MudraCard extends StatelessWidget {
   const MudraCard({
     super.key,
     required this.child,
     this.padding,
-    this.color,
     this.onTap,
-    this.elevation = false,
-  });
+  })  : _isPrimary = false;
+
+  const MudraCard.primary({
+    super.key,
+    required this.child,
+    this.padding,
+    this.onTap,
+  })  : _isPrimary = true;
+
+  const MudraCard.stat({
+    super.key,
+    required this.child,
+    this.padding,
+    this.onTap,
+  })  : _isPrimary = false;
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
-  final Color? color;
   final VoidCallback? onTap;
-  final bool elevation;
+  final bool _isPrimary;
 
   @override
   Widget build(BuildContext context) {
+    final effectivePadding =
+        padding ?? const EdgeInsets.all(AppSpacing.cardPad);
+
     final content = Container(
       decoration: BoxDecoration(
-        color: color ?? AppColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: elevation ? null : Border.all(color: AppColors.border),
-        boxShadow: elevation
-            ? const [
-                BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
-                BoxShadow(color: Color(0x06000000), blurRadius: 3, offset: Offset(0, 1)),
-              ]
-            : null,
+        border: Border(
+          left: BorderSide(
+            color: _isPrimary ? AppColors.gold : AppColors.border,
+            width: _isPrimary ? 3 : 1,
+          ),
+          top: const BorderSide(color: AppColors.border),
+          right: const BorderSide(color: AppColors.border),
+          bottom: const BorderSide(color: AppColors.border),
+        ),
       ),
-      padding: padding ?? const EdgeInsets.all(AppSpacing.md),
+      padding: effectivePadding,
       child: child,
     );
 

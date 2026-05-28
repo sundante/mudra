@@ -17,6 +17,7 @@ import '../../providers/settings_provider.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
+import '../../widgets/common/mudra_card.dart';
 import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/platform_card.dart';
@@ -360,73 +361,78 @@ class _FormulaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
+    final net = assets - liabilities;
+    return Row(
+      children: [
+        Expanded(
+          child: MudraCard.stat(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Assets',
-                    style: AppTypography.labelSmall
-                        .copyWith(color: AppColors.inkDim)),
-                const SizedBox(height: AppSpacing.xs),
+                const SectionLabel('assets'),
+                const SizedBox(height: 4),
                 AmountDisplay(
-                    amount: assets,
-                    currency: currency,
-                    style: AppTypography.monoMedium
-                        .copyWith(color: AppColors.green)),
+                  amount: assets,
+                  currency: currency,
+                  style: AppTypography.monoSmall.copyWith(color: AppColors.green),
+                  compact: true,
+                ),
               ],
             ),
           ),
-          Text('−',
-              style: AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
-          Expanded(
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('−',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim)),
+        ),
+        Expanded(
+          child: MudraCard.stat(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Liabilities',
-                    style: AppTypography.labelSmall
-                        .copyWith(color: AppColors.inkDim)),
-                const SizedBox(height: AppSpacing.xs),
+                const SectionLabel('liabilities'),
+                const SizedBox(height: 4),
                 AmountDisplay(
-                    amount: liabilities,
-                    currency: currency,
-                    style: AppTypography.monoMedium
-                        .copyWith(color: AppColors.red)),
+                  amount: liabilities,
+                  currency: currency,
+                  style: AppTypography.monoSmall.copyWith(color: AppColors.red),
+                  compact: true,
+                ),
               ],
             ),
           ),
-          Text('=',
-              style: AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
-          Expanded(
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Text('=',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim)),
+        ),
+        Expanded(
+          child: MudraCard.primary(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Net Worth',
-                    style: AppTypography.labelSmall
-                        .copyWith(color: AppColors.inkDim)),
-                const SizedBox(height: AppSpacing.xs),
+                const SectionLabel('net worth'),
+                const SizedBox(height: 4),
                 AmountDisplay(
-                    amount: assets - liabilities,
-                    currency: currency,
-                    style: AppTypography.monoMedium.copyWith(
-                        color: assets >= liabilities
-                            ? AppColors.green
-                            : AppColors.red)),
+                  amount: net,
+                  currency: currency,
+                  style: AppTypography.monoSmall.copyWith(
+                    color: net >= 0 ? AppColors.green : AppColors.red,
+                  ),
+                  compact: true,
+                ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-// ── Expandable Section ─────────────────────────────────────────────────────
+// ── Always-visible Section Card ────────────────────────────────────────────
 
 class _ExpandableSection extends StatelessWidget {
   const _ExpandableSection({
@@ -445,24 +451,25 @@ class _ExpandableSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-        childrenPadding: const EdgeInsets.fromLTRB(
-            AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-        title: SectionLabel(label),
-        trailing: AmountDisplay(
-          amount: total,
-          currency: currency,
-          style: AppTypography.monoMedium.copyWith(color: color),
-        ),
-        children: children,
+    return MudraCard(
+      padding: const EdgeInsets.all(AppSpacing.cardPad),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SectionLabel(label),
+              const Spacer(),
+              AmountDisplay(
+                amount: total,
+                currency: currency,
+                style: AppTypography.monoSmall.copyWith(color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...children,
+        ],
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 class SectionLabel extends StatelessWidget {
@@ -13,7 +12,7 @@ class SectionLabel extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: AppTypography.sectionLabel.copyWith(
-        color: color ?? AppColors.inkDim,
+        color: color,
       ),
     );
   }

@@ -7,8 +7,9 @@ class AppSpacing {
   static const double lg = 24;
   static const double xl = 32;
   static const double xxl = 48;
-  static const double screenH = 20.0;
-  static const double screenV = 24.0;
+  static const double screenH = 16.0;
+  static const double screenV = 16.0;
+  static const double cardPad = 12.0;
 }
 
 class AppRadius {
