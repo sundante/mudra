@@ -22,18 +22,23 @@ const AppSettingsSchema = CollectionSchema(
       name: r'baseCurrency',
       type: IsarType.string,
     ),
-    r'monthlyIncome': PropertySchema(
+    r'hasCompletedSetup': PropertySchema(
       id: 1,
+      name: r'hasCompletedSetup',
+      type: IsarType.bool,
+    ),
+    r'monthlyIncome': PropertySchema(
+      id: 2,
       name: r'monthlyIncome',
       type: IsarType.double,
     ),
     r'payDate': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'payDate',
       type: IsarType.long,
     ),
     r'userName': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'userName',
       type: IsarType.string,
     )
@@ -70,9 +75,10 @@ void _appSettingsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.baseCurrency);
-  writer.writeDouble(offsets[1], object.monthlyIncome);
-  writer.writeLong(offsets[2], object.payDate);
-  writer.writeString(offsets[3], object.userName);
+  writer.writeBool(offsets[1], object.hasCompletedSetup);
+  writer.writeDouble(offsets[2], object.monthlyIncome);
+  writer.writeLong(offsets[3], object.payDate);
+  writer.writeString(offsets[4], object.userName);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -83,10 +89,11 @@ AppSettings _appSettingsDeserialize(
 ) {
   final object = AppSettings();
   object.baseCurrency = reader.readString(offsets[0]);
+  object.hasCompletedSetup = reader.readBool(offsets[1]);
   object.id = id;
-  object.monthlyIncome = reader.readDouble(offsets[1]);
-  object.payDate = reader.readLong(offsets[2]);
-  object.userName = reader.readString(offsets[3]);
+  object.monthlyIncome = reader.readDouble(offsets[2]);
+  object.payDate = reader.readLong(offsets[3]);
+  object.userName = reader.readString(offsets[4]);
   return object;
 }
 
@@ -100,10 +107,12 @@ P _appSettingsDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -335,6 +344,16 @@ extension AppSettingsQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'baseCurrency',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      hasCompletedSetupEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasCompletedSetup',
+        value: value,
       ));
     });
   }
@@ -669,6 +688,20 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByHasCompletedSetup() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedSetup', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByHasCompletedSetupDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedSetup', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByMonthlyIncome() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'monthlyIncome', Sort.asc);
@@ -719,6 +752,20 @@ extension AppSettingsQuerySortThenBy
       thenByBaseCurrencyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'baseCurrency', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByHasCompletedSetup() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedSetup', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByHasCompletedSetupDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedSetup', Sort.desc);
     });
   }
 
@@ -781,6 +828,13 @@ extension AppSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QDistinct>
+      distinctByHasCompletedSetup() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasCompletedSetup');
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByMonthlyIncome() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'monthlyIncome');
@@ -812,6 +866,13 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, String, QQueryOperations> baseCurrencyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'baseCurrency');
+    });
+  }
+
+  QueryBuilder<AppSettings, bool, QQueryOperations>
+      hasCompletedSetupProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasCompletedSetup');
     });
   }
 

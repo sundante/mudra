@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
-import 'data/database.dart';
-import 'data/models/account.dart';
-import 'data/seed_data.dart';
+import 'data/repositories/auth_repository.dart';
+import 'providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,22 +12,24 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  final bootstrap = await bootstrapDatabase();
-  final isar = bootstrap.isar;
-
-  // Fresh install: seed demo data so the app is never empty on first launch
-  final accountCount = await isar.accounts.count();
-  if (accountCount == 0) {
-    await seedDemoData(isar);
-  }
-  if (bootstrap.didRecover) {
-    debugPrint('Mudra DB was recovered and reseeded on startup.');
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  const googleIosClientId = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
+  const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+  AuthRepository authRepository = const UnconfiguredAuthRepository();
+  if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+    authRepository = SupabaseAuthRepository(
+      client: Supabase.instance.client,
+      googleIosClientId: googleIosClientId.isEmpty ? null : googleIosClientId,
+      googleWebClientId: googleWebClientId.isEmpty ? null : googleWebClientId,
+    );
   }
 
   runApp(
     ProviderScope(
       overrides: [
-        isarProvider.overrideWithValue(isar),
+        authRepositoryProvider.overrideWithValue(authRepository),
       ],
       child: const MudraApp(),
     ),

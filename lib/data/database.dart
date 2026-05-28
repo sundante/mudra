@@ -14,6 +14,7 @@ import 'models/outgoing.dart';
 import 'models/variable_expense.dart';
 
 const mudraDbName = 'mudra_db';
+const _userDbPrefix = 'mudra_user_';
 
 class DatabaseBootstrapResult {
   const DatabaseBootstrapResult({
@@ -76,7 +77,12 @@ Future<BootstrapResult<T>> bootstrapWithRecovery<T>({
   }
 }
 
-Future<Isar> openDatabase() async {
+String userDatabaseName(String userId) {
+  final safeId = userId.replaceAll(RegExp('[^A-Za-z0-9_]'), '_');
+  return '$_userDbPrefix$safeId';
+}
+
+Future<Isar> openDatabase({String name = mudraDbName}) async {
   final dir = await getApplicationDocumentsDirectory();
   return Isar.open(
     [
@@ -89,8 +95,17 @@ Future<Isar> openDatabase() async {
       CreditSchema,
       VariableExpenseSchema,
     ],
-    name: mudraDbName,
+    name: name,
     directory: dir.path,
+  );
+}
+
+Future<DatabaseBootstrapResult> openUserDatabase(String userId) {
+  final name = userDatabaseName(userId);
+  return bootstrapDatabase(
+    open: () => openDatabase(name: name),
+    validate: validateDatabase,
+    reset: () => resetDatabaseFiles(name: name),
   );
 }
 
@@ -135,8 +150,8 @@ Future<void> validateDatabase(Isar isar) async {
   settings?.safePayDate;
 }
 
-Future<void> resetDatabaseFiles() async {
-  final instance = Isar.getInstance(mudraDbName);
+Future<void> resetDatabaseFiles({String name = mudraDbName}) async {
+  final instance = Isar.getInstance(name);
   if (instance != null) {
     await instance.close(deleteFromDisk: true);
     return;
@@ -147,9 +162,9 @@ Future<void> resetDatabaseFiles() async {
   if (!await dbDir.exists()) return;
 
   await for (final entity in dbDir.list()) {
-    final name =
+    final entityName =
         entity.uri.pathSegments.isNotEmpty ? entity.uri.pathSegments.last : '';
-    if (!name.startsWith(mudraDbName)) continue;
+    if (!entityName.startsWith(name)) continue;
 
     if (entity is File) {
       await entity.delete();
@@ -157,6 +172,49 @@ Future<void> resetDatabaseFiles() async {
       await entity.delete(recursive: true);
     }
   }
+}
+
+Future<bool> legacyDatabaseHasData() async {
+  final legacy = await openDatabase();
+  final hasData = await legacy.accounts.count() > 0 ||
+      await legacy.outgoings.count() > 0 ||
+      await legacy.investmentPlatforms.count() > 0 ||
+      await legacy.debts.count() > 0 ||
+      await legacy.credits.count() > 0 ||
+      await legacy.variableExpenses.count() > 0;
+  await legacy.close();
+  return hasData;
+}
+
+Future<void> migrateLegacyDatabaseInto(Isar target) async {
+  final legacy = await openDatabase();
+  final accounts = await legacy.accounts.where().findAll();
+  final outgoings = await legacy.outgoings.where().findAll();
+  final platforms = await legacy.investmentPlatforms.where().findAll();
+  final holdings = await legacy.investmentHoldings.where().findAll();
+  final debts = await legacy.debts.where().findAll();
+  final credits = await legacy.credits.where().findAll();
+  final expenses = await legacy.variableExpenses.where().findAll();
+  final settings = await legacy.appSettings.get(1);
+
+  await target.writeTxn(() async {
+    await target.accounts.putAll(accounts);
+    await target.outgoings.putAll(outgoings);
+    await target.investmentPlatforms.putAll(platforms);
+    await target.investmentHoldings.putAll(holdings);
+    await target.debts.putAll(debts);
+    await target.credits.putAll(credits);
+    await target.variableExpenses.putAll(expenses);
+    if (settings != null) {
+      await target.appSettings.put(settings);
+    }
+  });
+  await legacy.close(deleteFromDisk: true);
+}
+
+Future<void> discardLegacyDatabase() async {
+  final legacy = await openDatabase();
+  await legacy.close(deleteFromDisk: true);
 }
 
 Future<void> clearAllData(Isar isar) async {
@@ -172,6 +230,12 @@ Future<void> clearAllData(Isar isar) async {
   });
 }
 
+final activeDatabaseProvider = StateProvider<Isar?>((ref) => null);
+
 final isarProvider = Provider<Isar>((ref) {
-  throw UnimplementedError('isarProvider must be overridden in main');
+  final isar = ref.watch(activeDatabaseProvider);
+  if (isar == null) {
+    throw StateError('Financial data is unavailable before authentication.');
+  }
+  return isar;
 });

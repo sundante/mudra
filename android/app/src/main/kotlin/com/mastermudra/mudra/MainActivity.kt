@@ -1,4 +1,4 @@
-package com.example.mudra
+package com.mastermudra.mudra
 
 import io.flutter.embedding.android.FlutterActivity
 

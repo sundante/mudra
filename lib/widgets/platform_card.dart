@@ -34,6 +34,8 @@ class PlatformCard extends StatelessWidget {
 
     return MudraCard(
       onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -66,7 +68,7 @@ class PlatformCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(

@@ -13,6 +13,17 @@
 - **Testing**: flutter_test, integration_test, golden_toolkit
 - **Linting**: flutter_lints + project `analysis_options.yaml`
 
+## Design Rules (non-negotiable)
+
+- **Background**: `#FFFFFF` pure white — `#FAF8F4` cream is banned
+- **Colour grammar**: Green `#1E6B44` = income/positive · Red `#A83226` = expense/debt · Amber `#9A5510` = investment · Gold `#8A6520` = brand/CTA/active — never break this in charts or UI
+- **Gold is sacred**: use only on primary CTA, brand mark, key numbers, active nav state — overuse kills its signal
+- **Typography**: Cormorant Garamond = hero/display numbers · IBM Plex Sans = all UI text · IBM Plex Mono = **every** currency amount (no exceptions)
+- **Section labels**: IBM Plex Mono, 9.5px, ALL CAPS, tracked — e.g. `NEXT 7 DAYS`
+- **Hero gradient card**: dark gold (`#2A1C04 → #A07020`) — max 1 per screen, never stack two
+- **Full design reference**: `docs/vibes/mudra_design_system.html`
+- **Aspirational direction + roadmap**: `docs/vibes/DESIGN_DIRECTION.md`
+
 ## Architecture
 
 Flat feature structure (actual layout — agents must use these paths):

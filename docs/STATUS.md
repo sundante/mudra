@@ -1,11 +1,11 @@
 # Mudra — Build Status
-**Local-first MVP · Flutter · No Backend · No Auth**
+**Authenticated Local-first MVP · Flutter · Supabase Identity · Device-local Finances**
 
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
-**Last Updated:** 2026-05-27
-**Current Phase:** Phase 10 Complete ✅ — Variable Spend Logging
-**Overall Progress:** 152 / 152 items complete
+**Last Updated:** 2026-05-28
+**Current Phase:** Phase 11 In Verification — US-001 First Launch Authentication
+**Overall Progress:** Core implementation complete; configured auth/device verification pending
 
 ---
 
@@ -14,7 +14,8 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
-| 2026-05-27 | Phase 10 complete | Variable spend logging feature: VariableExpense Isar model + Safe extension, VariableExpenseRepository (CRUD + watchCurrentMonth + sumUpToDay/countUpToDay), variableExpensesProvider + todaySpendProvider, QuickSpendSheet (amount, 6 category chips, optional note, date picker), Dashboard FAB → QuickSpendSheet, variableSpentToDay/variableExpensesToDayCount added to DashboardData, simulatedBalanceOnDay formula updated to subtract variableSpentToDay, Debits screen gained 3rd "Spent" tab with variable expense list + swipe-delete. Widget tests for QuickSpendSheet. flutter analyze clean. | — |
+| 2026-05-28 | US-001 implementation | Added canonical user story, Supabase auth repository/session gate, Welcome/Register/Login/Verify/Reset/Legacy/Setup screens, protected routing, per-user Isar stores, legacy attach/start-fresh, Profile sign-out, `hasCompletedSetup`, mobile deep links/identity, and white native splash configuration. `flutter analyze` clean; `flutter test` passed; Android debug APK builds. | Configure Supabase/Google/Apple consoles and manually verify real auth on iOS + Android |
+| 2026-05-27 | Phase 10 complete | Variable spend logging feature: VariableExpense Isar model + Safe extension, VariableExpenseRepository (CRUD + watchCurrentMonth + sumUpToDay/countUpToDay), variableExpensesProvider + todaySpendProvider, QuickSpendSheet (amount, 6 category chips, optional note, date picker), Dashboard FAB → QuickSpendSheet, variableSpentToDay/variableExpensesToDayCount added to DashboardData, simulatedBalanceOnDay formula updated to subtract variableSpentToDay, Debts screen includes the "VARIABLE SPENT" monthly log with swipe-delete. Widget tests for QuickSpendSheet. flutter analyze clean. | — |
 | 2026-05-27 | MVP Complete | Both iOS + Android emulators verified live. Phase 4 dashboard checklist confirmed: seeded data loads, slider updates gauge/balance, date picker locks to current month and syncs with slider, Overall tab renders. Phase 9 verified: bottom sheets scroll with keyboard, large numbers display without overflow, release build clean. 140/140 items complete. | — |
 | 2026-05-27 | Phase 9 implementation | Orientation lock (SystemChrome.setPreferredOrientations), app icon generated (flutter_launcher_icons, cream bg + gold M), splash screen generated (flutter_native_splash, cream bg). Code-verified: haptics, amount formatting, fuel gauge animation, empty states, back/swipe-dismiss, divide-by-zero guard, negative balance guard, debug banner. flutter analyze clean. 3 items remain: bottom sheet keyboard scroll, large number overflow, release build — all need simulator. | Simulator verification |
 | 2026-05-27 | Phase 8 complete | Built settings_screen.dart: income sheet, pay date 1–31 grid picker, 7-currency chips, double-confirmation clear-all-data, footer with wordmark + version + tagline. Added clearAllData() to database.dart. flutter analyze clean. | Simulator verification |
@@ -70,7 +71,7 @@
 - [x] `lib/core/utils/currency_formatter.dart` — INR lakh/crore + international formats
 - [x] `lib/core/utils/date_helpers.dart` — `daysUntilDebit`, `debitLabel`, `isUrgent`
 - [ ] Google Fonts verified loading (Cormorant Garamond, IBM Plex Sans, IBM Plex Mono)
-- [ ] Theme applied to `MaterialApp` — cream background visible on both simulators
+- [x] Theme applied to `MaterialApp` — pure-white background configured throughout application surfaces
 
 ---
 
@@ -246,8 +247,8 @@
 - [x] Zero liquidTotal edge case — no divide-by-zero in fuel gauge
 - [x] Negative balanceForMonth — fuel gauge shows 0%, negative amount in red
 - [x] Orientation locked to portrait (`SystemChrome.setPreferredOrientations`)
-- [x] App icon set (cream bg, gold "M") — generated via flutter_launcher_icons
-- [x] Splash screen (cream bg) — generated via flutter_native_splash
+- [x] App icon set (pure-white bg, gold "M") — regenerated via flutter_launcher_icons
+- [x] Splash screen (pure-white bg) — regenerated via flutter_native_splash
 - [x] No debug banner (`debugShowCheckedModeBanner: false`)
 - [x] `flutter run --release` on both simulators — no console errors
 
@@ -266,7 +267,7 @@
 ### UI
 - [x] `lib/widgets/common/quick_spend_sheet.dart` — `QuickSpendSheet`: large amount input (IBM Plex Mono), 6 category chips (Food / Transport / Shopping / Health / Entertainment / Misc), optional note field, date chip (defaults Today, locks to current month), save with light haptic + snackbar
 - [x] `lib/screens/dashboard/dashboard_screen.dart` — FAB on "This Month" tab opens `QuickSpendSheet`; `variableSpentToDay` row visible in the Cash section when > 0
-- [x] `lib/screens/outgoings/debits_screen.dart` — 3rd tab "Spent" added alongside Expenses/Investments; shows variable expense list sorted by date descending, monthly total as "VARIABLE SPENT", swipe-to-delete
+- [x] `lib/screens/debts/debts_screen.dart` — expandable "VARIABLE SPENT" section shows current-month variable expense list, monthly total, and swipe-to-delete
 
 ### Dashboard Formula Update
 - [x] `DashboardData` gains `variableSpentToDay` (double) and `variableExpensesToDayCount` (int)
@@ -277,6 +278,30 @@
 - [x] `test/quick_spend_sheet_test.dart` — save button disabled at zero amount; submits correct amount + category
 
 **✅ PHASE 10 COMPLETE**
+
+---
+
+## Phase 11 — US-001 First Launch Authentication And Account Entry
+**Goal:** Require verified identity before financial access and isolate local records per authenticated account.
+
+### Implemented
+- [x] `docs/user-stories/US-001-first-launch-authentication.md` — approved story and implementation brief
+- [x] Supabase/Auth repository plus Riverpod session controller with verification, recovery, migration, setup, and ready stages
+- [x] Welcome, Register, Login, Verify Email, Forgot Password, New Password, Legacy Data, and Setup Welcome screens
+- [x] Auth-aware GoRouter redirects protect all five-tab financial routes, Profile, and App Map
+- [x] User-scoped Isar database lifecycle; signed-out startup does not open finance data or seed demo records
+- [x] Legacy local database attach/start-fresh choice after authentication
+- [x] `AppSettings.hasCompletedSetup` generated and used for setup routing
+- [x] Profile sign-out and non-seeding clear-data behavior
+- [x] iOS/Android identifiers and `mudra://auth/*` deep-link handling; Apple entitlement on iOS
+- [x] Native splash configuration regenerated to pure white
+- [x] Focused tests for Welcome gating, registration validation, and user database namespaces
+- [x] `flutter analyze` clean, `flutter test` passing, and Android debug APK build successful
+
+### Release Verification Pending
+- [ ] Configure Supabase project redirect URLs and email confirmation/reset templates
+- [ ] Configure Google and Apple provider credentials/capabilities for release builds
+- [ ] Manually verify email, Google, Apple, reset-password, migration, and sign-out on target devices
 
 ---
 
@@ -295,32 +320,35 @@
 | 8 — Settings | 7 | 7 | 0 ✅ |
 | 9 — Polish | 14 | 14 | 0 ✅ |
 | 10 — Variable Spend Logging | 12 | 12 | 0 ✅ |
-| **TOTAL** | **152** | **152** | **0 ✅** |
+| 11 — US-001 Authentication | 15 | 12 | 3 verification items |
+| **TOTAL** | **167** | **164** | **3 verification items** |
 
 ---
 
 ## Features Implemented
 
-> This section is the hand-off reference. Everything listed here is code-complete, verified on iOS and Android.
+> This section is the hand-off reference. Phases 0-10 were device-verified;
+> Phase 11 is code-complete and awaiting configured Supabase/provider device verification.
 
 ### App Infrastructure
-- Local-only, no backend, no auth, no internet — all data on-device via Isar
-- Crash-recovery database bootstrap: on hydration failure, DB resets and reseeds automatically
-- Fresh-install seed data so the app is never empty on first launch
+- Supabase-backed identity gate; finances remain device-local in per-user Isar stores
+- Authenticated database bootstrap with recovery and one-time legacy attach/start-fresh handling
+- Fresh install enters Welcome and setup handoff without seeded financial records
 - Portrait-only orientation lock
-- Custom app icon: cream background, gold "M" (flutter_launcher_icons)
-- Cream splash screen (flutter_native_splash)
+- Custom app icon: white background, gold "M" (flutter_launcher_icons)
+- Pure-white splash screen (flutter_native_splash)
 - No debug banner in release builds
 
 ### Design System
 - **3-font stack**: Cormorant Garamond (display/hero numbers), IBM Plex Sans (all UI text), IBM Plex Mono (every currency amount, no exceptions)
-- **Colour grammar**: green = positive/income, red = expense/negative/debt, amber = investment, gold = CTA/accent, cream (#FAF8F4) = background everywhere
+- **Colour grammar**: green = positive/income, red = expense/negative/debt, amber = investment, gold = CTA/accent, white (#FFFFFF) = page background
 - **Interaction grammar**: save → light haptic, delete/update → medium haptic, error → vibrate
 - Token library: `AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`
 - `CurrencyFormatter`: INR lakh/crore system (₹ 1,50,000 / ₹ 10.5L / ₹ 1.2Cr) + 6 international currencies
 
 ### Navigation
-- 5-tab bottom nav: Home / Funds / Debits / Investments / Settings
+- Welcome/Auth/Setup entry routes protect the five-tab financial shell
+- 5-tab bottom nav: Home / Funds / Debts / Invests / Net
 - GoRouter + `StatefulShellRoute` — tab state persists across switches
 - Gold active tab, dim inactive, top border on nav bar
 
@@ -364,7 +392,7 @@
 - Debit row: coloured left bar, name, category badge, date label, days-until label
 - **Add/Edit Expense**: name (suggestion chips), amount, debit date (1–31), category chips (loan, insurance, utility, subscription, other)
 - **Add/Edit Investment**: amber accent, investment categories (SIP, PPF, EPF, NPS, other)
-- **Spent tab**: variable expenses for the current month, sorted newest first, swipe-to-delete
+- **Variable Spent section**: variable expenses for the current month, sorted newest first, swipe-to-delete
 - List sorted by debit date ascending (Expenses/Investments tabs)
 - Swipe-to-delete; empty state per tab
 
@@ -385,18 +413,19 @@
 - **Monthly income** row → sheet with large amount input (anchors the gauge)
 - **Pay date** row → 31-day grid picker (1–31, 44×44 tap targets)
 - **Currency** group → 7 animated chips: INR / USD / GBP / AED / SGD / AUD / EUR — changing currency reformats every amount in the app instantly
-- **Clear all data**: double-confirmation dialog → heavy haptic → wipes all Isar collections → reseeds default settings
+- **Clear all data**: double-confirmation dialog → heavy haptic → wipes the signed-in user's collections and retains an empty configured workspace
+- **Sign out**: closes access to the active local store and returns to Welcome
 - Footer: Mudra wordmark + tagline + v1.0.0
 
 ### Variable Spend Logging
 - **QuickSpendSheet**: large amount input (IBM Plex Mono), 6 category chips (Food / Transport / Shopping / Health / Entertainment / Misc), optional note, date picker (current month only, defaults to today)
 - **Dashboard FAB** (This Month tab): opens QuickSpendSheet; logged amount immediately reduces simulated balance and fuel gauge
-- **Debits → Spent tab**: full list of current-month variable expenses, newest first, swipe-to-delete, monthly total
+- **Debts → Variable Spent**: full list of current-month variable expenses, newest first, swipe-to-delete, monthly total
 - `variableSpentToDay` is subtracted from `simulatedBalanceOnDay` in the Runway Engine formula
 
 ### Data Layer
-- **7 Isar models**: Account, Outgoing, InvestmentPlatform, Debt, AppSettings, Credit, VariableExpense — all with Safe extension getters for runtime null safety
-- **5 repositories**: AccountRepository, OutgoingRepository, InvestmentRepository, SettingsRepository, VariableExpenseRepository — all CRUD + watch streams
+- **8 Isar models**: Account, Outgoing, InvestmentPlatform, InvestmentHolding, Debt, AppSettings, Credit, VariableExpense — with Safe extension getters for runtime null safety
+- AuthRepository manages Supabase identity; finance repositories read from the active authenticated user store
 - **8 Riverpod providers**: accountsStream, outgoingsStream, platformsStream, debtsStream, creditsStream, settingsProvider, variableExpensesProvider, dashboardProvider (DashboardData)
 - `clearAllData()` utility in `database.dart` — clears all 7 collections
 
@@ -406,13 +435,13 @@
 
 | Decision | Detail |
 |---|---|
-| Local-only MVP | No backend, no auth, no internet — Isar on-device only |
+| Authenticated local-first | Supabase provides identity; finance records remain on-device in a user-scoped Isar store |
 | State management | Riverpod 2.x with `@riverpod` code generation |
 | Database | Isar 3.x (NoSQL, fast, works on simulator) |
 | Typography | Cormorant Garamond (display) · IBM Plex Sans (body) · IBM Plex Mono (all currency — no exceptions) |
 | Currency amounts | ALWAYS `CurrencyFormatter.format()` + IBM Plex Mono. Zero exceptions. |
 | Colour grammar | Positive → green · Expenses/negative → red · Investments → amber |
-| Backgrounds | `AppColors.background` (#FAF8F4) everywhere. Never `Colors.white` as scaffold bg. |
+| Backgrounds | `AppColors.background` (#FFFFFF) for page and app-bar backgrounds |
 | Bottom sheets | All forms are bottom sheets, not full-screen routes |
 | Phase discipline | Complete + test on both simulators before advancing to next phase |
 

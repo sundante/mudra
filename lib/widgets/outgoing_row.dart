@@ -33,12 +33,14 @@ class OutgoingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return MudraCard(
       onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 4,
-            height: 64,
+            height: 48,
             decoration: BoxDecoration(
               color: accentColor,
               borderRadius: BorderRadius.circular(AppRadius.full),
@@ -51,7 +53,7 @@ class OutgoingRow extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: AppTypography.bodyLarge.copyWith(
+                  style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.ink,
                     fontWeight: FontWeight.w600,
                   ),

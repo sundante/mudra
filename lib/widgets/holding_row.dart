@@ -39,8 +39,7 @@ class HoldingRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.sm),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-            vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: AppSpacing.xs),
         child: Row(
           children: [
             Expanded(

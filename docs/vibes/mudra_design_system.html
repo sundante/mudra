@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mudra — Design System v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════
+   MUDRA DESIGN SYSTEM — Master Reference v1.0
+   White · Gold · Visualisation-Heavy · Premium
+═══════════════════════════════════════════════════ */
+
+:root {
+  /* ── BACKGROUNDS ─── */
+  --white:        #FFFFFF;
+  --bg-subtle:    #F8F7F5;
+  --bg-section:   #F2F0EC;
+  --bg-hover:     #FAF9F7;
+
+  /* ── BORDERS ─── */
+  --border:       #EBEBEB;
+  --border2:      #E0DEDB;
+  --border3:      #D4D1CC;
+
+  /* ── INK ─── */
+  --ink:          #1C1814;
+  --ink2:         #3A3428;
+  --ink3:         #6B6358;
+  --ink4:         #9C9488;
+
+  /* ── GOLD — PRIMARY BRAND ─── */
+  --gold:         #8A6520;
+  --gold2:        #A07828;
+  --gold3:        #C49430;
+  --gold-lt:      #FBF4E4;
+  --gold-md:      #F0E0B0;
+  --gold-border:  #D4B870;
+  --gold-dark:    #3D2A08;
+  --gold-deep:    #2A1C04;
+
+  /* ── SEMANTIC ─── */
+  --green:        #1E6B44;
+  --green-lt:     #E8F5EE;
+  --green-text:   #155C38;
+  --red:          #A83226;
+  --red-lt:       #FDECEA;
+  --red-text:     #8A1F16;
+  --amber:        #9A5510;
+  --amber-lt:     #FEF0E0;
+  --amber-text:   #7A4010;
+  --blue:         #1A4FA0;
+  --blue-lt:      #EAF0FB;
+
+  /* ── GRADIENT HERO ─── */
+  --gradient-hero: linear-gradient(135deg, #2A1C04 0%, #4A3010 35%, #7A5818 65%, #A07020 100%);
+  --gradient-card: linear-gradient(135deg, #3D2A08 0%, #6B4818 60%, #96701E 100%);
+  --gradient-soft: linear-gradient(135deg, #FBF4E4 0%, #F0E0B0 100%);
+
+  /* ── CHART COLOURS ─── */
+  --chart-1:  #8A6520;   /* gold — primary */
+  --chart-2:  #1E6B44;   /* green */
+  --chart-3:  #A83226;   /* red */
+  --chart-4:  #9A5510;   /* amber */
+  --chart-5:  #1A4FA0;   /* blue */
+  --chart-6:  #6B3FA0;   /* purple */
+  --chart-7:  #2A6B6B;   /* teal */
+  --chart-8:  #C49430;   /* gold light */
+
+  /* ── ELEVATION ─── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.06);
+  --shadow-hero: 0 16px 48px rgba(42,28,4,.30);
+
+  /* ── RADIUS ─── */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  14px;
+  --r-xl:  20px;
+  --r-2xl: 28px;
+
+  /* ── SPACING ─── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+  --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg-subtle);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ────────────────────────────────── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  height: 52px; padding: 0 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--gold); }
+.nav-logo small { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); margin-left:8px; font-weight:400; }
+.nav-links { display:flex; gap:24px; list-style:none; }
+.nav-links a { font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink4); text-decoration:none; transition:color .2s; }
+.nav-links a:hover { color:var(--gold); }
+
+/* ── PAGE LAYOUT ─────────────────────────── */
+#prog { position:fixed; top:0; left:0; height:3px; background:var(--gold); width:0%; z-index:999; }
+.wrap { max-width:1200px; margin:0 auto; padding:0 56px 120px; }
+.chapter { padding-top:72px; }
+.chapter-eye { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; }
+.chapter-h { font-family:'Cormorant Garamond',serif; font-size:clamp(26px,3vw,38px); font-weight:700; color:var(--ink); margin-bottom:6px; line-height:1.15; }
+.chapter-h em { color:var(--gold); font-style:italic; }
+.chapter-sub { font-size:13.5px; color:var(--ink3); max-width:640px; line-height:1.7; margin-bottom:32px; }
+.rule { border:none; border-top:1px solid var(--border2); margin-bottom:32px; }
+
+/* ── GRID ─────────────────────────────────── */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+/* ── SECTION LABEL ───────────────────────── */
+.slabel { font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.2em; color:var(--ink4); margin-bottom:14px; display:block; }
+
+/* ═══════════════════════════════════════════
+   COLOUR SWATCHES
+═══════════════════════════════════════════ */
+.swatch-group { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.swatch-row { display:flex; gap:8px; flex-wrap:wrap; }
+.swatch {
+  display:flex; flex-direction:column; justify-content:space-between;
+  width:100px; height:76px; border-radius:var(--r-md);
+  padding:10px; border:1px solid rgba(0,0,0,.06);
+  transition:transform .2s; cursor:default;
+}
+.swatch:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.swatch.wide { width:160px; }
+.swatch.tall { height:100px; }
+.sw-hex { font-family:'IBM Plex Mono',monospace; font-size:9.5px; font-weight:500; }
+.sw-name { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:.06em; text-transform:uppercase; }
+.dark-text { color:rgba(255,255,255,.9); }
+.dark-text .sw-hex { color:rgba(255,255,255,.7); }
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY SPECIMENS
+═══════════════════════════════════════════ */
+.type-specimen { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:16px; }
+.type-head { background:var(--bg-section); padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.type-head-name { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); text-transform:uppercase; letter-spacing:.12em; }
+.type-head-spec { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink4); }
+.type-body { padding:20px; }
+.type-row { display:flex; align-items:baseline; gap:20px; padding:10px 0; border-bottom:1px solid var(--border); }
+.type-row:last-child { border-bottom:none; }
+.type-label { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink4); text-transform:uppercase; letter-spacing:.1em; min-width:100px; }
+.type-sample { flex:1; }
+.type-spec { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink4); text-align:right; white-space:nowrap; }
+
+/* ═══════════════════════════════════════════
+   PHONE MOCKUP BASE
+═══════════════════════════════════════════ */
+.phone {
+  width:220px; flex-shrink:0;
+  background:var(--white);
+  border-radius:32px;
+  border:2px solid var(--border2);
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  position:relative;
+}
+.phone::before {
+  content:''; position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  width:48px; height:5px; background:var(--border2); border-radius:3px; z-index:2;
+}
+.phone-inner { padding:26px 14px 14px; display:flex; flex-direction:column; gap:8px; }
+.phone-screen { background:var(--white); min-height:420px; }
+.phone-label { font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.12em; color:var(--ink4); margin-top:10px; text-align:center; }
+
+/* ═══════════════════════════════════════════
+   COMPONENT DEMOS — CARDS
+═══════════════════════════════════════════ */
+
+/* Hero gradient card */
+.hero-card {
+  background: var(--gradient-hero);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-hero);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.hero-card::before {
+  content:'';
+  position:absolute; top:-30px; right:-30px;
+  width:140px; height:140px;
+  background:radial-gradient(circle, rgba(196,148,48,.25) 0%, transparent 70%);
+  border-radius:50%;
+}
+.hero-card::after {
+  content:'';
+  position:absolute; bottom:-20px; left:-20px;
+  width:100px; height:100px;
+  background:radial-gradient(circle, rgba(196,148,48,.15) 0%, transparent 70%);
+  border-radius:50%;
+}
+.hc-eye { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:6px; }
+.hc-amount { font-family:'Cormorant Garamond',serif; font-size:42px; font-weight:700; line-height:1; color:white; margin-bottom:4px; }
+.hc-sub { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,.6); }
+.hc-row { display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px; }
+.hc-stat { }
+.hc-stat-num { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; color:rgba(255,255,255,.9); }
+.hc-stat-label { font-family:'IBM Plex Mono',monospace; font-size:8.5px; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:.1em; margin-top:1px; }
+.hc-badge { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.2); border-radius:20px; padding:4px 10px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,.8); }
+.hc-badge.positive { background:rgba(30,107,68,.3); border-color:rgba(30,107,68,.5); color:#7DE0A0; }
+.hc-badge.negative { background:rgba(168,50,38,.3); border-color:rgba(168,50,38,.5); color:#F5A09A; }
+
+/* Data card */
+.data-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:18px 20px;
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow .2s, transform .2s;
+}
+.data-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.dc-label { font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.14em; color:var(--ink4); margin-bottom:8px; }
+.dc-amount { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:var(--ink); }
+.dc-amount.display { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; }
+.dc-amount.green { color:var(--green); }
+.dc-amount.red { color:var(--red); }
+.dc-amount.gold { color:var(--gold); }
+.dc-sub { font-size:12px; color:var(--ink4); margin-top:3px; }
+.dc-divider { border:none; border-top:1px solid var(--border); margin:14px 0; }
+
+/* Metric tile */
+.metric-tile {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+}
+.mt-icon { font-size:18px; margin-bottom:8px; display:block; }
+.mt-value { font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; color:var(--ink); }
+.mt-value.display { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; }
+.mt-label { font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.12em; color:var(--ink4); margin-top:3px; }
+
+/* List row */
+.list-item { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); transition:background .15s; }
+.list-item:last-child { border-bottom:none; }
+.list-item:hover { background:var(--bg-hover); }
+.li-logo { width:36px; height:36px; border-radius:50%; background:var(--bg-section); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; border:1px solid var(--border); }
+.li-body { flex:1; min-width:0; }
+.li-name { font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.li-sub { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); margin-top:1px; }
+.li-right { text-align:right; flex-shrink:0; }
+.li-amount { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; color:var(--ink); }
+.li-pct { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 7px; border-radius:20px; margin-top:2px; display:inline-block; }
+.li-pct.up { background:var(--green-lt); color:var(--green-text); }
+.li-pct.down { background:var(--red-lt); color:var(--red-text); }
+
+/* ═══════════════════════════════════════════
+   CHART COMPONENTS
+═══════════════════════════════════════════ */
+
+/* Semi-donut (half donut) */
+.semi-donut-wrap { text-align:center; padding:8px; }
+.semi-donut-label { font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.12em; color:var(--ink4); margin-bottom:12px; }
+.semi-donut-amount { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--ink); margin-top:-10px; }
+.semi-donut-sub { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink4); }
+.legend-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:12px; }
+.legend-item { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-text { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink3); }
+
+/* Bar chart */
+.bar-chart { display:flex; align-items:flex-end; gap:6px; height:80px; padding:0 4px; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.bar { border-radius:4px 4px 0 0; width:100%; min-height:4px; transition:height .3s ease; }
+.bar-month { font-family:'IBM Plex Mono',monospace; font-size:8px; color:var(--ink4); }
+.bar-chart-wrap { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px 18px; }
+.bc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.bc-title { font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:600; color:var(--ink); }
+.bc-amount { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--gold); }
+.bc-sub { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink4); margin-top:2px; }
+
+/* Stacked bar */
+.stacked-row { display:flex; height:10px; border-radius:5px; overflow:hidden; gap:2px; margin:8px 0; }
+.stacked-segment { border-radius:3px; }
+
+/* Progress bar */
+.prog-row { display:flex; align-items:center; gap:12px; padding:6px 0; }
+.prog-label { font-size:12px; color:var(--ink2); flex:1; }
+.prog-track { flex:2; height:6px; background:var(--bg-section); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:3px; }
+.prog-val { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3); min-width:36px; text-align:right; }
+
+/* Sparkline area */
+.sparkline-wrap { position:relative; height:50px; margin:8px 0; }
+.sparkline-wrap svg { width:100%; height:100%; }
+
+/* Tree / flow row */
+.flow-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.flow-item:last-child { border-bottom:none; }
+.flow-bar-track { flex:1; height:6px; background:var(--bg-section); border-radius:3px; overflow:hidden; }
+.flow-bar-fill { height:100%; border-radius:3px; background:var(--gradient-soft); }
+.flow-name { font-size:12px; color:var(--ink2); min-width:80px; }
+.flow-pct { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gold); min-width:36px; text-align:right; }
+.flow-amount { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3); min-width:60px; text-align:right; }
+
+/* ═══════════════════════════════════════════
+   BUTTON SYSTEM
+═══════════════════════════════════════════ */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:var(--r-sm); font-family:'IBM Plex Sans',sans-serif; font-weight:500; font-size:13px; cursor:pointer; transition:all .2s; border:1px solid transparent; text-decoration:none; }
+.btn-lg { padding:14px 28px; font-size:14px; border-radius:var(--r-md); }
+.btn-sm { padding:7px 14px; font-size:12px; }
+.btn-primary { background:var(--gold); color:white; }
+.btn-primary:hover { background:var(--gold2); }
+.btn-secondary { background:var(--gold-lt); border-color:var(--gold-border); color:var(--gold); }
+.btn-secondary:hover { background:var(--gold-md); }
+.btn-ghost { background:transparent; border-color:var(--border2); color:var(--ink2); }
+.btn-ghost:hover { background:var(--bg-section); }
+.btn-danger { background:var(--red-lt); border-color:#E0B0AC; color:var(--red-text); }
+.fab { width:52px; height:52px; border-radius:50%; background:var(--gold); color:white; font-size:22px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(138,101,32,.40); cursor:pointer; border:none; transition:transform .2s, box-shadow .2s; }
+.fab:hover { transform:scale(1.06); box-shadow:0 6px 24px rgba(138,101,32,.50); }
+
+/* ═══════════════════════════════════════════
+   INPUT SYSTEM
+═══════════════════════════════════════════ */
+.input-wrap { margin-bottom:14px; }
+.input-label { font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.12em; color:var(--ink4); margin-bottom:6px; display:block; }
+.input { width:100%; height:48px; padding:0 14px; border:1px solid var(--border2); border-radius:var(--r-sm); background:var(--white); font-family:'IBM Plex Sans',sans-serif; font-size:14px; color:var(--ink); outline:none; transition:border-color .2s, box-shadow .2s; }
+.input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(138,101,32,.10); }
+.input.mono { font-family:'IBM Plex Mono',monospace; font-size:16px; text-align:right; }
+.input-prefix-wrap { position:relative; }
+.input-prefix { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--gold); pointer-events:none; }
+.input-prefix-wrap .input { padding-left:28px; }
+
+/* ═══════════════════════════════════════════
+   BADGE / CHIP SYSTEM
+═══════════════════════════════════════════ */
+.badge { display:inline-flex; align-items:center; gap:4px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.06em; padding:3px 9px; border-radius:20px; border:1px solid; white-space:nowrap; font-weight:500; }
+.badge-gold { background:var(--gold-lt); border-color:var(--gold-border); color:var(--gold); }
+.badge-green { background:var(--green-lt); border-color:#7EC8A0; color:var(--green-text); }
+.badge-red { background:var(--red-lt); border-color:#E0A09C; color:var(--red-text); }
+.badge-amber { background:var(--amber-lt); border-color:#D4A060; color:var(--amber-text); }
+.badge-blue { background:var(--blue-lt); border-color:#90B0E0; color:var(--blue); }
+.badge-grey { background:var(--bg-section); border-color:var(--border2); color:var(--ink4); }
+
+/* chip */
+.chip { display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:500; padding:6px 14px; border-radius:20px; border:1px solid var(--border2); background:var(--white); color:var(--ink2); cursor:pointer; transition:all .15s; }
+.chip.active { background:var(--gold); border-color:var(--gold); color:white; }
+.chip:hover:not(.active) { background:var(--bg-section); border-color:var(--border3); }
+
+/* ═══════════════════════════════════════════
+   BOTTOM SHEET
+═══════════════════════════════════════════ */
+.sheet { background:var(--white); border-radius:var(--r-2xl) var(--r-2xl) 0 0; padding:20px; box-shadow:0 -8px 40px rgba(0,0,0,.12); }
+.sheet-handle { width:36px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 16px; }
+.sheet-title { font-family:'IBM Plex Sans',sans-serif; font-size:16px; font-weight:600; color:var(--ink); margin-bottom:16px; text-align:center; }
+
+/* ═══════════════════════════════════════════
+   SCREEN MOCKUPS
+═══════════════════════════════════════════ */
+.screens-row { display:flex; gap:24px; overflow-x:auto; padding-bottom:16px; }
+.screen { background:var(--white); border-radius:var(--r-2xl); width:220px; flex-shrink:0; box-shadow:var(--shadow-lg); border:1px solid var(--border); overflow:hidden; }
+.sc-status { height:28px; background:var(--white); display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid var(--border); }
+.sc-time { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--ink); font-weight:500; }
+.sc-icons { font-size:8px; color:var(--ink); }
+.sc-body { padding:14px; }
+.sc-appbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.sc-logo { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--gold); }
+.sc-icon-btn { width:32px; height:32px; border-radius:50%; background:var(--bg-section); display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+/* ═══════════════════════════════════════════
+   PROMPT BOX
+═══════════════════════════════════════════ */
+.prompt-box { background:var(--ink); color:white; border-radius:var(--r-xl); overflow:hidden; }
+.pb-head { background:rgba(255,255,255,.06); padding:16px 24px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:space-between; }
+.pb-title { font-family:'IBM Plex Sans',sans-serif; font-size:14px; font-weight:600; color:white; }
+.pb-copy { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:rgba(255,255,255,.4); cursor:pointer; }
+.pb-body { padding:24px; }
+.pb-body pre { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; color:rgba(255,255,255,.75); white-space:pre-wrap; word-break:break-word; }
+.pb-body pre .key { color:#C4A050; }
+.pb-body pre .val { color:#80B08A; }
+.pb-body pre .comment { color:rgba(255,255,255,.3); }
+.pb-body pre .heading { color:#E0C870; font-weight:500; }
+.pb-foot { padding:12px 24px; background:rgba(255,255,255,.04); border-top:1px solid rgba(255,255,255,.08); }
+.pb-foot p { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:rgba(255,255,255,.3); }
+.copy-btn { background:var(--gold); color:white; border:none; border-radius:var(--r-sm); padding:7px 16px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:opacity .2s; }
+.copy-btn:hover { opacity:.85; }
+
+footer { border-top:1px solid var(--border2); padding:28px 56px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:var(--bg-subtle); }
+footer p { font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink4); }
+footer strong { color:var(--gold); }
+
+@media(max-width:860px){
+  .wrap{padding:0 20px 80px;} nav{padding:0 20px;} .nav-links{display:none;} footer{padding:20px;}
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .screens-row{gap:14px;}
+  .screen{width:180px;}
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.chapter{animation:fadeUp .5s ease both;}
+.chapter:nth-child(1){animation-delay:.05s;}
+.chapter:nth-child(2){animation-delay:.10s;}
+.chapter:nth-child(3){animation-delay:.15s;}
+.chapter:nth-child(4){animation-delay:.20s;}
+.chapter:nth-child(5){animation-delay:.25s;}
+.chapter:nth-child(6){animation-delay:.30s;}
+.chapter:nth-child(7){animation-delay:.35s;}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav>
+  <div class="nav-logo">Mudra <small>Design System v1.0</small></div>
+  <ul class="nav-links">
+    <li><a href="#philosophy">Philosophy</a></li>
+    <li><a href="#colour">Colour</a></li>
+    <li><a href="#type">Typography</a></li>
+    <li><a href="#charts">Charts</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#screens">Screens</a></li>
+    <li><a href="#prompt">AI Prompt</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 0 — COVER
+══════════════════════════════════════════ -->
+<div class="chapter" style="padding-top:52px;">
+  <div style="background:var(--gradient-hero);border-radius:var(--r-2xl);padding:48px 44px;box-shadow:var(--shadow-hero);position:relative;overflow:hidden;margin-bottom:0;">
+    <div style="position:absolute;top:-60px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(196,148,48,.2) 0%,transparent 70%);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-40px;left:60px;width:200px;height:200px;background:radial-gradient(circle,rgba(196,148,48,.12) 0%,transparent 70%);border-radius:50%;"></div>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">मुद्रा · Design System v1.0 · May 2026</p>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(40px,5vw,64px);font-weight:700;line-height:1.05;color:white;margin-bottom:12px;">White. Gold.<br/><span style="font-style:italic;color:rgba(196,164,80,1);">Visualisation-first.</span></h1>
+    <p style="font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:300;color:rgba(255,255,255,.6);max-width:540px;line-height:1.6;">The complete design language for Mudra — the daily financial awareness app. One palette. One typeface family. Every chart, component, and screen principle defined.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;">
+      <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.7);">8 Chart Types</span>
+      <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.7);">3 Font Roles</span>
+      <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.7);">4 Card Patterns</span>
+      <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.7);">Claude Design Ready</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 1 — PHILOSOPHY
+══════════════════════════════════════════ -->
+<div class="chapter" id="philosophy">
+  <p class="chapter-eye">Chapter 01 — Design Philosophy</p>
+  <h2 class="chapter-h">The <em>Five Principles</em></h2>
+  <hr class="rule"/>
+
+  <div class="g3" style="margin-bottom:20px;">
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">🔭</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Clarity over decoration</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">Every visual element must earn its place by making financial data clearer. No decorative charts, no gratuitous gradients. If a user cannot read the key number in under 2 seconds, the design has failed.</div>
+    </div>
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">⚖️</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Gold is sacred</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">Gold appears only on the most important elements: the primary CTA, the brand mark, the runway number, and the active state. Overuse kills its signal power. Every gold element must justify its presence.</div>
+    </div>
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">📐</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">White breathes</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">Pure white (#FFFFFF) as the base creates maximum contrast for data. Generous whitespace is not emptiness — it is the cognitive space users need to process financial information without anxiety.</div>
+    </div>
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">📊</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Data has a grammar</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">Green = positive/income. Red = expense/negative/debt. Amber = investment/neutral. Gold = brand/CTA. This colour grammar never breaks — not even in charts. Users learn it once and read it everywhere.</div>
+    </div>
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">🔢</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Numbers are monospaced</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">Every currency amount — without exception — uses IBM Plex Mono. Monospaced digits align vertically in lists, making comparison instant. This is a hard rule, not a guideline.</div>
+    </div>
+    <div class="data-card">
+      <span style="font-size:24px;display:block;margin-bottom:10px;">🏛️</span>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Hero = Cormorant</div>
+      <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;">The large financial numbers (Runway, Net Worth, Total Assets) use Cormorant Garamond — a serif that feels authoritative and premium at display sizes. It creates the "weight" that big numbers deserve.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 2 — COLOUR
+══════════════════════════════════════════ -->
+<div class="chapter" id="colour">
+  <p class="chapter-eye">Chapter 02 — Colour System</p>
+  <h2 class="chapter-h"><em>Gold</em> on White — The Complete Palette</h2>
+  <hr class="rule"/>
+
+  <span class="slabel">Backgrounds & Surfaces</span>
+  <div class="swatch-row" style="margin-bottom:24px;">
+    <div class="swatch" style="background:#FFFFFF;"><span class="sw-name" style="color:var(--ink4);">White</span><span class="sw-hex" style="color:var(--ink3);">#FFFFFF</span></div>
+    <div class="swatch" style="background:#F8F7F5;"><span class="sw-name" style="color:var(--ink4);">Subtle</span><span class="sw-hex" style="color:var(--ink3);">#F8F7F5</span></div>
+    <div class="swatch" style="background:#F2F0EC;"><span class="sw-name" style="color:var(--ink4);">Section</span><span class="sw-hex" style="color:var(--ink3);">#F2F0EC</span></div>
+    <div class="swatch" style="background:#EBEBEB;"><span class="sw-name" style="color:var(--ink4);">Border</span><span class="sw-hex" style="color:var(--ink3);">#EBEBEB</span></div>
+    <div class="swatch" style="background:#E0DEDB;"><span class="sw-name" style="color:var(--ink4);">Border 2</span><span class="sw-hex" style="color:var(--ink3);">#E0DEDB</span></div>
+  </div>
+
+  <span class="slabel">Gold — Primary Brand (use sparingly)</span>
+  <div class="swatch-row" style="margin-bottom:24px;">
+    <div class="swatch tall" style="background:#2A1C04;" class="dark-text"><span class="sw-name" style="color:rgba(255,255,255,.5);">Deep</span><span class="sw-hex" style="color:rgba(255,255,255,.7);">#2A1C04</span></div>
+    <div class="swatch tall" style="background:#4A3010;" class="dark-text"><span class="sw-name" style="color:rgba(255,255,255,.5);">Dark</span><span class="sw-hex" style="color:rgba(255,255,255,.7);">#4A3010</span></div>
+    <div class="swatch tall" style="background:#8A6520;"><span class="sw-name" style="color:rgba(255,255,255,.6);">★ Primary</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#8A6520</span></div>
+    <div class="swatch tall" style="background:#C49430;"><span class="sw-name" style="color:rgba(255,255,255,.6);">Light</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#C49430</span></div>
+    <div class="swatch tall" style="background:#F0E0B0;"><span class="sw-name" style="color:var(--gold);">Medium</span><span class="sw-hex" style="color:var(--gold2);">#F0E0B0</span></div>
+    <div class="swatch tall" style="background:#FBF4E4;"><span class="sw-name" style="color:var(--gold);">Tint</span><span class="sw-hex" style="color:var(--gold2);">#FBF4E4</span></div>
+  </div>
+
+  <span class="slabel">Semantic Colours — Colour Grammar</span>
+  <div class="swatch-row" style="margin-bottom:24px;">
+    <div class="swatch wide" style="background:#1E6B44;"><span class="sw-name" style="color:rgba(255,255,255,.6);">✓ Positive / Income</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#1E6B44</span></div>
+    <div class="swatch wide" style="background:#E8F5EE;"><span class="sw-name" style="color:var(--green);">Green Light</span><span class="sw-hex" style="color:var(--green);">#E8F5EE</span></div>
+    <div class="swatch wide" style="background:#A83226;"><span class="sw-name" style="color:rgba(255,255,255,.6);">✗ Expense / Debt</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#A83226</span></div>
+    <div class="swatch wide" style="background:#FDECEA;"><span class="sw-name" style="color:var(--red);">Red Light</span><span class="sw-hex" style="color:var(--red);">#FDECEA</span></div>
+    <div class="swatch wide" style="background:#9A5510;"><span class="sw-name" style="color:rgba(255,255,255,.6);">~ Investment</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#9A5510</span></div>
+    <div class="swatch wide" style="background:#FEF0E0;"><span class="sw-name" style="color:var(--amber);">Amber Light</span><span class="sw-hex" style="color:var(--amber);">#FEF0E0</span></div>
+  </div>
+
+  <span class="slabel">Chart Palette — 8 Series (in preference order)</span>
+  <div class="swatch-row" style="margin-bottom:8px;">
+    <div class="swatch" style="background:#8A6520;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C1</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#8A6520</span></div>
+    <div class="swatch" style="background:#1E6B44;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C2</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#1E6B44</span></div>
+    <div class="swatch" style="background:#A83226;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C3</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#A83226</span></div>
+    <div class="swatch" style="background:#9A5510;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C4</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#9A5510</span></div>
+    <div class="swatch" style="background:#1A4FA0;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C5</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#1A4FA0</span></div>
+    <div class="swatch" style="background:#6B3FA0;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C6</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#6B3FA0</span></div>
+    <div class="swatch" style="background:#2A6B6B;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C7</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#2A6B6B</span></div>
+    <div class="swatch" style="background:#C49430;"><span class="sw-name" style="color:rgba(255,255,255,.6);">C8</span><span class="sw-hex" style="color:rgba(255,255,255,.9);">#C49430</span></div>
+  </div>
+  <p style="font-size:11.5px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;margin-bottom:32px;">Chart colours always follow semantic grammar where applicable: income data = C2 green, expense = C3 red, investment = C4 amber, brand metric = C1 gold.</p>
+
+  <!-- Gradient showcase -->
+  <span class="slabel">Hero Gradient — Dark Gold (for prominent cards only)</span>
+  <div style="border-radius:var(--r-xl);padding:28px 32px;background:var(--gradient-hero);box-shadow:var(--shadow-hero);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px;">Gradient Demo</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:white;line-height:1;">₹ 67,232</p>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">Month Runway</p>
+    </div>
+    <div style="text-align:right;">
+      <span style="background:rgba(30,107,68,.35);border:1px solid rgba(30,107,68,.5);color:#7DE0A0;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 10px;border-radius:20px;">+₹ 1,200 vs last month</span>
+    </div>
+  </div>
+  <p style="font-size:11.5px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;margin-bottom:0;">Used for: the main Runway card, the Net Worth hero, onboarding screens. Maximum 1 per screen. Never stack two gradient cards.</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 3 — TYPOGRAPHY
+══════════════════════════════════════════ -->
+<div class="chapter" id="type">
+  <p class="chapter-eye">Chapter 03 — Typography</p>
+  <h2 class="chapter-h">Three Fonts. <em>One System.</em></h2>
+  <hr class="rule"/>
+
+  <!-- Cormorant -->
+  <div class="type-specimen">
+    <div class="type-head">
+      <span class="type-head-name">Cormorant Garamond — Display & Hero Numbers</span>
+      <span class="type-head-spec">Font role: large financial figures, screen headings</span>
+    </div>
+    <div class="type-body">
+      <div class="type-row">
+        <span class="type-label">Display XL</span>
+        <span class="type-sample" style="font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:700;line-height:1;color:var(--ink);">₹ 1,20,000</span>
+        <span class="type-spec">700 · 64px · lh 1.0</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Display L</span>
+        <span class="type-sample" style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;line-height:1.05;color:var(--ink);">₹ 67,232</span>
+        <span class="type-spec">700 · 48px · lh 1.05</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Display M</span>
+        <span class="type-sample" style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--ink);">₹ 5.75 Lakh</span>
+        <span class="type-spec">700 · 36px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Heading L</span>
+        <span class="type-sample" style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);">Your money. Clear, every morning.</span>
+        <span class="type-spec">600 · 26px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Italic accent</span>
+        <span class="type-sample" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;font-weight:400;color:var(--gold);">Available this month</span>
+        <span class="type-spec">400i · 22px · gold</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IBM Plex Sans -->
+  <div class="type-specimen">
+    <div class="type-head">
+      <span class="type-head-name">IBM Plex Sans — All UI Text</span>
+      <span class="type-head-spec">Font role: labels, body, buttons, descriptions</span>
+    </div>
+    <div class="type-body">
+      <div class="type-row">
+        <span class="type-label">Title</span>
+        <span class="type-sample" style="font-family:'IBM Plex Sans',sans-serif;font-size:17px;font-weight:600;color:var(--ink);">Home Loan EMI — SBI</span>
+        <span class="type-spec">600 · 17px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Body L</span>
+        <span class="type-sample" style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:400;color:var(--ink2);">Your runway is tight. 3 large debits in the next 7 days.</span>
+        <span class="type-spec">400 · 15px · lh 1.65</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Body M</span>
+        <span class="type-sample" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:400;color:var(--ink3);">Add your SBI savings account to get started.</span>
+        <span class="type-spec">400 · 13px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Label strong</span>
+        <span class="type-sample" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:var(--ink);">Nippon Small Cap · SIP</span>
+        <span class="type-spec">600 · 13px</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IBM Plex Mono -->
+  <div class="type-specimen">
+    <div class="type-head">
+      <span class="type-head-name">IBM Plex Mono — ALL Currency Amounts (zero exceptions)</span>
+      <span class="type-head-spec">Font role: every number, section labels, badges, timestamps</span>
+    </div>
+    <div class="type-body">
+      <div class="type-row">
+        <span class="type-label">Amount L</span>
+        <span class="type-sample" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--ink);">₹ 34,568</span>
+        <span class="type-spec">600 · 22px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Amount M</span>
+        <span class="type-sample" style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:var(--ink);">₹ 2,000 <span style="color:var(--amber);">+₹ 18,200</span> <span style="color:var(--green);">+₹ 1,20,000</span></span>
+        <span class="type-spec">500 · 15px</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Negative</span>
+        <span class="type-sample" style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:var(--red);">− ₹ 34,568</span>
+        <span class="type-spec">500 · 15px · red</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Section label</span>
+        <span class="type-sample" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.2em;color:var(--ink4);">NEXT 7 DAYS · LIQUID TOTAL · COMMITTED</span>
+        <span class="type-spec">400 · 9.5px · tracked 1.8</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">% Change</span>
+        <span class="type-sample"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--green-lt);color:var(--green-text);padding:3px 9px;border-radius:20px;border:1px solid #7EC8A0;">+12.4%</span>&nbsp;&nbsp;<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--red-lt);color:var(--red-text);padding:3px 9px;border-radius:20px;border:1px solid #E0A09C;">−33.4%</span></span>
+        <span class="type-spec">Badge · 11px</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 4 — CHARTS
+══════════════════════════════════════════ -->
+<div class="chapter" id="charts">
+  <p class="chapter-eye">Chapter 04 — Data Visualisation</p>
+  <h2 class="chapter-h">8 Chart <em>Patterns</em></h2>
+  <hr class="rule"/>
+  <p class="chapter-sub">Every chart serves the clarity principle: one insight, immediately readable. Complex multi-axis charts are banned. Each pattern is defined with its use case and implementation approach.</p>
+
+  <div class="g2" style="margin-bottom:20px;">
+
+    <!-- 1. Semi-Donut -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 1 — Semi-Donut (Half Ring)</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: asset allocation, budget breakdown, category split. The open bottom provides space for the total amount label.</div>
+      <div class="semi-donut-wrap">
+        <div class="semi-donut-label">Asset Allocation</div>
+        <svg viewBox="0 0 200 120" style="width:180px;height:110px;overflow:visible;">
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#8A6520;stop-opacity:1"/>
+              <stop offset="100%" style="stop-color:#C49430;stop-opacity:1"/>
+            </linearGradient>
+          </defs>
+          <!-- background arc -->
+          <path d="M 20 100 A 80 80 0 0 1 180 100" stroke="#EBEBEB" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Segment 1: liquid (gold) 40% -->
+          <path d="M 20 100 A 80 80 0 0 1 116 27" stroke="url(#g1)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Segment 2: investments (amber) 35% -->
+          <path d="M 116 27 A 80 80 0 0 1 170 55" stroke="#9A5510" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Segment 3: FDs (green) 25% -->
+          <path d="M 170 55 A 80 80 0 0 1 180 100" stroke="#1E6B44" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- centre text -->
+          <text x="100" y="88" text-anchor="middle" font-family="Cormorant Garamond" font-size="20" font-weight="700" fill="#1C1814">₹ 5.75L</text>
+          <text x="100" y="102" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#9C9488" letter-spacing="1">NET WORTH</text>
+        </svg>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#8A6520;"></div><span class="legend-text">Liquid 40%</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#9A5510;"></div><span class="legend-text">Invested 35%</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1E6B44;"></div><span class="legend-text">FD 25%</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: CustomPainter with drawArc() · Gap at bottom = 60° · Each segment = strokeWidth 12–14</p>
+      </div>
+    </div>
+
+    <!-- 2. Fuel Gauge Ring (existing) -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 2 — Fuel Gauge Ring (Animated)</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">The hero widget. Full 240° arc. Colour shifts green → amber → red based on runway percentage. Animates on value change.</div>
+      <div style="text-align:center;padding:8px;">
+        <svg viewBox="0 0 200 200" style="width:160px;height:160px;">
+          <circle cx="100" cy="100" r="72" stroke="#EBEBEB" stroke-width="14" fill="none" stroke-dasharray="452 452" stroke-dashoffset="-113" stroke-linecap="round" transform="rotate(150 100 100)"/>
+          <circle cx="100" cy="100" r="72" stroke="#1E6B44" stroke-width="14" fill="none" stroke-dasharray="271 452" stroke-dashoffset="-113" stroke-linecap="round" transform="rotate(150 100 100)"/>
+          <text x="100" y="96" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8A6520">₹</text>
+          <text x="100" y="116" text-anchor="middle" font-family="Cormorant Garamond" font-size="28" font-weight="700" fill="#1C1814">67,232</text>
+          <text x="100" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9C9488" letter-spacing="0.8">AVAILABLE</text>
+        </svg>
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:6px;">
+          <div style="text-align:center;"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink2);">₹ 97,400</span><br/><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;">Liquid</span></div>
+          <div style="text-align:center;"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red);">₹ 30,168</span><br/><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;">Committed</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Already implemented. 240° sweep, stroke-dasharray animation, colour threshold at 50% / 30%.</p>
+      </div>
+    </div>
+
+    <!-- 3. Bar Chart -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 3 — Monthly Bar Chart</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: monthly spend, income by month, SIP history. Two-colour stacked variant shows income vs expense per month.</div>
+      <div class="bar-chart-wrap">
+        <div class="bc-header">
+          <div><div class="bc-title">Monthly Spend</div><div class="bc-sub">LAST 6 MONTHS</div></div>
+          <div style="text-align:right;"><div class="bc-amount">₹ 52,340</div><div class="bc-sub">This month</div></div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar" style="height:38px;background:#8A6520;opacity:.4;"></div><div class="bar-month">Dec</div></div>
+          <div class="bar-col"><div class="bar" style="height:52px;background:#8A6520;opacity:.5;"></div><div class="bar-month">Jan</div></div>
+          <div class="bar-col"><div class="bar" style="height:44px;background:#8A6520;opacity:.6;"></div><div class="bar-month">Feb</div></div>
+          <div class="bar-col"><div class="bar" style="height:62px;background:#8A6520;opacity:.7;"></div><div class="bar-month">Mar</div></div>
+          <div class="bar-col"><div class="bar" style="height:48px;background:#8A6520;opacity:.8;"></div><div class="bar-month">Apr</div></div>
+          <div class="bar-col"><div class="bar" style="height:72px;background:#8A6520;"></div><div class="bar-month">May</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: fl_chart BarChart or custom Column widgets. Animate height on mount. Tap to show tooltip.</p>
+      </div>
+    </div>
+
+    <!-- 4. Income Flow / Tree -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 4 — Income Flow Tree</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: income source breakdown, expense category split. Horizontal bars scaled to percentage. The "tree" feel comes from indentation and connecting lines.</div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;">
+        <div style="padding:14px 16px;background:var(--bg-subtle);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink4);">Income Sources</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--green);">+₹ 1,20,000</span>
+        </div>
+        <div style="padding:4px 0;">
+          <div class="flow-item"><span class="flow-name">Salary</span><div class="flow-bar-track"><div class="flow-bar-fill" style="width:75%;background:linear-gradient(90deg,#1E6B44,#3A9A6A);"></div></div><span class="flow-pct">75%</span><span class="flow-amount">₹ 90,000</span></div>
+          <div class="flow-item"><span class="flow-name">Freelance</span><div class="flow-bar-track"><div class="flow-bar-fill" style="width:17%;background:linear-gradient(90deg,#8A6520,#C49430);"></div></div><span class="flow-pct">17%</span><span class="flow-amount">₹ 20,000</span></div>
+          <div class="flow-item"><span class="flow-name">Rental</span><div class="flow-bar-track"><div class="flow-bar-fill" style="width:8%;background:linear-gradient(90deg,#1A4FA0,#4A7FD0);"></div></div><span class="flow-pct">8%</span><span class="flow-amount">₹ 10,000</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: custom ListView with AnimatedContainer for bar width. Animate on screen enter.</p>
+      </div>
+    </div>
+
+    <!-- 5. Stacked Horizontal Bar -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 5 — Stacked Horizontal Budget Bar</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: budget vs actual, income vs committed vs free. Single bar, multiple coloured segments. Immediately shows proportions at a glance.</div>
+      <div style="padding:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:600;color:var(--ink);">Monthly ₹ 1,20,000</span>
+        </div>
+        <div class="stacked-row" style="height:14px;border-radius:7px;">
+          <div class="stacked-segment" style="width:29%;background:#A83226;border-radius:7px 0 0 7px;"></div>
+          <div class="stacked-segment" style="width:15%;background:#9A5510;"></div>
+          <div class="stacked-segment" style="width:15%;background:#C49430;"></div>
+          <div class="stacked-segment" style="width:41%;background:#1E6B44;border-radius:0 7px 7px 0;"></div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+          <div class="legend-item"><div class="legend-dot" style="background:#A83226;"></div><span class="legend-text">Fired ₹34K</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#9A5510;"></div><span class="legend-text">CC ₹18K</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C49430;"></div><span class="legend-text">Committed ₹18K</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1E6B44;"></div><span class="legend-text">Free ₹50K</span></div>
+        </div>
+      </div>
+      <div style="margin-top:0;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: Row with Flexible widgets. ClipRRect on outer Row for rounded ends.</p>
+      </div>
+    </div>
+
+    <!-- 6. Sparkline -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 6 — Sparkline (Inline Trend)</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: net worth trend on the portfolio card, investment P&L trend. Inline within a card — never standalone. Conveys direction without axes.</div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:var(--ink);">Net Worth</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink4);">12 months</div></div>
+          <div style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:var(--green);">₹ 5.75L</div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--green-lt);color:var(--green-text);padding:2px 7px;border-radius:20px;border:1px solid #7EC8A0;">+18.4%</span></div>
+        </div>
+        <svg viewBox="0 0 280 60" style="width:100%;height:50px;overflow:visible;">
+          <defs>
+            <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1E6B44" stop-opacity=".15"/>
+              <stop offset="100%" stop-color="#1E6B44" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,52 C20,50 40,48 60,44 C80,40 100,36 120,30 C140,24 160,20 180,16 C200,12 220,10 240,8 C260,6 270,5 280,4" stroke="#1E6B44" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M0,52 C20,50 40,48 60,44 C80,40 100,36 120,30 C140,24 160,20 180,16 C200,12 220,10 240,8 C260,6 270,5 280,4 L280,60 L0,60 Z" fill="url(#spark-fill)"/>
+          <circle cx="280" cy="4" r="3.5" fill="#1E6B44"/>
+        </svg>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: fl_chart LineChart with minimal config. No axes, no gridlines. Area fill with opacity gradient.</p>
+      </div>
+    </div>
+
+    <!-- 7. Category Donut -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 7 — Full Donut (Category)</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: expense category breakdown, portfolio allocation. Centre shows total. Tap segment to highlight and show detail.</div>
+      <div style="text-align:center;padding:8px 0;">
+        <svg viewBox="0 0 160 160" style="width:140px;height:140px;">
+          <circle cx="80" cy="80" r="56" fill="none" stroke="#A83226" stroke-width="22" stroke-dasharray="100 252"/>
+          <circle cx="80" cy="80" r="56" fill="none" stroke="#9A5510" stroke-width="22" stroke-dasharray="75 252" stroke-dashoffset="-100"/>
+          <circle cx="80" cy="80" r="56" fill="none" stroke="#1A4FA0" stroke-width="22" stroke-dasharray="42 252" stroke-dashoffset="-175"/>
+          <circle cx="80" cy="80" r="56" fill="none" stroke="#8A6520" stroke-width="22" stroke-dasharray="35 252" stroke-dashoffset="-217"/>
+          <text x="80" y="76" text-anchor="middle" font-family="Cormorant Garamond" font-size="20" font-weight="700" fill="#1C1814">₹ 52K</text>
+          <text x="80" y="91" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9C9488" letter-spacing="1">SPENT</text>
+        </svg>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#A83226;"></div><span class="legend-text">Food 40%</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#9A5510;"></div><span class="legend-text">Transport 30%</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1A4FA0;"></div><span class="legend-text">Shopping 17%</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#8A6520;"></div><span class="legend-text">Other 13%</span></div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: fl_chart PieChart with hole radius 0.55. Tap callback changes centre text to segment detail.</p>
+      </div>
+    </div>
+
+    <!-- 8. Progress rows -->
+    <div class="data-card">
+      <div class="dc-label">Chart Type 8 — Progress Rows (Budget vs Actual)</div>
+      <div style="font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.6;">Use for: category budget vs actual spend, 80C utilisation, savings goal progress. Clean, scannable, no SVG needed.</div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;">
+        <div class="prog-row"><span class="prog-label">Food & Dining</span><div class="prog-track"><div class="prog-fill" style="width:82%;background:#A83226;"></div></div><span class="prog-val" style="color:var(--red);">82%</span></div>
+        <div class="prog-row"><span class="prog-label">Transport</span><div class="prog-track"><div class="prog-fill" style="width:54%;background:#9A5510;"></div></div><span class="prog-val" style="color:var(--amber);">54%</span></div>
+        <div class="prog-row"><span class="prog-label">Shopping</span><div class="prog-track"><div class="prog-fill" style="width:31%;background:#1E6B44;"></div></div><span class="prog-val" style="color:var(--green);">31%</span></div>
+        <div class="prog-row"><span class="prog-label">Health</span><div class="prog-track"><div class="prog-fill" style="width:12%;background:#1E6B44;"></div></div><span class="prog-val" style="color:var(--green);">12%</span></div>
+        <div class="prog-row"><span class="prog-label">80C Utilised</span><div class="prog-track"><div class="prog-fill" style="width:67%;background:#8A6520;"></div></div><span class="prog-val" style="color:var(--gold);">67%</span></div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink4);">Flutter: Row + LinearProgressIndicator or custom ClipRRect. Colour threshold: >80% red, >50% amber, ≤50% green.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 5 — COMPONENTS
+══════════════════════════════════════════ -->
+<div class="chapter" id="components">
+  <p class="chapter-eye">Chapter 05 — Component Library</p>
+  <h2 class="chapter-h">Cards, Buttons, <em>Inputs</em></h2>
+  <hr class="rule"/>
+
+  <!-- Cards -->
+  <span class="slabel" style="margin-bottom:16px;">Card Patterns — 4 Variants</span>
+  <div class="g2" style="margin-bottom:24px;">
+    <div>
+      <p style="font-size:11px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;">HERO GRADIENT CARD — max 1 per screen</p>
+      <div class="hero-card">
+        <p class="hc-eye">Month Runway</p>
+        <p class="hc-amount">₹ 67,232</p>
+        <p class="hc-sub">Updated just now</p>
+        <div class="hc-row">
+          <div class="hc-stat"><div class="hc-stat-num">₹ 97,400</div><div class="hc-stat-label">In Bank</div></div>
+          <div class="hc-stat"><div class="hc-stat-num">₹ 30,168</div><div class="hc-stat-label">Committed</div></div>
+          <span class="hc-badge positive">+₹ 1.2K vs last month</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <p style="font-size:11px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;">DATA CARD — white, bordered</p>
+      <div class="data-card">
+        <div class="dc-label">Net Worth</div>
+        <div class="dc-amount display green">₹ 5.75L</div>
+        <div class="dc-sub">Assets − Liabilities · as of today</div>
+        <div class="dc-divider"></div>
+        <div style="display:flex;justify-content:space-between;">
+          <div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);">₹ 8.20L</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;">Assets</div></div>
+          <div style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red);">₹ 2.45L</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;">Liabilities</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric tiles -->
+  <span class="slabel">Metric Tiles — Quick Stats Grid</span>
+  <div class="g4" style="margin-bottom:24px;">
+    <div class="metric-tile"><span class="mt-icon">🏦</span><div class="mt-value display">₹ 97.4K</div><div class="mt-label">Liquid</div></div>
+    <div class="metric-tile"><span class="mt-icon">📅</span><div class="mt-value display" style="color:var(--red);">₹ 34.5K</div><div class="mt-label">Fired</div></div>
+    <div class="metric-tile"><span class="mt-icon">⏳</span><div class="mt-value display" style="color:var(--amber);">₹ 11.9K</div><div class="mt-label">Pending</div></div>
+    <div class="metric-tile"><span class="mt-icon">💳</span><div class="mt-value display" style="color:var(--red);">₹ 18.2K</div><div class="mt-label">CC Outstanding</div></div>
+  </div>
+
+  <!-- List items -->
+  <span class="slabel">List Rows</span>
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px;">
+    <div class="list-item"><div class="li-logo">📈</div><div class="li-body"><div class="li-name">Nippon Small Cap</div><div class="li-sub">SIP · ₹ 2,000 · 5th of month</div></div><div class="li-right"><div class="li-amount" style="color:var(--amber);">₹ 2,000</div><span class="li-pct up">+24.8%</span></div></div>
+    <div class="list-item"><div class="li-logo">🇺🇸</div><div class="li-body"><div class="li-name">Vested — US Stocks</div><div class="li-sub">US Equity · Last updated 2h ago</div></div><div class="li-right"><div class="li-amount">$450.96</div><span class="li-pct down">−33.4%</span></div></div>
+    <div class="list-item"><div class="li-logo">🏠</div><div class="li-body"><div class="li-name">Home Loan EMI</div><div class="li-sub">Loan · SBI · 1st of month</div></div><div class="li-right"><div class="li-amount" style="color:var(--red);">₹ 28,500</div><span class="li-pct" style="background:var(--red-lt);color:var(--red-text);border:1px solid #E0A09C;">Fixed</span></div></div>
+  </div>
+
+  <!-- Buttons -->
+  <span class="slabel">Button System</span>
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:24px;">
+    <button class="btn btn-primary btn-lg">Log Spend ₹500</button>
+    <button class="btn btn-primary">Save Account</button>
+    <button class="btn btn-secondary">Edit</button>
+    <button class="btn btn-ghost">Cancel</button>
+    <button class="btn btn-danger btn-sm">Delete</button>
+    <div class="fab">+</div>
+  </div>
+
+  <!-- Badges + chips -->
+  <span class="slabel">Badges & Chips</span>
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:24px;">
+    <span class="badge badge-gold">★ Gold</span>
+    <span class="badge badge-green">✓ Positive</span>
+    <span class="badge badge-red">✗ Expense</span>
+    <span class="badge badge-amber">~ Investment</span>
+    <span class="badge badge-blue">ℹ Info</span>
+    <span class="badge badge-grey">Neutral</span>
+    <span class="chip active">This Month</span>
+    <span class="chip">Overall</span>
+    <span class="chip">Personal</span>
+    <span class="chip">Joint</span>
+  </div>
+
+  <!-- Inputs -->
+  <span class="slabel">Input Fields</span>
+  <div class="g2" style="margin-bottom:0;">
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;">
+      <div class="input-wrap">
+        <label class="input-label">Account Nickname</label>
+        <input class="input" placeholder="e.g. SBI Daily" readonly/>
+      </div>
+      <div class="input-wrap">
+        <label class="input-label">Balance</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">₹</span>
+          <input class="input mono" placeholder="0" value="97,400" readonly/>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;">
+      <div class="sheet" style="border-radius:var(--r-xl) var(--r-xl) 0 0;margin:-20px -20px 0;padding:16px 20px 20px;border:none;box-shadow:0 -4px 24px rgba(0,0,0,.08);">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Log a spend</div>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">₹</span>
+          <input class="input mono" placeholder="0" style="font-size:24px;height:56px;padding-left:32px;" readonly/>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+          <span class="chip active">🍽 Food</span>
+          <span class="chip">🚗 Transport</span>
+          <span class="chip">🛍 Shopping</span>
+          <span class="chip">💊 Health</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 6 — SCREEN MOCKUPS
+══════════════════════════════════════════ -->
+<div class="chapter" id="screens">
+  <p class="chapter-eye">Chapter 06 — Screen Compositions</p>
+  <h2 class="chapter-h">How it all <em>comes together</em></h2>
+  <hr class="rule"/>
+
+  <div class="screens-row">
+
+    <!-- Dashboard -->
+    <div class="screen">
+      <div class="sc-status"><span class="sc-time">9:41</span><span class="sc-icons">●●●</span></div>
+      <div class="sc-body">
+        <div class="sc-appbar"><span class="sc-logo">Mudra</span><div style="display:flex;gap:6px;"><div class="sc-icon-btn">🔔</div><div class="sc-icon-btn">⚙️</div></div></div>
+        <!-- mini hero card -->
+        <div style="background:var(--gradient-hero);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-15px;right:-15px;width:60px;height:60px;background:radial-gradient(circle,rgba(196,148,48,.2),transparent);border-radius:50%;"></div>
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px;">Month Runway</p>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:white;line-height:1;">₹ 67,232</p>
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.5);margin-top:2px;">of ₹97,400 liquid</p>
+          <!-- mini gauge -->
+          <div style="margin-top:10px;"><svg viewBox="0 0 100 60" style="width:100%;height:40px;"><path d="M 10 50 A 40 40 0 0 1 90 50" stroke="rgba(255,255,255,.15)" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M 10 50 A 40 40 0 0 1 74 22" stroke="#C49430" stroke-width="7" fill="none" stroke-linecap="round"/></svg></div>
+        </div>
+        <!-- stats row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;">
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);font-weight:500;">₹5.75L</div><div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;">Net Worth</div></div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink);font-weight:500;">8 items</div><div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;">Fixed</div></div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink);font-weight:500;">3 accs</div><div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;">Accounts</div></div>
+        </div>
+        <!-- debit radar -->
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink4);margin-bottom:5px;">Next 7 Days</p>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--white);border:1px solid var(--border);border-radius:7px;"><div style="width:2px;height:24px;background:var(--amber);border-radius:1px;flex-shrink:0;"></div><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">PPF — HDFC</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--ink4);">in 7 days</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--amber);">₹2,000</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--white);border:1px solid var(--border);border-radius:7px;"><div style="width:2px;height:24px;background:var(--red);border-radius:1px;flex-shrink:0;"></div><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">Home Loan</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--red);">Tomorrow!</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);">₹28,500</div></div>
+        </div>
+      </div>
+      <p class="phone-label">Home</p>
+    </div>
+
+    <!-- Investments Portfolio -->
+    <div class="screen">
+      <div class="sc-status"><span class="sc-time">9:41</span><span class="sc-icons">●●●</span></div>
+      <div class="sc-body">
+        <div class="sc-appbar"><span class="sc-logo">Portfolio</span></div>
+        <!-- net worth hero -->
+        <div style="background:var(--gradient-hero);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;">
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px;">Net Worth</p>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:white;line-height:1;">₹ 5,75,000</p>
+          <div style="margin-top:8px;display:flex;gap:8px;">
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.8);">₹8.20L</div><div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.4);text-transform:uppercase;">Assets</div></div>
+            <div style="width:1px;background:rgba(255,255,255,.15);"></div>
+            <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.6);">₹2.45L</div><div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.4);text-transform:uppercase;">Liabilities</div></div>
+          </div>
+          <!-- mini sparkline -->
+          <svg viewBox="0 0 100 20" style="width:100%;height:14px;margin-top:8px;"><path d="M0,18 C15,16 30,14 45,12 C60,10 75,7 85,5 C90,4 95,3 100,2" stroke="rgba(196,164,80,.7)" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <!-- semi-donut small -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px;">
+            <svg viewBox="0 0 80 48" style="width:72px;height:40px;display:block;margin:0 auto;"><path d="M 8 40 A 32 32 0 0 1 72 40" stroke="#EBEBEB" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M 8 40 A 32 32 0 0 1 48 10" stroke="#8A6520" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M 48 10 A 32 32 0 0 1 72 40" stroke="#1E6B44" stroke-width="8" fill="none" stroke-linecap="round"/><text x="40" y="36" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#1C1814" font-weight="500">45/55</text></svg>
+            <p style="font-family:'IBM Plex Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);text-align:center;margin-top:3px;">Allocation</p>
+          </div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--red);margin-bottom:2px;">−₹ 2,20,000</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">US Stocks P&L</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--green);">+₹ 24,800</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;">MF P&L</div>
+          </div>
+        </div>
+        <!-- platform list -->
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink4);margin-bottom:5px;">Platforms</p>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);"><div style="width:24px;height:24px;border-radius:6px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;font-size:11px;">📈</div><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">Zerodha</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Indian Stocks</div></div><div style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink);">₹2.10L</div><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;background:var(--green-lt);color:var(--green-text);padding:1px 5px;border-radius:10px;">+12%</span></div></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;"><div style="width:24px;height:24px;border-radius:6px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;font-size:11px;">🌐</div><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">Vested</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">US Stocks</div></div><div style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink);">$450</div><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;background:var(--red-lt);color:var(--red-text);padding:1px 5px;border-radius:10px;">−33%</span></div></div>
+        </div>
+      </div>
+      <p class="phone-label">Portfolio</p>
+    </div>
+
+    <!-- Budgeting / Spend screen -->
+    <div class="screen">
+      <div class="sc-status"><span class="sc-time">9:41</span><span class="sc-icons">●●●</span></div>
+      <div class="sc-body">
+        <div class="sc-appbar"><span class="sc-logo">Spend</span></div>
+        <!-- monthly spend hero -->
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;">
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink4);margin-bottom:2px;">Variable Spend — May</p>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--red);line-height:1;">₹ 52,340</p>
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink4);margin-top:2px;">of ₹ 80,000 budgeted</p>
+          <!-- stacked bar -->
+          <div style="margin-top:10px;height:8px;border-radius:4px;overflow:hidden;display:flex;gap:1px;">
+            <div style="width:39%;background:#A83226;border-radius:4px 0 0 4px;"></div>
+            <div style="width:24%;background:#9A5510;"></div>
+            <div style="width:15%;background:#1A4FA0;"></div>
+            <div style="width:22%;background:#EBEBEB;border-radius:0 4px 4px 0;"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:6px;">
+            <div class="legend-item"><div class="legend-dot" style="background:#A83226;width:6px;height:6px;"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Food</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#9A5510;width:6px;height:6px;"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Transport</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#1A4FA0;width:6px;height:6px;"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Shopping</span></div>
+          </div>
+        </div>
+        <!-- category progress -->
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink4);margin-bottom:5px;">By Category</p>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:9px;color:var(--ink2);flex:1;">Food</span><div style="flex:2;height:5px;background:var(--bg-section);border-radius:3px;overflow:hidden;"><div style="width:82%;height:100%;background:var(--red);border-radius:3px;"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--red);min-width:24px;text-align:right;">82%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:9px;color:var(--ink2);flex:1;">Transport</span><div style="flex:2;height:5px;background:var(--bg-section);border-radius:3px;overflow:hidden;"><div style="width:54%;height:100%;background:var(--amber);border-radius:3px;"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber);min-width:24px;text-align:right;">54%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:9px;color:var(--ink2);flex:1;">Shopping</span><div style="flex:2;height:5px;background:var(--bg-section);border-radius:3px;overflow:hidden;"><div style="width:31%;height:100%;background:var(--green);border-radius:3px;"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green);min-width:24px;text-align:right;">31%</span></div>
+        </div>
+        <!-- recent entries -->
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink4);margin:8px 0 5px;">Today</p>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);"><span style="font-size:14px;">🍽</span><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">Food</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Lunch · 12:30</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);">₹ 320</div></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;"><span style="font-size:14px;">🚗</span><div style="flex:1;"><div style="font-size:9px;font-weight:600;color:var(--ink);">Transport</div><div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--ink4);">Uber · 9:15</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);">₹ 180</div></div>
+        </div>
+      </div>
+      <p class="phone-label">Budgeting</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 7 — AI DESIGN PROMPT
+══════════════════════════════════════════ -->
+<div class="chapter" id="prompt">
+  <p class="chapter-eye">Chapter 07 — Claude Design Prompt</p>
+  <h2 class="chapter-h">Ready-to-use <em>AI Design Prompt</em></h2>
+  <hr class="rule"/>
+  <p class="chapter-sub">Paste this into Claude's design tool to generate UI screens that respect the Mudra design system. The prompt encodes all decisions above so Claude Design doesn't invent its own aesthetic.</p>
+
+  <div class="prompt-box">
+    <div class="pb-head">
+      <span class="pb-title">Mudra Design System — Claude Design Prompt</span>
+      <span class="pb-copy" onclick="copyPrompt()">⎘ Copy</span>
+    </div>
+    <div class="pb-body">
+<pre id="dsPrompt"><span class="heading">Design a mobile app screen for Mudra — a personal finance awareness app.</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">IDENTITY</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="key">App name:</span>       <span class="val">Mudra (मुद्रा)</span>
+<span class="key">Tagline:</span>        <span class="val">"Your money. Clear, every morning."</span>
+<span class="key">Aesthetic:</span>      <span class="val">Premium fintech. Clean. Data-first. Not clinical.</span>
+<span class="key">Inspiration:</span>   <span class="val">INDmoney, Robinhood, Image 4's stacked charts — but</span>
+                <span class="val">with warm gold instead of purple/blue gradients.</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">COLOURS — USE EXACTLY THESE</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="key">Background:</span>     <span class="val">#FFFFFF (pure white — not cream)</span>
+<span class="key">Surface alt:</span>    <span class="val">#F8F7F5 (very subtle warm grey for section bgs)</span>
+<span class="key">Border:</span>         <span class="val">#EBEBEB</span>
+<span class="key">Primary text:</span>   <span class="val">#1C1814 (warm near-black)</span>
+<span class="key">Secondary text:</span> <span class="val">#6B6358</span>
+<span class="key">Hint/label:</span>     <span class="val">#9C9488</span>
+
+<span class="key">Gold (brand):</span>   <span class="val">#8A6520 — CTAs, active states, the runway number</span>
+<span class="key">Gold light:</span>     <span class="val">#FBF4E4 — gold card backgrounds</span>
+<span class="key">Gold gradient:</span>  <span class="val">linear-gradient(135deg, #2A1C04 0%, #7A5818 65%, #A07020 100%)</span>
+                <span class="val">Use for: the hero card only. Max 1 per screen.</span>
+
+<span class="key">Green:</span>          <span class="val">#1E6B44 — positive amounts, income, gains</span>
+<span class="key">Green light:</span>    <span class="val">#E8F5EE</span>
+<span class="key">Red:</span>            <span class="val">#A83226 — expenses, debts, losses</span>
+<span class="key">Red light:</span>      <span class="val">#FDECEA</span>
+<span class="key">Amber:</span>          <span class="val">#9A5510 — investments, neutral/pending</span>
+<span class="key">Amber light:</span>    <span class="val">#FEF0E0</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">TYPOGRAPHY — USE EXACTLY THESE</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="key">Display/Hero:</span>   <span class="val">Cormorant Garamond 700 — for large financial numbers</span>
+                <span class="val">and screen headings. Elegant serif.</span>
+<span class="key">Body/UI:</span>        <span class="val">IBM Plex Sans 400/500/600 — all UI text, labels, body</span>
+<span class="key">Amounts/Mono:</span>   <span class="val">IBM Plex Mono 500/600 — EVERY currency amount, no exceptions</span>
+                <span class="val">Also: section labels (9.5px, ALL CAPS, tracked 1.8)</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">COLOUR GRAMMAR — NEVER BREAK THESE</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="val">Positive amounts / income   → #1E6B44 green</span>
+<span class="val">Expenses / debts / losses  → #A83226 red</span>
+<span class="val">Investments / neutral      → #9A5510 amber</span>
+<span class="val">Brand / CTA / active       → #8A6520 gold</span>
+<span class="val">Background everywhere      → #FFFFFF white</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">CHART COMPONENTS — USE THESE PATTERNS</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="val">1. SEMI-DONUT (half ring, bottom open) — asset allocation</span>
+<span class="val">2. FUEL GAUGE RING (240° arc, animated) — monthly runway</span>
+<span class="val">3. BAR CHART (rounded top, 6-month view) — spend trends</span>
+<span class="val">4. INCOME FLOW TREE (horizontal bars by source) — income</span>
+<span class="val">5. STACKED BAR (single bar, multi-segment) — budget split</span>
+<span class="val">6. SPARKLINE (area fill, no axes) — net worth trend</span>
+<span class="val">7. FULL DONUT (hole 55%) — category breakdown</span>
+<span class="val">8. PROGRESS ROWS (linear bars) — budget vs actual</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">CARD PATTERNS</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="val">HERO: Gold gradient dark card (#2A1C04→#A07020). Max 1 per screen.</span>
+<span class="val">      Shows: Runway / Net Worth / primary KPI. White text.</span>
+<span class="val">DATA: White card, 1px #EBEBEB border, 14px radius, shadow-sm.</span>
+<span class="val">      Shows: metrics, charts, lists.</span>
+<span class="val">TILE: 2×2 or 3×1 grid of small metric tiles. IBM Plex Mono values.</span>
+<span class="val">LIST: White, no outer border, internal dividers only.</span>
+<span class="val">      Row: logo circle + name/sub + amount (mono) + % badge.</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">SCREEN STRUCTURE</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="val">Status bar: white</span>
+<span class="val">App bar: white bg, "Mudra" in Cormorant Garamond gold left,</span>
+<span class="val">         icon buttons right (notification bell, settings gear)</span>
+<span class="val">Body: white scroll area, 16px horizontal padding</span>
+<span class="val">      Section labels: IBM Plex Mono 9.5px ALL CAPS ink4 above each section</span>
+<span class="val">      Hero card: always first, full width</span>
+<span class="val">      Stats tiles: 3-column grid below hero</span>
+<span class="val">      Charts: full-width data cards, 10px content padding</span>
+<span class="val">      Lists: white cards with 1px borders</span>
+<span class="val">FAB: gold circle, + icon, bottom-right, gold drop-shadow</span>
+<span class="val">Bottom nav: white, 1px top border, gold active icon + label</span>
+<span class="val">Tabs: 5 — Home / Funds / Debits / Portfolio / Settings</span>
+
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="heading">WHAT NOT TO DO</span>
+<span class="comment">═══════════════════════════════════════════════</span>
+<span class="val">✗ No purple, blue, or teal gradients</span>
+<span class="val">✗ No dark mode (light theme only)</span>
+<span class="val">✗ No Inter, Roboto, or system fonts</span>
+<span class="val">✗ No pie charts (use semi-donut or full donut only)</span>
+<span class="val">✗ No currency amounts in sans-serif (always IBM Plex Mono)</span>
+<span class="val">✗ No cream/warm background (#FAF8F4) — use pure white</span>
+<span class="val">✗ No more than 1 gold gradient card per screen</span>
+<span class="val">✗ No "buy", "invest", "apply" CTAs — awareness only</span></pre>
+    </div>
+    <div class="pb-foot" style="display:flex;justify-content:space-between;align-items:center;">
+      <p>~900 words · Paste into Claude Design or any AI design tool</p>
+      <button class="copy-btn" onclick="copyPrompt()">⎘ Copy Prompt</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <p>Mudra Design System v1.0 · <strong>MudraMaster · May 2026</strong> · Confidential</p>
+  <p>White · Gold · Visualisation-heavy · Cormorant Garamond · IBM Plex</p>
+</footer>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  document.getElementById('prog').style.width =
+    ((d.scrollTop || document.body.scrollTop) / (d.scrollHeight - d.clientHeight) * 100) + '%';
+});
+
+function copyPrompt() {
+  const text = document.getElementById('dsPrompt').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    document.querySelectorAll('.copy-btn,.pb-copy').forEach(b => {
+      const orig = b.textContent;
+      b.textContent = '✓ Copied!';
+      if(b.classList.contains('copy-btn')) b.style.background = '#1E6B44';
+      setTimeout(() => { b.textContent = orig; if(b.classList.contains('copy-btn')) b.style.background = ''; }, 2500);
+    });
+  });
+}
+</script>
+</body>
+</html>

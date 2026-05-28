@@ -19,6 +19,7 @@ class MudraInput extends StatelessWidget {
     this.onTap,
     this.maxLines = 1,
     this.amountMode = false,
+    this.obscureText = false,
   });
 
   final String label;
@@ -32,6 +33,7 @@ class MudraInput extends StatelessWidget {
   final VoidCallback? onTap;
   final int maxLines;
   final bool amountMode;
+  final bool obscureText;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +54,7 @@ class MudraInput extends StatelessWidget {
           readOnly: readOnly,
           onTap: onTap,
           maxLines: maxLines,
+          obscureText: obscureText,
           style:
               amountMode ? AppTypography.monoMedium : AppTypography.bodyMedium,
           inputFormatters: amountMode

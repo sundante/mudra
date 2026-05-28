@@ -35,6 +35,8 @@ class AccountTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return MudraCard(
       onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,7 +49,7 @@ class AccountTile extends StatelessWidget {
                   children: [
                     Text(
                       nickname,
-                      style: AppTypography.bodyLarge.copyWith(
+                      style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.ink,
                         fontWeight: FontWeight.w600,
                       ),
@@ -79,7 +81,7 @@ class AccountTile extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           InkWell(
             onTap: onBalanceTap,
             borderRadius: BorderRadius.circular(AppRadius.sm),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:isar/isar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -11,9 +12,11 @@ import '../../core/utils/date_helpers.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/debt.dart';
 import '../../data/models/outgoing.dart';
+import '../../data/models/variable_expense.dart';
 import '../../providers/investment_provider.dart';
 import '../../providers/outgoing_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/variable_expense_provider.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/mudra_button.dart';
 import '../../widgets/common/mudra_card.dart';
@@ -64,16 +67,8 @@ const _outgoingGroups = [
     [OutgoingCategory.insurance, OutgoingCategory.policyPremium],
     AppColors.green
   ),
-  (
-    'SUBSCRIPTIONS',
-    [OutgoingCategory.subscription],
-    AppColors.amber
-  ),
-  (
-    'UTILITIES & BILLS',
-    [OutgoingCategory.utility],
-    AppColors.red
-  ),
+  ('SUBSCRIPTIONS', [OutgoingCategory.subscription], AppColors.amber),
+  ('UTILITIES & BILLS', [OutgoingCategory.utility], AppColors.red),
   (
     'INVESTMENTS (SIPs)',
     [
@@ -144,6 +139,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
   Widget build(BuildContext context) {
     final outgoings = ref.watch(outgoingsStreamProvider).valueOrNull ?? [];
     final debts = ref.watch(debtsStreamProvider).valueOrNull ?? [];
+    final variableExpenses =
+        ref.watch(variableExpensesProvider).valueOrNull ?? [];
     final settings = ref.watch(settingsProvider).valueOrNull ?? AppSettings();
     final currency = settings.safeBaseCurrency;
 
@@ -152,18 +149,15 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
         .where((o) => o.isActive)
         .toList();
 
-    final totalCommitted =
-        activeItems.fold<double>(0, (s, o) => s + o.amount);
+    final totalCommitted = activeItems.fold<double>(0, (s, o) => s + o.amount);
 
-    final upcoming = activeItems
-        .where((o) => o.daysUntil <= 7)
-        .toList()
+    final upcoming = activeItems.where((o) => o.daysUntil <= 7).toList()
       ..sort((a, b) => a.daysUntil.compareTo(b.daysUntil));
 
-    final activeIOwe = debts
-        .where((d) =>
-            d.safeDirection == DebtDirection.iOwe && !d.safeIsSettled)
-        .toList();
+    final iOweDebts =
+        debts.where((d) => d.safeDirection == DebtDirection.iOwe).toList();
+    final owedToMeDebts =
+        debts.where((d) => d.safeDirection == DebtDirection.theyOwe).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -172,10 +166,16 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           'Debts',
           style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline, color: AppColors.inkDim),
+            onPressed: () => context.push('/profile'),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openOutgoingSheet(context,
-            defaultType: OutgoingType.expense),
+        onPressed: () =>
+            _openOutgoingSheet(context, defaultType: OutgoingType.expense),
         backgroundColor: AppColors.gold,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
@@ -285,22 +285,73 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             ),
           ],
 
+          _VariableSpendSection(
+            expenses: variableExpenses,
+            currency: currency,
+            onDelete: _deleteVariableExpense,
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenH,
+                AppSpacing.md,
+                AppSpacing.screenH,
+                AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  const Expanded(child: SectionLabel('PERSONAL DEBTS')),
+                  TextButton.icon(
+                    onPressed: () => _openDebtSheet(context),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Debt'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // ── I Owe section ────────────────────────────────────────────
           _DebtGroupSection(
             label: 'I OWE',
-            debts: activeIOwe,
+            debts: iOweDebts,
             currency: currency,
             color: AppColors.red,
-            onTap: (debt) => _openDebtSheet(context, debt: _DebtView(
-              id: debt.id,
-              uid: debt.safeUid,
-              counterpartyName: debt.safeCounterpartyName,
-              direction: debt.safeDirection,
-              amount: debt.safeAmount,
-              dueDate: debt.dueDate,
-              notes: debt.safeNotes,
-              createdAt: ((debt.createdAt as dynamic) as DateTime?) ?? DateTime.now(),
-            )),
+            onTap: (debt) => _openDebtSheet(context,
+                debt: _DebtView(
+                  id: debt.id,
+                  uid: debt.safeUid,
+                  counterpartyName: debt.safeCounterpartyName,
+                  direction: debt.safeDirection,
+                  amount: debt.safeAmount,
+                  dueDate: debt.dueDate,
+                  notes: debt.safeNotes,
+                  isSettled: debt.safeIsSettled,
+                  createdAt: ((debt.createdAt as dynamic) as DateTime?) ??
+                      DateTime.now(),
+                )),
+            onDelete: _deleteDebt,
+            onMarkSettled: _markSettled,
+          ),
+          _DebtGroupSection(
+            label: 'OWED TO ME',
+            debts: owedToMeDebts,
+            currency: currency,
+            color: AppColors.green,
+            onTap: (debt) => _openDebtSheet(context,
+                debt: _DebtView(
+                  id: debt.id,
+                  uid: debt.safeUid,
+                  counterpartyName: debt.safeCounterpartyName,
+                  direction: debt.safeDirection,
+                  amount: debt.safeAmount,
+                  dueDate: debt.dueDate,
+                  notes: debt.safeNotes,
+                  isSettled: debt.safeIsSettled,
+                  createdAt: ((debt.createdAt as dynamic) as DateTime?) ??
+                      DateTime.now(),
+                )),
             onDelete: _deleteDebt,
             onMarkSettled: _markSettled,
           ),
@@ -373,7 +424,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
       ..amount = draft.amount
       ..dueDate = draft.dueDate
       ..notes = draft.notes
-      ..isSettled = false
+      ..isSettled = draft.isSettled
       ..createdAt = draft.createdAt;
     await repo.saveDebt(debt);
     await HapticFeedback.lightImpact();
@@ -384,13 +435,17 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
     await HapticFeedback.mediumImpact();
   }
 
+  Future<void> _deleteVariableExpense(int id) async {
+    await ref.read(variableExpenseRepoProvider).delete(id);
+    await HapticFeedback.mediumImpact();
+  }
+
   Future<void> _markSettled(int id) async {
     await ref.read(investmentRepoProvider).settleDebt(id);
     await HapticFeedback.mediumImpact();
   }
 
-  Future<bool> _confirmDelete(
-      BuildContext context, _OutgoingView item) async {
+  Future<bool> _confirmDelete(BuildContext context, _OutgoingView item) async {
     return await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
@@ -464,8 +519,8 @@ class _GroupSection extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 if (items.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -479,8 +534,8 @@ class _GroupSection extends StatelessWidget {
             ),
             trailing: items.isEmpty
                 ? Text('—',
-                    style:
-                        AppTypography.monoSmall.copyWith(color: AppColors.inkDim))
+                    style: AppTypography.monoSmall
+                        .copyWith(color: AppColors.inkDim))
                 : AmountDisplay(
                     amount: total,
                     currency: currency,
@@ -537,6 +592,256 @@ class _GroupSection extends StatelessWidget {
   }
 }
 
+// ── Variable spend section ───────────────────────────────────────────────────
+
+class _VariableSpendSection extends StatelessWidget {
+  const _VariableSpendSection({
+    required this.expenses,
+    required this.currency,
+    required this.onDelete,
+  });
+
+  final List<VariableExpense> expenses;
+  final String currency;
+  final Future<void> Function(int id) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final total =
+        expenses.fold<double>(0, (sum, expense) => sum + expense.safeAmount);
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH,
+          AppSpacing.md,
+          AppSpacing.screenH,
+          AppSpacing.sm,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: ExpansionTile(
+            initiallyExpanded: expenses.isNotEmpty,
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            title: Row(
+              children: [
+                const SectionLabel('VARIABLE SPENT'),
+                const SizedBox(width: AppSpacing.sm),
+                if (expenses.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.redLight,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      '${expenses.length}',
+                      style: AppTypography.monoXSmall
+                          .copyWith(color: AppColors.red),
+                    ),
+                  ),
+              ],
+            ),
+            trailing: expenses.isEmpty
+                ? Text(
+                    '-',
+                    style: AppTypography.monoSmall
+                        .copyWith(color: AppColors.inkDim),
+                  )
+                : AmountDisplay(
+                    amount: total,
+                    currency: currency,
+                    style:
+                        AppTypography.monoSmall.copyWith(color: AppColors.red),
+                  ),
+            children: expenses.isEmpty
+                ? [
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      child: Text(
+                        'Nothing logged this month. Use + on Home to log spend.',
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.inkDim),
+                      ),
+                    ),
+                  ]
+                : expenses
+                    .map((expense) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: Dismissible(
+                            key: ValueKey('variable-expense-${expense.id}'),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.redLight,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.red,
+                              ),
+                            ),
+                            confirmDismiss: (_) =>
+                                _confirmDelete(context, expense),
+                            onDismissed: (_) => onDelete(expense.id),
+                            child: _VariableSpendRow(
+                              expense: expense,
+                              currency: currency,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmDelete(
+    BuildContext context,
+    VariableExpense expense,
+  ) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(
+              'Delete ${expense.safeCategory.label} spend?',
+              style: AppTypography.bodyLarge.copyWith(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              'This restores the amount in monthly projections.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete',
+                    style: TextStyle(color: AppColors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+}
+
+class _VariableSpendRow extends StatelessWidget {
+  const _VariableSpendRow({required this.expense, required this.currency});
+
+  final VariableExpense expense;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return MudraCard(
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.red,
+              borderRadius: BorderRadius.circular(AppRadius.full),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Text(
+            expense.safeCategory.emoji,
+            style: AppTypography.bodyMedium,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  expense.safeCategory.label,
+                  style:
+                      AppTypography.bodyMedium.copyWith(color: AppColors.ink),
+                ),
+                if (expense.safeNote.isNotEmpty)
+                  Text(
+                    expense.safeNote,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.inkDim),
+                  ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _spentDateLabel(expense.safeSpentAt),
+                style:
+                    AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
+              ),
+              AmountDisplay(
+                amount: expense.safeAmount,
+                currency: currency,
+                style: AppTypography.monoSmall.copyWith(color: AppColors.red),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _spentDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final value = DateTime(date.year, date.month, date.day);
+    if (value == today) return 'Today';
+    if (value == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}';
+  }
+}
+
 // ── Debt group section ────────────────────────────────────────────────────────
 
 class _DebtGroupSection extends StatelessWidget {
@@ -560,7 +865,9 @@ class _DebtGroupSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = debts.fold<double>(0, (s, d) => s + d.safeAmount);
+    final active = debts.where((debt) => !debt.safeIsSettled).toList();
+    final settled = debts.where((debt) => debt.safeIsSettled).toList();
+    final total = active.fold<double>(0, (s, d) => s + d.safeAmount);
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -573,7 +880,7 @@ class _DebtGroupSection extends StatelessWidget {
             border: Border.all(color: AppColors.border),
           ),
           child: ExpansionTile(
-            initiallyExpanded: debts.isNotEmpty,
+            initiallyExpanded: active.isNotEmpty,
             tilePadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md, vertical: AppSpacing.xs),
             childrenPadding: const EdgeInsets.fromLTRB(
@@ -582,22 +889,22 @@ class _DebtGroupSection extends StatelessWidget {
               children: [
                 SectionLabel(label),
                 const SizedBox(width: AppSpacing.sm),
-                if (debts.isNotEmpty)
+                if (active.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     child: Text(
-                      '${debts.length}',
+                      '${active.length}',
                       style: AppTypography.monoXSmall.copyWith(color: color),
                     ),
                   ),
               ],
             ),
-            trailing: debts.isEmpty
+            trailing: active.isEmpty
                 ? Text('—',
                     style: AppTypography.monoSmall
                         .copyWith(color: AppColors.inkDim))
@@ -606,7 +913,7 @@ class _DebtGroupSection extends StatelessWidget {
                     currency: currency,
                     style: AppTypography.monoSmall.copyWith(color: color),
                   ),
-            children: debts.isEmpty
+            children: active.isEmpty && settled.isEmpty
                 ? [
                     Padding(
                       padding:
@@ -618,46 +925,123 @@ class _DebtGroupSection extends StatelessWidget {
                       ),
                     ),
                   ]
-                : debts.map((d) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Dismissible(
-                        key: ValueKey('debt-${d.id}'),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.greenLight,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: const Icon(Icons.check_circle_outline,
-                              color: AppColors.green),
-                        ),
-                        confirmDismiss: (_) async {
-                          onMarkSettled(d.id);
-                          return false;
-                        },
-                        child: GestureDetector(
-                          onTap: () => onTap(d),
-                          child: _DebtRow(debt: d, currency: currency),
-                        ),
+                : [
+                    ...active.map((debt) => _debtTile(context, debt)),
+                    if (settled.isNotEmpty)
+                      ExpansionTile(
+                        initiallyExpanded: false,
+                        tilePadding: EdgeInsets.zero,
+                        title: SectionLabel('SETTLED (${settled.length})'),
+                        children: settled
+                            .map((debt) =>
+                                _debtTile(context, debt, isSettled: true))
+                            .toList(),
                       ),
-                    );
-                  }).toList(),
+                  ],
           ),
         ),
       ),
     );
   }
+
+  Widget _debtTile(
+    BuildContext context,
+    Debt debt, {
+    bool isSettled = false,
+  }) {
+    Widget deleteBackground() => Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.redLight,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: const Icon(Icons.delete_outline, color: AppColors.red),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Dismissible(
+        key: ValueKey('debt-${debt.id}'),
+        direction: isSettled
+            ? DismissDirection.endToStart
+            : DismissDirection.horizontal,
+        background: isSettled
+            ? deleteBackground()
+            : Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.greenLight,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  color: AppColors.green,
+                ),
+              ),
+        secondaryBackground: deleteBackground(),
+        confirmDismiss: (direction) async {
+          if (!isSettled && direction == DismissDirection.startToEnd) {
+            onMarkSettled(debt.id);
+          } else if (await _confirmDelete(context, debt)) {
+            onDelete(debt.id);
+          }
+          return false;
+        },
+        child: Opacity(
+          opacity: isSettled ? 0.55 : 1,
+          child: GestureDetector(
+            onTap: () => onTap(debt),
+            child: _DebtRow(debt: debt, currency: currency, color: color),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context, Debt debt) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(
+              'Delete ${debt.safeCounterpartyName}?',
+              style: AppTypography.bodyLarge.copyWith(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              'This removes the debt permanently.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete',
+                    style: TextStyle(color: AppColors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
 }
 
 class _DebtRow extends StatelessWidget {
-  const _DebtRow({required this.debt, required this.currency});
+  const _DebtRow({
+    required this.debt,
+    required this.currency,
+    required this.color,
+  });
 
   final Debt debt;
   final String currency;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -668,7 +1052,7 @@ class _DebtRow extends StatelessWidget {
             width: 4,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.red,
+              color: color,
               borderRadius: BorderRadius.circular(AppRadius.full),
             ),
           ),
@@ -698,8 +1082,7 @@ class _DebtRow extends StatelessWidget {
           AmountDisplay(
             amount: debt.safeAmount,
             currency: currency,
-            style:
-                AppTypography.monoSmall.copyWith(color: AppColors.red),
+            style: AppTypography.monoSmall.copyWith(color: color),
           ),
         ],
       ),
@@ -708,8 +1091,18 @@ class _DebtRow extends StatelessWidget {
 
   String _fmt(DateTime date) {
     const m = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${date.day} ${m[date.month - 1]}';
   }
@@ -758,13 +1151,12 @@ class _UpcomingChip extends StatelessWidget {
               item.name,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.ink, fontWeight: FontWeight.w600),
+              style: AppTypography.bodyMedium
+                  .copyWith(color: AppColors.ink, fontWeight: FontWeight.w600),
             ),
             Text(
               '${_categoryLabel(item.category)}  ·  Day ${item.debitDate}',
-              style:
-                  AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
+              style: AppTypography.monoXSmall.copyWith(color: AppColors.inkDim),
             ),
             AmountDisplay(
               amount: item.amount,
@@ -832,6 +1224,7 @@ class _DebtView {
     required this.amount,
     required this.dueDate,
     required this.notes,
+    required this.isSettled,
     required this.createdAt,
   });
 
@@ -842,6 +1235,7 @@ class _DebtView {
   final double amount;
   final DateTime? dueDate;
   final String notes;
+  final bool isSettled;
   final DateTime createdAt;
 }
 
@@ -878,6 +1272,7 @@ class _DebtDraft {
     required this.amount,
     this.dueDate,
     this.notes,
+    required this.isSettled,
     required this.createdAt,
   });
 
@@ -888,6 +1283,7 @@ class _DebtDraft {
   final double amount;
   final DateTime? dueDate;
   final String? notes;
+  final bool isSettled;
   final DateTime createdAt;
 }
 
@@ -911,8 +1307,7 @@ class _OutgoingEditorSheet extends ConsumerStatefulWidget {
       _OutgoingEditorSheetState();
 }
 
-class _OutgoingEditorSheetState
-    extends ConsumerState<_OutgoingEditorSheet> {
+class _OutgoingEditorSheetState extends ConsumerState<_OutgoingEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _amountController;
@@ -943,8 +1338,9 @@ class _OutgoingEditorSheetState
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initial != null;
-    final categories =
-        _type == OutgoingType.expense ? _expenseCategories : _investmentCategories;
+    final categories = _type == OutgoingType.expense
+        ? _expenseCategories
+        : _investmentCategories;
     final suggestions = _type == OutgoingType.expense
         ? _expenseSuggestions
         : _investmentSuggestions;
@@ -959,8 +1355,8 @@ class _OutgoingEditorSheetState
             borderRadius:
                 BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
           ),
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
-              AppSpacing.lg, AppSpacing.screenH, AppSpacing.screenV),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.lg,
+              AppSpacing.screenH, AppSpacing.screenV),
           child: Form(
             key: _formKey,
             child: Column(
@@ -1021,8 +1417,9 @@ class _OutgoingEditorSheetState
                       ? 'Home Loan EMI'
                       : 'Mutual Fund SIP',
                   textInputAction: TextInputAction.next,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Name is required'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
@@ -1062,23 +1459,19 @@ class _OutgoingEditorSheetState
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
-                  children: categories
-                      .map((cat) {
-                        final sel = _category == cat;
-                        final col = _categoryColor(cat);
-                        return ChoiceChip(
-                          label: Text(_categoryLabel(cat)),
-                          selected: sel,
-                          onSelected: (_) =>
-                              setState(() => _category = cat),
-                          selectedColor: col,
-                          labelStyle: AppTypography.labelMedium.copyWith(
-                              color: sel ? Colors.white : AppColors.inkMid),
-                          side: BorderSide(
-                              color: sel ? col : AppColors.border),
-                        );
-                      })
-                      .toList(),
+                  children: categories.map((cat) {
+                    final sel = _category == cat;
+                    final col = _categoryColor(cat);
+                    return ChoiceChip(
+                      label: Text(_categoryLabel(cat)),
+                      selected: sel,
+                      onSelected: (_) => setState(() => _category = cat),
+                      selectedColor: col,
+                      labelStyle: AppTypography.labelMedium.copyWith(
+                          color: sel ? Colors.white : AppColors.inkMid),
+                      side: BorderSide(color: sel ? col : AppColors.border),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 MudraCard(
@@ -1098,11 +1491,10 @@ class _OutgoingEditorSheetState
                         ),
                       ),
                       OutlinedButton.icon(
-                        onPressed: _saving
-                            ? null
-                            : () => _pickDebitDate(context),
-                        icon: const Icon(Icons.calendar_month_outlined,
-                            size: 18),
+                        onPressed:
+                            _saving ? null : () => _pickDebitDate(context),
+                        icon:
+                            const Icon(Icons.calendar_month_outlined, size: 18),
                         label: const Text('Pick'),
                       ),
                     ],
@@ -1115,9 +1507,8 @@ class _OutgoingEditorSheetState
                       child: MudraButton(
                         label: 'Cancel',
                         variant: MudraButtonVariant.secondary,
-                        onPressed: _saving
-                            ? null
-                            : () => Navigator.of(context).pop(),
+                        onPressed:
+                            _saving ? null : () => Navigator.of(context).pop(),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -1166,8 +1557,9 @@ class _OutgoingEditorSheetState
 
   OutgoingCategory _resolveCategory(
       OutgoingCategory? initial, OutgoingType type) {
-    final allowed =
-        type == OutgoingType.expense ? _expenseCategories : _investmentCategories;
+    final allowed = type == OutgoingType.expense
+        ? _expenseCategories
+        : _investmentCategories;
     if (initial != null && allowed.contains(initial)) return initial;
     return allowed.first;
   }
@@ -1224,8 +1616,7 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
   void initState() {
     super.initState();
     final i = widget.initial;
-    _nameController =
-        TextEditingController(text: i?.counterpartyName ?? '');
+    _nameController = TextEditingController(text: i?.counterpartyName ?? '');
     _amountController = TextEditingController(
         text: i == null ? '' : i.amount.toStringAsFixed(2));
     _notesController = TextEditingController(text: i?.notes ?? '');
@@ -1254,8 +1645,8 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
             borderRadius:
                 BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
           ),
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
-              AppSpacing.lg, AppSpacing.screenH, AppSpacing.screenV),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.lg,
+              AppSpacing.screenH, AppSpacing.screenV),
           child: Form(
             key: _formKey,
             child: Column(
@@ -1272,11 +1663,9 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                       ),
                     ),
                     IconButton(
-                      onPressed: _saving
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      icon:
-                          const Icon(Icons.close, color: AppColors.inkDim),
+                      onPressed:
+                          _saving ? null : () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: AppColors.inkDim),
                     ),
                   ],
                 ),
@@ -1286,8 +1675,7 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                     ButtonSegment(
                         value: DebtDirection.iOwe, label: Text('I Owe')),
                     ButtonSegment(
-                        value: DebtDirection.theyOwe,
-                        label: Text('They Owe')),
+                        value: DebtDirection.theyOwe, label: Text('They Owe')),
                   ],
                   selected: {_direction},
                   onSelectionChanged: (s) =>
@@ -1364,9 +1752,8 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                       child: MudraButton(
                         label: 'Cancel',
                         variant: MudraButtonVariant.secondary,
-                        onPressed: _saving
-                            ? null
-                            : () => Navigator.of(context).pop(),
+                        onPressed:
+                            _saving ? null : () => Navigator.of(context).pop(),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -1415,8 +1802,18 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
 
   String _fmtDate(DateTime d) {
     const m = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${d.day} ${m[d.month - 1]} ${d.year}';
   }
@@ -1438,6 +1835,7 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
+      isSettled: i?.isSettled ?? false,
       createdAt: i?.createdAt ?? DateTime.now(),
     ));
     if (mounted) Navigator.of(context).pop();

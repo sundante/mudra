@@ -7,6 +7,17 @@ class VariableExpenseRepository {
 
   final Isar _isar;
 
+  Stream<List<VariableExpense>> watchLast6Months() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month - 5);
+    final end = DateTime(now.year, now.month + 1);
+    return _isar.variableExpenses
+        .filter()
+        .spentAtBetween(start, end, includeLower: true, includeUpper: false)
+        .sortBySpentAtDesc()
+        .watch(fireImmediately: true);
+  }
+
   Stream<List<VariableExpense>> watchCurrentMonth() {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month);

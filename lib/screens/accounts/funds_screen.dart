@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:isar/isar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -67,8 +68,8 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
     final filtered =
         viewData.where((a) => a.accountType == _selectedType).toList();
     final liquidTotal = viewData
-        .where((a) =>
-            a.accountType == AccountType.personal && a.includeInLiquid)
+        .where(
+            (a) => a.accountType == AccountType.personal && a.includeInLiquid)
         .fold(0.0, (sum, a) => sum + a.balance);
     final fdTotal = viewData.fold(0.0, (sum, a) => sum + a.fdAmount);
 
@@ -79,6 +80,12 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
           'Funds',
           style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline, color: AppColors.inkDim),
+            onPressed: () => context.push('/profile'),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openAccountSheet(context),

@@ -3,53 +3,174 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
-import 'core/theme/app_typography.dart';
-import 'data/models/app_settings.dart';
-import 'providers/settings_provider.dart';
+import 'providers/auth_provider.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/accounts/funds_screen.dart';
+import 'screens/auth/auth_screens.dart';
 import 'screens/debts/debts_screen.dart';
+import 'screens/map/map_screen.dart';
 import 'screens/portfolio/investments_screen.dart';
 import 'screens/net/net_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/spend/spend_screen.dart';
 
-final _router = GoRouter(
-  initialLocation: '/',
-  routes: [
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return ScaffoldWithNavBar(navigationShell: navigationShell);
+CustomTransitionPage<void> _fade(GoRouterState s, Widget child) =>
+    CustomTransitionPage<void>(
+      key: s.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 220),
+      transitionsBuilder: (_, animation, __, w) =>
+          FadeTransition(opacity: animation, child: w),
+    );
+
+GoRouter _createRouter(AppSessionController session) => GoRouter(
+      initialLocation: '/loading',
+      refreshListenable: session,
+      redirect: (context, state) {
+        final path = state.uri.path;
+        final stage = session.state.stage;
+        final isAuthPath = path == '/welcome' ||
+            path.startsWith('/auth/') ||
+            path == '/callback' ||
+            path == '/reset-password';
+        switch (stage) {
+          case AppSessionStage.loading:
+            return path == '/loading' ? null : '/loading';
+          case AppSessionStage.signedOut:
+            return isAuthPath ? null : '/welcome';
+          case AppSessionStage.verificationRequired:
+            return path == '/auth/verify-email' ? null : '/auth/verify-email';
+          case AppSessionStage.passwordRecovery:
+            return path == '/auth/new-password' ? null : '/auth/new-password';
+          case AppSessionStage.legacyDataDecision:
+            return path == '/legacy-data' ? null : '/legacy-data';
+          case AppSessionStage.setupRequired:
+            return path == '/setup/welcome' ? null : '/setup/welcome';
+          case AppSessionStage.ready:
+            return isAuthPath ||
+                    path == '/loading' ||
+                    path == '/legacy-data' ||
+                    path == '/setup/welcome'
+                ? '/'
+                : null;
+        }
       },
-      branches: [
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/', builder: (c, s) => const DashboardScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/accounts', builder: (c, s) => const FundsScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/debts', builder: (c, s) => const DebtsScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/portfolio', builder: (c, s) => const InvestmentsScreen()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/net', builder: (c, s) => const NetScreen()),
-        ]),
+      routes: [
+        GoRoute(
+          path: '/loading',
+          pageBuilder: (c, s) => _fade(s, const AuthLoadingScreen()),
+        ),
+        GoRoute(
+          path: '/welcome',
+          pageBuilder: (c, s) => _fade(s, const WelcomeScreen()),
+        ),
+        GoRoute(
+          path: '/auth/login',
+          pageBuilder: (c, s) => _fade(s, const LoginScreen()),
+        ),
+        GoRoute(
+          path: '/auth/register',
+          pageBuilder: (c, s) => _fade(s, const RegisterScreen()),
+        ),
+        GoRoute(
+          path: '/auth/verify-email',
+          pageBuilder: (c, s) => _fade(s, const VerifyEmailScreen()),
+        ),
+        GoRoute(
+          path: '/auth/forgot-password',
+          pageBuilder: (c, s) => _fade(s, const ForgotPasswordScreen()),
+        ),
+        GoRoute(
+          path: '/auth/new-password',
+          pageBuilder: (c, s) => _fade(s, const NewPasswordScreen()),
+        ),
+        GoRoute(
+          path: '/callback',
+          pageBuilder: (c, s) => _fade(s, const AuthLoadingScreen()),
+        ),
+        GoRoute(
+          path: '/reset-password',
+          pageBuilder: (c, s) => _fade(s, const AuthLoadingScreen()),
+        ),
+        GoRoute(
+          path: '/legacy-data',
+          pageBuilder: (c, s) => _fade(s, const LegacyDataScreen()),
+        ),
+        GoRoute(
+          path: '/setup/welcome',
+          pageBuilder: (c, s) => _fade(s, const SetupWelcomeScreen()),
+        ),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return ScaffoldWithNavBar(navigationShell: navigationShell);
+          },
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: '/',
+                  pageBuilder: (c, s) => _fade(s, const DashboardScreen())),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: '/accounts',
+                  pageBuilder: (c, s) => _fade(s, const FundsScreen())),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: '/debts',
+                  pageBuilder: (c, s) => _fade(s, const DebtsScreen())),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: '/portfolio',
+                  pageBuilder: (c, s) => _fade(s, const InvestmentsScreen())),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: '/net',
+                  pageBuilder: (c, s) => _fade(s, const NetScreen())),
+            ]),
+          ],
+        ),
+        GoRoute(
+          path: '/profile',
+          pageBuilder: (c, s) => _fade(s, const ProfileScreen()),
+        ),
+        GoRoute(
+          path: '/map',
+          pageBuilder: (c, s) => _fade(s, const MapScreen()),
+        ),
+        GoRoute(
+          path: '/spend',
+          pageBuilder: (c, s) => _fade(s, const SpendScreen()),
+        ),
       ],
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (c, s) => const ProfileScreen(),
-    ),
-  ],
-);
+    );
 
-class MudraApp extends ConsumerWidget {
+class MudraApp extends ConsumerStatefulWidget {
   const MudraApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MudraApp> createState() => _MudraAppState();
+}
+
+class _MudraAppState extends ConsumerState<MudraApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = _createRouter(ref.read(appSessionControllerProvider));
+  }
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Mudra',
       debugShowCheckedModeBanner: false,
@@ -59,47 +180,14 @@ class MudraApp extends ConsumerWidget {
   }
 }
 
-class ScaffoldWithNavBar extends ConsumerWidget {
+class ScaffoldWithNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull;
-    final name = settings?.safeUserName ?? '';
-    final initials = _initials(name);
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Mudra',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
-        ),
-        actions: [
-          GestureDetector(
-            onTap: () => context.push('/profile'),
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              width: 34,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: AppColors.gold,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                initials,
-                style: AppTypography.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -144,12 +232,5 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }

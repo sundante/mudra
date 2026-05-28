@@ -1,5 +1,5 @@
 # Mudra — Product & Data Reference
-**Flutter MVP · Local-first · No Backend · No Auth**
+**Flutter MVP · Authenticated Local-first · Supabase Identity · Device-local Finances**
 Version 2.0 · May 2026
 
 > Build status and feature inventory: `docs/STATUS.md`
@@ -11,11 +11,11 @@ Version 2.0 · May 2026
 ## Design System Grammar
 
 ### Colour Grammar
-- Positive / income → `AppColors.green` (#2A6B4F)
+- Positive / income → `AppColors.green` (#1E6B44)
 - Expense / negative / debt → `AppColors.red` (#A83226)
-- Investment / neutral → `AppColors.amber` (#A05A10)
+- Investment / neutral → `AppColors.amber` (#9A5510)
 - Primary CTA / accent → `AppColors.gold` (#8A6520)
-- Background → `AppColors.background` (#FAF8F4) — **never** `Colors.white` as scaffold bg
+- Background → `AppColors.background` (#FFFFFF) — pure white across scaffolds
 
 ### Typography Grammar
 - **Hero numbers / display headings** → Cormorant Garamond (`AppTypography.displayLarge` etc.)
@@ -71,7 +71,7 @@ id, uid, name, amount, creditDate (1–31), isActive, createdAt
 
 ### AppSettings (singleton, id=1)
 ```
-baseCurrency, monthlyIncome, payDate (1–31)
+baseCurrency, monthlyIncome, payDate (1–31), userName, hasCompletedSetup
 ```
 
 ### VariableExpense
@@ -109,6 +109,11 @@ debitRadar                 = outgoings due later this month, sorted by debitDate
 
 ## User Stories
 
+### Authentication Foundation
+| # | Story | Status |
+|---|---|---|
+| US-001 | First launch authentication and account entry: Welcome, Supabase registration/login, email verification, password reset, social sign-in, per-user local data, setup handoff | Implemented; live provider/device verification pending |
+
 ### P0 — Must Ship
 | # | Story | Screen |
 |---|---|---|
@@ -130,7 +135,8 @@ debitRadar                 = outgoings due later this month, sorted by debitDate
 | US-12 | Delete / edit any account, outgoing, or investment |
 | US-13 | Choose base currency (INR/USD/GBP/AED/SGD/AUD/EUR) |
 
-All P0 and P1 stories are implemented. ✅
+All P0 and P1 finance stories are implemented. US-001 introduces the
+authenticated entry gate before those protected experiences.
 
 ---
 
@@ -143,8 +149,10 @@ All P0 and P1 stories are implemented. ✅
 | No outgoings | `fixedCommitted = 0`, gauge full |
 | Very large numbers (₹ 10 Cr) | Compact lakh/crore formatting, no overflow |
 | Empty debit radar | "All clear" empty state |
-| Fresh install | Instructional empty states everywhere; seed data runs; settings default to INR |
-| DB hydration crash | Recovery bootstrap resets DB files and reseeds on next launch |
+| Fresh install | Welcome/authentication gate; after verification an empty private user store routes to setup welcome |
+| Existing local-only install | After login, user chooses to attach legacy data to their private store or start fresh |
+| Signed-out protected route | Redirected to Welcome; no financial database is opened |
+| DB hydration crash | Recovery bootstrap applies to the authenticated user's private Isar store |
 
 ---
 

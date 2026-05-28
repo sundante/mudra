@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/spacing.dart';
 import '../../core/theme/app_colors.dart';
@@ -8,7 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/database.dart';
 import '../../data/models/app_settings.dart';
-import '../../data/seed_data.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/common/mudra_button.dart';
 import '../../widgets/common/mudra_card.dart';
@@ -125,8 +126,7 @@ class _ProfileBody extends ConsumerWidget {
                             .copyWith(color: AppColors.ink)),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      CurrencyFormatter.format(
-                          settings.safeMonthlyIncome,
+                      CurrencyFormatter.format(settings.safeMonthlyIncome,
                           settings.safeBaseCurrency),
                       style: AppTypography.monoMedium
                           .copyWith(color: AppColors.green),
@@ -172,6 +172,57 @@ class _ProfileBody extends ConsumerWidget {
         _CurrencyChips(
           selected: settings.safeBaseCurrency,
           onSelect: (currency) => _saveCurrency(ref, settings, currency),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // ── App Map ───────────────────────────────────────────────────
+        const SectionLabel('navigation'),
+        const SizedBox(height: AppSpacing.sm),
+        MudraCard(
+          onTap: () => context.push('/map'),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('App Map',
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: AppColors.ink)),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Explore all screens & navigation flows',
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.inkDim),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.account_tree_outlined,
+                  color: AppColors.inkDim, size: 18),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, color: AppColors.inkDim),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        const SectionLabel('account'),
+        const SizedBox(height: AppSpacing.sm),
+        MudraCard(
+          onTap: () => _confirmSignOut(context, ref),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text('Sign out',
+                    style: AppTypography.bodyMedium
+                        .copyWith(color: AppColors.ink)),
+              ),
+              const Icon(Icons.logout, color: AppColors.inkDim, size: 18),
+            ],
+          ),
         ),
 
         const SizedBox(height: AppSpacing.lg),
@@ -315,8 +366,8 @@ class _ProfileBody extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Continue',
-                style: TextStyle(color: AppColors.red)),
+            child:
+                const Text('Continue', style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),
@@ -352,8 +403,38 @@ class _ProfileBody extends ConsumerWidget {
     await HapticFeedback.vibrate();
     final isar = ref.read(isarProvider);
     await clearAllData(isar);
-    await seedDemoData(isar);
+    final settings = AppSettings()..hasCompletedSetup = true;
+    await ref.read(settingsRepoProvider).save(settings);
     ref.invalidate(settingsProvider);
+  }
+
+  Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text('Sign out?',
+                style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.ink, fontWeight: FontWeight.w600)),
+            content: Text(
+              'Your local financial records remain private to this account.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Sign out'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) return;
+    await ref.read(appSessionControllerProvider).signOut();
   }
 }
 
@@ -399,8 +480,7 @@ class _CurrencyChips extends StatelessWidget {
                 '$flag  $code',
                 style: AppTypography.labelMedium.copyWith(
                   color: isSelected ? Colors.white : AppColors.ink,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ),
@@ -678,8 +758,7 @@ class _PayDateSheetState extends State<_PayDateSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenH,
@@ -749,8 +828,7 @@ class _PayDateSheetState extends State<_PayDateSheet> {
                 child: MudraButton(
                   label: 'Cancel',
                   variant: MudraButtonVariant.secondary,
-                  onPressed:
-                      _saving ? null : () => Navigator.of(context).pop(),
+                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),

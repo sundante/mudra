@@ -37,11 +37,11 @@ class DebitRadarItem extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(width: 3, height: 48, color: barColor),
+          Container(width: 3, height: 36, color: barColor),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

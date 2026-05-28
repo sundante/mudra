@@ -9,6 +9,7 @@ class AppSettings {
   double monthlyIncome = 0.0;
   int payDate = 1;
   String userName = '';
+  bool hasCompletedSetup = false;
 }
 
 extension AppSettingsSafe on AppSettings {
@@ -18,4 +19,6 @@ extension AppSettingsSafe on AppSettings {
       ((monthlyIncome as dynamic) as double?) ?? 0.0;
   int get safePayDate => ((payDate as dynamic) as int?) ?? 1;
   String get safeUserName => ((userName as dynamic) as String?) ?? '';
+  bool get safeHasCompletedSetup =>
+      ((hasCompletedSetup as dynamic) as bool?) ?? false;
 }

@@ -17,6 +17,7 @@ class AppTheme {
         ),
         appBarTheme: AppBarTheme(
           backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 1,
           shadowColor: AppColors.border,
@@ -50,8 +51,7 @@ class AppTheme {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.surface,
-          hintStyle:
-              AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+          hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: const BorderSide(color: AppColors.border),
@@ -79,8 +79,7 @@ class AppTheme {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
             textStyle: AppTypography.labelLarge,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
         ),
       );

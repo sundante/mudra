@@ -12,6 +12,10 @@ final variableExpensesProvider = StreamProvider<List<VariableExpense>>(
   (ref) => ref.watch(variableExpenseRepoProvider).watchCurrentMonth(),
 );
 
+final variableExpensesLast6MonthsProvider = StreamProvider<List<VariableExpense>>(
+  (ref) => ref.watch(variableExpenseRepoProvider).watchLast6Months(),
+);
+
 final todaySpendProvider = Provider<double>((ref) {
   final expenses = ref.watch(variableExpensesProvider).valueOrNull ?? [];
   final today = DateTime.now().day;

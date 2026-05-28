@@ -15,8 +15,12 @@ import '../../providers/outgoing_provider.dart';
 import '../../providers/selected_day_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/variable_expense_provider.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/mudra_card.dart';
+import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/common/quick_spend_sheet.dart';
 import '../../widgets/fuel_gauge_ring.dart';
@@ -209,6 +213,20 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 ),
               ),
 
+              // ── Month Runway Hero ────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenH, AppSpacing.md,
+                    AppSpacing.screenH, 0),
+                child: MudraHeroCard(
+                  label: 'MONTH RUNWAY',
+                  amount: CurrencyFormatter.compact(
+                      dashboard.monthRunway, dashboard.currency),
+                  sublabel:
+                      'of ${CurrencyFormatter.compact(dashboard.bankBalance, dashboard.currency)} liquid · Day $selectedDay',
+                ),
+              ),
+
               // ── Fuel Gauge ──────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -374,6 +392,62 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                         style: AppTypography.monoLarge
                             .copyWith(color: AppColors.ink),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(color: AppColors.border),
+
+              // ── Quick Actions ────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenH,
+                    vertical: AppSpacing.screenV),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionLabel('quick actions'),
+                    const SizedBox(height: AppSpacing.md),
+                    GridView.count(
+                      crossAxisCount: 3,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                      childAspectRatio: 1.4,
+                      children: [
+                        _QuickActionTile(
+                          icon: Icons.receipt_long_outlined,
+                          label: 'Spending',
+                          onTap: () => context.push('/spend'),
+                        ),
+                        _QuickActionTile(
+                          icon: Icons.savings_outlined,
+                          label: 'Funds',
+                          onTap: () => context.go('/accounts'),
+                        ),
+                        _QuickActionTile(
+                          icon: Icons.account_balance_outlined,
+                          label: 'Debts',
+                          onTap: () => context.go('/debts'),
+                        ),
+                        _QuickActionTile(
+                          icon: Icons.show_chart_outlined,
+                          label: 'Invests',
+                          onTap: () => context.go('/portfolio'),
+                        ),
+                        _QuickActionTile(
+                          icon: Icons.donut_large_outlined,
+                          label: 'Net Worth',
+                          onTap: () => context.go('/net'),
+                        ),
+                        _QuickActionTile(
+                          icon: Icons.account_tree_outlined,
+                          label: 'App Map',
+                          onTap: () => context.push('/map'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1160,11 +1234,11 @@ class _RadarItem extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(width: 3, height: 48, color: barColor),
+          Container(width: 3, height: 36, color: barColor),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1245,26 +1319,62 @@ class _OverallTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: GestureDetector(
-              onTap: () => context.go('/net'),
-              child: Column(
+          GestureDetector(
+            onTap: () => context.go('/net'),
+            child: MudraHeroCard(
+              label: 'NET WORTH',
+              amount: CurrencyFormatter.compact(
+                  dashboard.netWorth, dashboard.currency),
+              sublabel: dashboard.netWorth >= 0
+                  ? 'You\'re in the green'
+                  : 'Liabilities exceed assets',
+              bottom: Row(
                 children: [
-                  AmountDisplay(
-                    amount: dashboard.netWorth,
-                    currency: dashboard.currency,
-                    style: AppTypography.displayMedium,
-                    coloured: true,
+                  _HeroDashStat(
+                    label: 'ASSETS',
+                    value: CurrencyFormatter.compact(
+                        dashboard.totalAssets, dashboard.currency),
                   ),
-                  const SizedBox(height: 4),
-                  const SectionLabel('net worth'),
+                  Container(width: 1, height: 28, color: Colors.white24),
+                  _HeroDashStat(
+                    label: 'INVESTED',
+                    value: CurrencyFormatter.compact(
+                        dashboard.investmentsTotal, dashboard.currency),
+                  ),
+                  Container(width: 1, height: 28, color: Colors.white24),
+                  _HeroDashStat(
+                    label: 'LIABILITIES',
+                    value: CurrencyFormatter.compact(
+                        dashboard.totalLiabilities, dashboard.currency),
+                  ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
+          AssetAllocationDonut(
+            currency: dashboard.currency,
+            segments: [
+              DonutSegment(
+                label: 'Liquid Cash',
+                value: dashboard.bankBalance,
+                color: AppColors.green,
+              ),
+              DonutSegment(
+                label: 'Fixed Dep.',
+                value: dashboard.fdTotal,
+                color: AppColors.blue,
+              ),
+              DonutSegment(
+                label: 'Investments',
+                value: dashboard.investmentsTotal,
+                color: AppColors.amber,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               _StatTile(
@@ -1389,7 +1499,7 @@ class _StatTile extends StatelessWidget {
           splashColor: AppColors.goldLight.withAlpha(80),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm, vertical: AppSpacing.md),
+                horizontal: AppSpacing.sm, vertical: 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1400,6 +1510,79 @@ class _StatTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Hero Dash Stat (hero card bottom row) ─────────────────────────────────
+
+class _HeroDashStat extends StatelessWidget {
+  const _HeroDashStat({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'IBM Plex Mono',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'IBM Plex Mono',
+              fontSize: 8,
+              letterSpacing: 1.0,
+              color: Colors.white38,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quick Action Tile ──────────────────────────────────────────────────────
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return MudraCard(
+      elevation: true,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppColors.gold, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(color: AppColors.ink),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

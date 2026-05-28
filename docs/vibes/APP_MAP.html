@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mudra — App Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Design Tokens ───────────────────────────────────────────────── */
+  :root {
+    --bg:         #FFFFFF;
+    --surface:    #FFFFFF;
+    --surfaceAlt: #F3F1EC;
+    --border:     #E6E2DA;
+    --ink:        #1A1714;
+    --inkMid:     #4A4642;
+    --inkDim:     #8C8480;
+    --gold:       #8A6520;
+    --goldLight:  #F5EDD9;
+    --green:      #1E6B44;
+    --greenLight: #E8F5EE;
+    --red:        #A83226;
+    --redLight:   #FAEAE9;
+    --amber:      #9A5510;
+    --amberLight: #FEF0E0;
+    --blue:       #1A5F8A;
+    --blueLight:  #E6F2FA;
+    --connector:  #D4CFCA;
+    --radius:     8px;
+    --node-radius: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Page Header ─────────────────────────────────────────────────── */
+  .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .page-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+  .page-header p {
+    font-size: 11px;
+    color: var(--inkDim);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--inkMid);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn:hover { background: var(--goldLight); border-color: var(--gold); color: var(--gold); }
+  .btn.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+
+  /* ── Scroll Container ────────────────────────────────────────────── */
+  .tree-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 32px 32px 64px 32px;
+  }
+
+  /* ── Tree Layout ─────────────────────────────────────────────────── */
+  .tree { display: flex; align-items: flex-start; }
+
+  .node-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  /* ── Node Box ────────────────────────────────────────────────────── */
+  .node {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    min-width: 160px;
+    max-width: 220px;
+    padding: 8px 12px;
+    border-radius: var(--node-radius);
+    border: 1.5px solid transparent;
+    cursor: default;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .node.has-children {
+    cursor: pointer;
+  }
+  .node.has-children:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  }
+  .node-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .node-label .chevron {
+    margin-left: auto;
+    font-size: 9px;
+    opacity: 0.7;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .node.expanded > .node-label .chevron { transform: rotate(90deg); }
+  .node-sub {
+    font-size: 10.5px;
+    margin-top: 3px;
+    line-height: 1.4;
+    opacity: 0.82;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── Colour themes ───────────────────────────────────────────────── */
+  .c-root   { background: var(--gold);       color: #fff;      border-color: var(--gold); }
+  .c-home   { background: var(--ink);        color: #fff;      border-color: var(--ink); }
+  .c-funds  { background: var(--green);      color: #fff;      border-color: var(--green); }
+  .c-debts  { background: var(--red);        color: #fff;      border-color: var(--red); }
+  .c-invest { background: var(--amber);      color: #fff;      border-color: var(--amber); }
+  .c-net    { background: var(--blue);       color: #fff;      border-color: var(--blue); }
+  .c-profile{ background: var(--inkDim);     color: #fff;      border-color: var(--inkDim); }
+  .c-leaf   { background: var(--surfaceAlt); color: var(--ink); border-color: var(--border); cursor: default; }
+  .c-action { background: var(--surface);    color: var(--inkMid); border-color: var(--border); font-style: italic; }
+
+  /* ── Connector Lines ─────────────────────────────────────────────── */
+  .connector {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 32px;
+    position: relative;
+  }
+  .connector::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    background: var(--connector);
+  }
+
+  /* ── Children Column ─────────────────────────────────────────────── */
+  .children-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    opacity: 0;
+  }
+  .children-wrap.open {
+    max-height: 9999px;
+    opacity: 1;
+  }
+
+  .child-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Vertical line connecting siblings */
+  .child-row:not(:last-child) > .v-line {
+    display: block;
+  }
+  .v-line {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    bottom: -50%;
+    width: 1.5px;
+    background: var(--connector);
+    display: none;
+  }
+  .children-wrap > .child-row:not(:first-child):not(:last-child) > .v-line {
+    display: block;
+    top: 0;
+    bottom: 0;
+  }
+  .children-wrap > .child-row:first-child > .v-line {
+    display: block;
+    top: 50%;
+    bottom: 0;
+  }
+  .children-wrap > .child-row:last-child > .v-line {
+    display: block;
+    top: 0;
+    bottom: 50%;
+  }
+  .children-wrap > .child-row:only-child > .v-line {
+    display: none;
+  }
+
+  .child-gap { height: 10px; }
+
+  /* ── Legend ──────────────────────────────────────────────────────── */
+  .legend {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .legend-title {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--inkDim);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 2px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--inkMid);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="page-header">
+  <div>
+    <h1>Mudra — App Map</h1>
+    <p>Interactive navigation · click any node to expand</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btn-expand" onclick="expandAll()">Expand All</button>
+    <button class="btn" id="btn-collapse" onclick="collapseAll()">Collapse All</button>
+  </div>
+</div>
+
+<!-- Tree -->
+<div class="tree-scroll">
+  <div class="tree" id="tree-root"></div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-title">Sections</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8A6520"></div>App Shell / Nav</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1A1714"></div>Home · Dashboard</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1E6B44"></div>Funds · Accounts</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#A83226"></div>Debts</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9A5510"></div>Investments</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1A5F8A"></div>Net Worth</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8C8480"></div>Profile</div>
+</div>
+
+<script>
+/* ── Tree Data ───────────────────────────────────────────────────────────── */
+const TREE = {
+  label: 'Mudra App', sub: 'v1.0 · Flutter', color: 'root', expanded: true,
+  children: [
+    {
+      label: 'Splash Screen', color: 'root',
+      children: [
+        {
+          label: 'App loads', sub: 'Supabase session gate', color: 'leaf',
+          children: [
+            { label: 'Signed out → Welcome', color: 'action' },
+            { label: 'Verified session → private local store', color: 'action' },
+          ]
+        }
+      ]
+    },
+    {
+      label: 'Authentication Entry', sub: 'Signed-out routes', color: 'profile', expanded: true,
+      children: [
+        { label: 'Welcome', sub: '/welcome', color: 'leaf',
+          children: [
+            { label: 'Create Account → Register', color: 'action' },
+            { label: 'Log In → Email / Google / Apple (iOS)', color: 'action' },
+          ]
+        },
+        { label: 'Verify Email', sub: 'mudra://auth/callback', color: 'leaf' },
+        { label: 'Reset Password', sub: 'mudra://auth/reset-password', color: 'leaf' },
+        { label: 'Legacy Data Decision', sub: 'Attach / Start Fresh', color: 'leaf' },
+        { label: 'Setup Welcome', sub: 'Authenticated handoff', color: 'leaf' },
+      ]
+    },
+    {
+      label: 'Protected Bottom Nav Shell', sub: 'Authenticated + setup complete · 5 tabs', color: 'root', expanded: true,
+      children: [
+        {
+          label: 'Home', sub: '/  · Dashboard', color: 'home', expanded: true,
+          children: [
+            {
+              label: 'This Month Tab', sub: 'Default on launch', color: 'home',
+              children: [
+                { label: 'Sticky Date Header', color: 'leaf',
+                  children: [{ label: 'Tap 📅 → Date Picker', sub: 'Locked to current month', color: 'action' }] },
+                { label: 'Fuel Gauge Ring', sub: 'Spend vs budget arc', color: 'leaf' },
+                { label: 'Day Slider (1–31)', color: 'leaf',
+                  children: [{ label: 'Drag → simulate balance on any day', color: 'action' }] },
+                { label: 'Liquid / Balance Row', sub: 'Opening cash · current balance', color: 'leaf' },
+                {
+                  label: 'Runway Table', sub: '4 collapsible sections', color: 'home',
+                  children: [
+                    { label: 'Opening Cash', color: 'leaf',
+                      children: [{ label: 'Expand → account rows', color: 'action' }] },
+                    { label: 'Credits', color: 'leaf',
+                      children: [{ label: 'Expand → received + upcoming rows', color: 'action' }] },
+                    { label: 'Debits', color: 'leaf',
+                      children: [{ label: 'Expand → category groups + items', color: 'action' }] },
+                    { label: 'Commitments', color: 'leaf',
+                      children: [{ label: 'Expand → CC outstanding + future debits', color: 'action' }] },
+                  ]
+                },
+                { label: 'Until End of Month', sub: 'Radar — debits within 7 days', color: 'home',
+                  children: [
+                    { label: 'Radar Item', sub: 'name · type · amount · urgency chip', color: 'leaf' }
+                  ]
+                },
+                { label: 'FAB  [+]', sub: 'Quick Spend', color: 'home',
+                  children: [
+                    { label: 'Quick Spend Sheet', color: 'home',
+                      children: [
+                        { label: 'Amount field', color: 'leaf' },
+                        { label: 'Category chips', sub: 'Food / Travel / Shopping / Bills / Health / Other', color: 'leaf' },
+                        { label: 'Optional note', color: 'leaf' },
+                        { label: 'Date picker (current month)', color: 'leaf' },
+                        { label: '[Save] → VariableExpense created', color: 'action' },
+                      ]
+                    }
+                  ]
+                },
+              ]
+            },
+            {
+              label: 'Overall Tab', color: 'home',
+              children: [
+                { label: 'Net Worth Hero', sub: 'Tap → /net screen', color: 'leaf',
+                  children: [{ label: 'Tap → navigates to Net Worth screen', color: 'action' }] },
+                { label: 'Asset Allocation Donut', color: 'leaf',
+                  children: [
+                    { label: 'Segment: Liquid Cash', color: 'action' },
+                    { label: 'Segment: Fixed Deposits', color: 'action' },
+                    { label: 'Segment: Investments', color: 'action' },
+                    { label: 'Tap segment → shows value', color: 'action' },
+                  ]
+                },
+                { label: 'Stat Tiles Row', color: 'home',
+                  children: [
+                    { label: 'ASSETS → tap → /accounts', color: 'action' },
+                    { label: 'INVESTED → tap → /portfolio', color: 'action' },
+                    { label: 'LIABILITIES → tap → /portfolio', color: 'action' },
+                  ]
+                },
+                { label: 'Breakdown Rows', sub: 'Assets + Liabilities', color: 'leaf' },
+              ]
+            },
+          ]
+        },
+
+        {
+          label: 'Funds', sub: '/accounts', color: 'funds', expanded: true,
+          children: [
+            { label: 'Account List', color: 'funds',
+              children: [
+                { label: 'AccountTile', sub: 'nickname · bank · category · balance', color: 'leaf',
+                  children: [
+                    { label: 'LIQUID badge if included in liquid', color: 'leaf' },
+                    { label: 'Tap balance → Quick Balance Update Sheet', color: 'action',
+                      children: [
+                        { label: 'Amount field (pre-filled)', color: 'leaf' },
+                        { label: '[Update] → saves new balance', color: 'action' },
+                      ]
+                    },
+                    { label: 'FD Amount row (if > 0)', color: 'leaf' },
+                    { label: 'Tap tile → Edit Account Sheet', color: 'action',
+                      children: [
+                        { label: 'Nickname · Bank Name', color: 'leaf' },
+                        { label: 'Account Type chips', sub: 'Personal / Credit Card / Savings', color: 'leaf' },
+                        { label: 'Balance · FD Amount', color: 'leaf' },
+                        { label: 'Include in Liquid toggle', color: 'leaf' },
+                        { label: '[Save]', color: 'action' },
+                        { label: '[Delete] → confirm → hard delete', color: 'action' },
+                      ]
+                    },
+                    { label: 'Swipe left → Delete (confirm)', color: 'action' },
+                  ]
+                },
+              ]
+            },
+            { label: 'FAB  [+]', sub: 'Add Account', color: 'funds',
+              children: [
+                { label: 'Add Account Sheet (same as Edit, blank)', color: 'leaf' }
+              ]
+            },
+          ]
+        },
+
+        {
+          label: 'Debts', sub: '/debts', color: 'debts', expanded: true,
+          children: [
+            {
+              label: 'Upcoming + Total Committed', color: 'debts',
+              children: [
+                { label: 'Fixed Commitment Groups', sub: 'Loans · Bills · SIPs · Subscriptions', color: 'leaf' },
+              ]
+            },
+            {
+              label: 'VARIABLE SPENT', color: 'debts',
+              children: [
+                { label: 'Current-month quick spend rows', sub: 'Swipe left → delete', color: 'leaf' }
+              ]
+            },
+            { label: 'PERSONAL DEBTS', sub: '+ Add Debt', color: 'debts',
+              children: [
+                { label: 'I OWE', sub: 'Active + collapsed SETTLED', color: 'leaf' },
+                { label: 'OWED TO ME', sub: 'Active + collapsed SETTLED', color: 'leaf' },
+                { label: 'Swipe right → settle · left → delete', color: 'action' }
+              ]
+            },
+            { label: 'FAB  [+]', sub: 'Add fixed commitment', color: 'debts' },
+          ]
+        },
+
+        {
+          label: 'Invests', sub: '/portfolio', color: 'invest', expanded: true,
+          children: [
+            { label: 'Net Worth Hero', sub: 'Tap → /net', color: 'leaf' },
+            { label: 'Platform Filter Bar', sub: 'All · Platform chips', color: 'invest',
+              children: [
+                { label: 'Tap chip → filter holdings', color: 'action' }
+              ]
+            },
+            { label: 'Timeline Filter Bar', sub: '1M · 3M · 6M · 1Y · All', color: 'invest',
+              children: [
+                { label: 'Filters holdings by createdAt', color: 'action' }
+              ]
+            },
+            { label: 'Asset Allocation Donut', sub: 'By AssetType', color: 'invest',
+              children: [
+                { label: 'Mutual Fund · Stocks · PPF · EPF · NPS · Gold · Other', color: 'leaf' },
+                { label: 'Tap segment → shows value', color: 'action' },
+              ]
+            },
+            {
+              label: 'Holdings by Asset Type', sub: 'ExpansionTile per type', color: 'invest',
+              children: [
+                { label: 'AssetType Group header', sub: 'label + group total', color: 'leaf',
+                  children: [
+                    { label: 'HoldingRow', sub: 'scheme · platform badge · invested · P&L chip', color: 'leaf',
+                      children: [
+                        { label: 'Tap → Edit Holding Sheet', color: 'action',
+                          children: [
+                            { label: 'Scheme name', color: 'leaf' },
+                            { label: 'Platform picker chips', color: 'leaf' },
+                            { label: 'Asset type chips', color: 'leaf' },
+                            { label: 'Invested Amount · Current Value', color: 'leaf' },
+                            { label: 'Units (optional)', color: 'leaf' },
+                            { label: '[Save] / [Delete]', color: 'action' },
+                          ]
+                        },
+                        { label: 'Swipe left → Delete', color: 'action' },
+                      ]
+                    },
+                  ]
+                },
+              ]
+            },
+            {
+              label: 'Platform Summary', color: 'invest',
+              children: [
+                { label: 'PlatformCard', sub: 'name · asset type · invested · P&L', color: 'leaf',
+                  children: [
+                    { label: 'Tap → Edit Platform Sheet', color: 'action' },
+                    { label: 'Swipe left → Delete platform', color: 'action' },
+                  ]
+                },
+              ]
+            },
+            { label: 'FAB  [+]', sub: 'Add Choice Sheet', color: 'invest',
+              children: [
+                { label: 'Add Holding / Scheme', color: 'invest',
+                  children: [
+                    { label: 'Scheme name', color: 'leaf' },
+                    { label: 'Platform picker chips', color: 'leaf' },
+                    { label: 'Asset type chips', color: 'leaf' },
+                    { label: 'Invested Amount · Current Value', color: 'leaf' },
+                    { label: 'Units (optional)', color: 'leaf' },
+                    { label: '[Save]', color: 'action' },
+                  ]
+                },
+                { label: 'Add Platform', color: 'invest',
+                  children: [
+                    { label: 'Platform name', color: 'leaf' },
+                    { label: 'Asset type chips', color: 'leaf' },
+                    { label: 'Invested Amount · Current Value', color: 'leaf' },
+                    { label: '[Save]', color: 'action' },
+                  ]
+                },
+              ]
+            },
+          ]
+        },
+
+        {
+          label: 'Net Worth', sub: '/net', color: 'net', expanded: true,
+          children: [
+            { label: 'Net Worth Hero', sub: '"Your Net Worth" + green/red label', color: 'leaf' },
+            { label: 'Asset Allocation Donut', sub: 'Liquid · FD · Investments', color: 'leaf' },
+            { label: 'Formula Card', sub: 'Assets − Liabilities = Net Worth', color: 'leaf' },
+            {
+              label: 'Expandable Sections', color: 'net',
+              children: [
+                { label: 'MONEY IN BANKS', color: 'leaf',
+                  children: [
+                    { label: 'Liquid Accounts → account rows', color: 'action' },
+                    { label: 'Fixed Deposits → account rows', color: 'action' },
+                  ]
+                },
+                { label: 'INVESTMENTS', color: 'leaf',
+                  children: [
+                    { label: 'PlatformCard per platform (read-only)', color: 'action' }
+                  ]
+                },
+                { label: 'CC OUTSTANDING', color: 'leaf',
+                  children: [
+                    { label: 'Credit card rows (name · bank · balance)', color: 'action' }
+                  ]
+                },
+                { label: 'LOANS & I OWE', color: 'leaf',
+                  children: [
+                    { label: 'Personal debts (counterparty · due date)', color: 'action' },
+                    { label: 'Active outgoings due ≤ today', color: 'action' },
+                  ]
+                },
+                { label: 'OWED TO ME', sub: 'Only shown when entries exist', color: 'leaf',
+                  children: [
+                    { label: 'Debt rows (counterparty · due date · amount)', color: 'action' }
+                  ]
+                },
+              ]
+            },
+          ]
+        },
+      ]
+    },
+
+    {
+      label: 'App Bar → Profile', sub: 'Protected screens only', color: 'profile', expanded: true,
+      children: [
+        {
+          label: 'Profile Screen', sub: '/profile', color: 'profile',
+          children: [
+            { label: 'User Name', sub: 'Display name → initials avatar', color: 'leaf' },
+            { label: 'Base Currency', sub: 'INR · USD · EUR · GBP · JPY · AED · SGD', color: 'leaf' },
+            { label: 'Pay Date', sub: 'Grid 1–31 picker', color: 'leaf' },
+            { label: 'App Map', sub: 'Navigate to /map', color: 'leaf' },
+            { label: 'Sign Out', sub: 'Close user store → Welcome', color: 'action' },
+            { label: 'Clear All Data', sub: 'Wipe current user store', color: 'action' },
+          ]
+        }
+      ]
+    },
+  ]
+};
+
+/* ── Tree Renderer ───────────────────────────────────────────────────────── */
+function colorClass(c) {
+  const map = {
+    root: 'c-root', home: 'c-home', funds: 'c-funds', debts: 'c-debts',
+    invest: 'c-invest', net: 'c-net', profile: 'c-profile',
+    leaf: 'c-leaf', action: 'c-action'
+  };
+  return map[c] || 'c-leaf';
+}
+
+function buildNode(data, depth) {
+  const hasChildren = data.children && data.children.length > 0;
+  const wrap = document.createElement('div');
+  wrap.className = 'node-wrap';
+
+  // The node pill
+  const node = document.createElement('div');
+  node.className = `node ${colorClass(data.color)}${hasChildren ? ' has-children' : ''}${data.expanded ? ' expanded' : ''}`;
+  node.dataset.depth = depth;
+
+  const labelRow = document.createElement('div');
+  labelRow.className = 'node-label';
+  labelRow.textContent = data.label;
+  if (hasChildren) {
+    const chev = document.createElement('span');
+    chev.className = 'chevron';
+    chev.textContent = '▶';
+    labelRow.appendChild(chev);
+  }
+  node.appendChild(labelRow);
+
+  if (data.sub) {
+    const sub = document.createElement('div');
+    sub.className = 'node-sub';
+    sub.textContent = data.sub;
+    node.appendChild(sub);
+  }
+
+  wrap.appendChild(node);
+
+  if (hasChildren) {
+    // Connector
+    const conn = document.createElement('div');
+    conn.className = 'connector';
+    wrap.appendChild(conn);
+
+    // Children column
+    const childrenWrap = document.createElement('div');
+    childrenWrap.className = `children-wrap${data.expanded ? ' open' : ''}`;
+
+    data.children.forEach((child, i) => {
+      const childRow = document.createElement('div');
+      childRow.className = 'child-row';
+
+      const vLine = document.createElement('div');
+      vLine.className = 'v-line';
+      childRow.appendChild(vLine);
+
+      const childConn = document.createElement('div');
+      childConn.className = 'connector';
+      childRow.appendChild(childConn);
+
+      childRow.appendChild(buildNode(child, depth + 1));
+
+      // Gap between siblings
+      const gap = document.createElement('div');
+      gap.className = 'child-gap';
+
+      childrenWrap.appendChild(childRow);
+      if (i < data.children.length - 1) childrenWrap.appendChild(gap);
+    });
+
+    wrap.appendChild(childrenWrap);
+
+    node.addEventListener('click', () => {
+      const open = childrenWrap.classList.toggle('open');
+      node.classList.toggle('expanded', open);
+    });
+  }
+
+  return wrap;
+}
+
+function expandAll() {
+  document.querySelectorAll('.children-wrap').forEach(el => el.classList.add('open'));
+  document.querySelectorAll('.node.has-children').forEach(el => el.classList.add('expanded'));
+}
+function collapseAll() {
+  document.querySelectorAll('.children-wrap').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.node.has-children').forEach(el => el.classList.remove('expanded'));
+}
+
+// Boot
+const root = document.getElementById('tree-root');
+root.appendChild(buildNode(TREE, 0));
+</script>
+</body>
+</html>

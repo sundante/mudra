@@ -2,6 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mudra/data/database.dart';
 
 void main() {
+  test('user database names scope local finance records by identity', () {
+    expect(userDatabaseName('user-123'), 'mudra_user_user_123');
+    expect(
+        userDatabaseName('other@example.com'), 'mudra_user_other_example_com');
+  });
+
   group('bootstrapWithRecovery', () {
     test('returns normal startup result when open and validate succeed',
         () async {

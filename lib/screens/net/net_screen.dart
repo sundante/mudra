@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/spacing.dart';
 import '../../core/theme/app_colors.dart';
@@ -13,7 +14,10 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/investment_provider.dart';
 import '../../providers/outgoing_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
+import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/platform_card.dart';
 
@@ -36,16 +40,14 @@ class NetScreen extends ConsumerWidget {
             a.safeAccountType == AccountType.personal &&
             a.safeIncludeInLiquid)
         .toList();
-    final fdAccounts =
-        accounts.where((a) => a.safeFdAmount > 0).toList();
-    final ccAccounts =
-        accounts.where((a) => a.safeIsCreditCard).toList();
+    final fdAccounts = accounts.where((a) => a.safeFdAmount > 0).toList();
+    final ccAccounts = accounts.where((a) => a.safeIsCreditCard).toList();
     final activeDebtsIOwe = debts
         .where((d) => d.safeDirection == DebtDirection.iOwe && !d.safeIsSettled)
         .toList();
     final activeDebtsOwedToMe = debts
-        .where((d) =>
-            d.safeDirection == DebtDirection.theyOwe && !d.safeIsSettled)
+        .where(
+            (d) => d.safeDirection == DebtDirection.theyOwe && !d.safeIsSettled)
         .toList();
 
     final now = DateTime.now();
@@ -59,6 +61,7 @@ class NetScreen extends ConsumerWidget {
         slivers: [
           SliverAppBar(
             backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
             elevation: 0,
             pinned: true,
             title: Text(
@@ -66,6 +69,12 @@ class NetScreen extends ConsumerWidget {
               style:
                   AppTypography.headingMedium.copyWith(color: AppColors.gold),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person_outline, color: AppColors.inkDim),
+                onPressed: () => context.push('/profile'),
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -79,12 +88,58 @@ class NetScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── Net Worth Hero ──────────────────────────────────
-                  _NetWorthHero(
-                    netWorth: dashboard.netWorth,
-                    currency: currency,
+                  MudraHeroCard(
+                    label: 'YOUR NET WORTH',
+                    amount: CurrencyFormatter.compact(dashboard.netWorth, currency),
+                    sublabel: dashboard.netWorth >= 0
+                        ? 'You\'re in the green'
+                        : 'Liabilities exceed assets',
+                    bottom: Row(
+                      children: [
+                        _NetHeroStat(
+                          label: 'ASSETS',
+                          value: CurrencyFormatter.compact(dashboard.totalAssets, currency),
+                        ),
+                        Container(width: 1, height: 28, color: Colors.white24),
+                        _NetHeroStat(
+                          label: 'LIABILITIES',
+                          value: CurrencyFormatter.compact(dashboard.totalLiabilities, currency),
+                        ),
+                        Container(width: 1, height: 28, color: Colors.white24),
+                        _NetHeroStat(
+                          label: 'INVESTED',
+                          value: CurrencyFormatter.compact(dashboard.investmentsTotal, currency),
+                        ),
+                      ],
+                    ),
                   ),
 
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Asset Allocation Donut ───────────────────────────
+                  if (dashboard.totalAssets > 0)
+                    AssetAllocationDonut(
+                      currency: currency,
+                      segments: [
+                        DonutSegment(
+                          label: 'Liquid Cash',
+                          value: dashboard.bankBalance,
+                          color: AppColors.green,
+                        ),
+                        DonutSegment(
+                          label: 'Fixed Dep.',
+                          value: dashboard.fdTotal,
+                          color: AppColors.blue,
+                        ),
+                        DonutSegment(
+                          label: 'Investments',
+                          value: dashboard.investmentsTotal,
+                          color: AppColors.amber,
+                        ),
+                      ],
+                    ),
+
+                  const SizedBox(height: AppSpacing.lg),
 
                   // ── Formula Row ─────────────────────────────────────
                   _FormulaCard(
@@ -184,8 +239,9 @@ class NetScreen extends ConsumerWidget {
                         const _SubLabel('Personal'),
                         ...activeDebtsIOwe.map((d) => _AccountRow(
                               name: d.safeCounterpartyName,
-                              subtitle:
-                                  d.dueDate != null ? 'Due ${_formatDate(d.dueDate!)}' : '',
+                              subtitle: d.dueDate != null
+                                  ? 'Due ${_formatDate(d.dueDate!)}'
+                                  : '',
                               amount: d.safeAmount,
                               currency: currency,
                               color: AppColors.red,
@@ -238,47 +294,53 @@ class NetScreen extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${date.day} ${months[date.month - 1]}';
   }
 }
 
-// ── Net Worth Hero ─────────────────────────────────────────────────────────
+// ── Hero Stat (for hero card bottom row) ──────────────────────────────────
 
-class _NetWorthHero extends StatelessWidget {
-  const _NetWorthHero({required this.netWorth, required this.currency});
+class _NetHeroStat extends StatelessWidget {
+  const _NetHeroStat({required this.label, required this.value});
 
-  final double netWorth;
-  final String currency;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final isPositive = netWorth >= 0;
-    return Column(
-      children: [
-        Text(
-          'Your Net Worth',
-          style: AppTypography.labelMedium.copyWith(color: AppColors.inkDim),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        AmountDisplay(
-          amount: netWorth,
-          currency: currency,
-          style: AppTypography.displayLarge.copyWith(
-            color: isPositive ? AppColors.green : AppColors.red,
-            fontSize: 44,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          isPositive ? 'You\'re in the green' : 'Liabilities exceed assets',
-          style: AppTypography.bodySmall.copyWith(
-            color: isPositive ? AppColors.green : AppColors.red,
-          ),
-        ),
-      ],
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value,
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Mono',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              )),
+          const SizedBox(height: 2),
+          Text(label,
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Mono',
+                fontSize: 8,
+                letterSpacing: 1.0,
+                color: Colors.white38,
+              )),
+        ],
+      ),
     );
   }
 }
@@ -323,8 +385,7 @@ class _FormulaCard extends StatelessWidget {
             ),
           ),
           Text('−',
-              style:
-                  AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
           Expanded(
             child: Column(
               children: [
@@ -341,8 +402,7 @@ class _FormulaCard extends StatelessWidget {
             ),
           ),
           Text('=',
-              style:
-                  AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.inkDim)),
           Expanded(
             child: Column(
               children: [

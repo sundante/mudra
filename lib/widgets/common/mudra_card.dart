@@ -10,12 +10,14 @@ class MudraCard extends StatelessWidget {
     this.padding,
     this.color,
     this.onTap,
+    this.elevation = false,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final Color? color;
   final VoidCallback? onTap;
+  final bool elevation;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,13 @@ class MudraCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
+        border: elevation ? null : Border.all(color: AppColors.border),
+        boxShadow: elevation
+            ? const [
+                BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
+                BoxShadow(color: Color(0x06000000), blurRadius: 3, offset: Offset(0, 1)),
+              ]
+            : null,
       ),
       padding: padding ?? const EdgeInsets.all(AppSpacing.md),
       child: child,
