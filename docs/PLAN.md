@@ -22,6 +22,7 @@ Version 2.0 · May 2026
 - **All UI text** → IBM Plex Sans (`AppTypography.bodyLarge` etc.)
 - **ALL currency amounts** → IBM Plex Mono (`AppTypography.monoMedium` etc.) — **zero exceptions**
 - **Section labels** → IBM Plex Mono, 9.5px, 1.8 letterSpacing, ALL CAPS, `AppColors.inkDim`
+- **Font loading** → All three families are bundled as local assets (`assets/fonts/`). `google_fonts` package is kept but `allowRuntimeFetching = false` — zero CDN calls at runtime.
 
 ### Interaction Grammar
 - Save / create → `HapticFeedback.lightImpact()`
@@ -113,6 +114,7 @@ debitRadar                 = outgoings due later this month, sorted by debitDate
 | # | Story | Status |
 |---|---|---|
 | US-001 | First launch authentication and account entry: Welcome, Supabase registration/login, email verification, password reset, social sign-in, per-user local data, setup handoff | Implemented; live provider/device verification pending |
+| US-002 | Guest mode and guided onboarding: "Use as Guest" entry, ephemeral demo data (Rohan profile), DEMO MODE banner, 5-step guided tour overlay, handoff screen, 3-step setup wizard for new users | Router bug fixed; in verification |
 
 ### P0 — Must Ship
 | # | Story | Screen |
@@ -153,6 +155,43 @@ authenticated entry gate before those protected experiences.
 | Existing local-only install | After login, user chooses to attach legacy data to their private store or start fresh |
 | Signed-out protected route | Redirected to Welcome; no financial database is opened |
 | DB hydration crash | Recovery bootstrap applies to the authenticated user's private Isar store |
+
+---
+
+---
+
+## Dev Build & Security
+
+### Running in Dev Mode (no backend required)
+```bash
+# No --dart-define flags needed — Supabase is skipped, dev bypass is active
+flutter run -d <device-id>
+```
+On the Welcome screen (debug build only):
+- **Dev: Skip auth** — opens a local `mudra_user_developer` Isar DB, bypasses Supabase entirely
+- **Dev Tools** — opens the data management screen
+
+### Dev Tools Screen (`/dev-tools`)
+Accessible via the "Dev Tools" link on the Welcome screen. Debug builds only.
+- Shows dev DB name, file status, and per-collection record counts
+- **Open dev DB** — signs in as developer and opens the dashboard
+- **Clear all data** — wipes all collections with confirmation (keeps the DB file)
+- **Delete DB + reset** — permanently removes the `.isar` file and returns to Welcome
+
+### Security Posture (dev build)
+| Concern | Status |
+|---|---|
+| Phone data access (contacts, camera, location, mic) | Not declared — impossible |
+| Outbound network from app code | Zero — fonts bundled, Supabase skipped, social buttons hidden |
+| iCloud backup of Isar DB | Excluded — using `getApplicationSupportDirectory()` |
+| Hardcoded secrets | None — all `--dart-define` injected |
+| Debug bypass in release builds | Not possible — `kDebugMode` only |
+
+### Deferred to Production Hardening
+- Database encryption at rest (Isar v3 limitation)
+- Certificate pinning for Supabase connections
+- Session timeout policies
+- Biometric unlock
 
 ---
 

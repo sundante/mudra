@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/spacing.dart';
 
 /// A dark gold gradient hero card used as the primary KPI card on each screen.
@@ -99,10 +98,10 @@ class MudraHeroCard extends StatelessWidget {
                     children: [
                       Text(
                         label,
-                        style: GoogleFonts.ibmPlexMono(
+                        style: const TextStyle(fontFamily: 'IBMPlexMono',
                           fontSize: 9,
                           letterSpacing: 2.0,
-                          color: const Color(0x80FFFFFF),
+                          color: Color(0x80FFFFFF),
                         ),
                       ),
                       if (trailing != null) ...[
@@ -114,7 +113,7 @@ class MudraHeroCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     amount,
-                    style: GoogleFonts.ibmPlexMono(
+                    style: const TextStyle(fontFamily: 'IBMPlexMono',
                       fontSize: 42,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -125,9 +124,9 @@ class MudraHeroCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       sublabel!,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: const TextStyle(fontFamily: 'IBMPlexMono',
                         fontSize: 10,
-                        color: const Color(0x99FFFFFF),
+                        color: Color(0x99FFFFFF),
                       ),
                     ),
                   ],

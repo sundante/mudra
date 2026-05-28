@@ -4,7 +4,7 @@
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
 **Last Updated:** 2026-05-28
-**Current Phase:** Phase 11 In Verification — US-001 First Launch Authentication
+**Current Phase:** Phase 12 In Progress — US-002 Guest Mode And Guided Onboarding
 **Overall Progress:** Core implementation complete; configured auth/device verification pending
 
 ---
@@ -14,6 +14,10 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-28 | Dev mode hardening | Full security audit and air-gap for dev builds. Bundled Cormorant Garamond, IBM Plex Sans, IBM Plex Mono as local assets — removed all google_fonts CDN calls from `app_typography.dart`, `amount_display.dart`, `mudra_hero_card.dart`; added `GoogleFonts.config.allowRuntimeFetching = false` guard. Switched `openDatabase()` and `resetDatabaseFiles()` to `getApplicationSupportDirectory()` (iOS iCloud backup excluded by default). Hidden Google/Apple social buttons when Supabase not configured. Added `Dev: Skip auth` + `Dev Tools` entry on WelcomeScreen (debug only). New `lib/screens/dev/dev_tools_screen.dart` with DB info, Clear all data, and Delete DB + reset. `flutter analyze` clean. | Install on real device to verify fonts + Dev Tools flow |
+| 2026-05-28 | Auth screen layout fix | Fixed `WelcomeScreen` rendering assertion (`!semantics.parentDataDirty`) caused by `Spacer()` widgets + two-button `Row` in Copilot-added debug block. Replaced `Column` + `Spacer` with `SingleChildScrollView` + fixed padding. Consolidated debug buttons into one `Dev: Skip auth` button. | — |
+| 2026-05-28 | Dev bypass added (Copilot) | Added `signInAsDebug()` method to `AppSessionController` and debug bypass buttons on WelcomeScreen. Also added `SetupWizardScreen`, `GuestHandoffScreen`, `GuidedTourOverlay`, and their providers for the US-002 onboarding flow. | — |
+| 2026-05-28 | US-002 bug fix | Fixed guest mode router redirect: `AppSessionStage.guest` now redirects all auth paths (including `/welcome`) to `/`; previously only `/loading` was redirected, leaving the user stuck on the welcome screen. Renamed "Enter as Guest" → "Use as Guest" in `WelcomeScreen`. | — |
 | 2026-05-28 | US-001 implementation | Added canonical user story, Supabase auth repository/session gate, Welcome/Register/Login/Verify/Reset/Legacy/Setup screens, protected routing, per-user Isar stores, legacy attach/start-fresh, Profile sign-out, `hasCompletedSetup`, mobile deep links/identity, and white native splash configuration. `flutter analyze` clean; `flutter test` passed; Android debug APK builds. | Configure Supabase/Google/Apple consoles and manually verify real auth on iOS + Android |
 | 2026-05-27 | Phase 10 complete | Variable spend logging feature: VariableExpense Isar model + Safe extension, VariableExpenseRepository (CRUD + watchCurrentMonth + sumUpToDay/countUpToDay), variableExpensesProvider + todaySpendProvider, QuickSpendSheet (amount, 6 category chips, optional note, date picker), Dashboard FAB → QuickSpendSheet, variableSpentToDay/variableExpensesToDayCount added to DashboardData, simulatedBalanceOnDay formula updated to subtract variableSpentToDay, Debts screen includes the "VARIABLE SPENT" monthly log with swipe-delete. Widget tests for QuickSpendSheet. flutter analyze clean. | — |
 | 2026-05-27 | MVP Complete | Both iOS + Android emulators verified live. Phase 4 dashboard checklist confirmed: seeded data loads, slider updates gauge/balance, date picker locks to current month and syncs with slider, Overall tab renders. Phase 9 verified: bottom sheets scroll with keyboard, large numbers display without overflow, release build clean. 140/140 items complete. | — |
@@ -70,7 +74,7 @@
 - [x] `lib/core/constants/spacing.dart` — `AppSpacing` + `AppRadius`
 - [x] `lib/core/utils/currency_formatter.dart` — INR lakh/crore + international formats
 - [x] `lib/core/utils/date_helpers.dart` — `daysUntilDebit`, `debitLabel`, `isUrgent`
-- [ ] Google Fonts verified loading (Cormorant Garamond, IBM Plex Sans, IBM Plex Mono)
+- [x] Fonts bundled as local assets — no CDN calls. `assets/fonts/CormorantGaramond/`, `IBMPlexSans/`, `IBMPlexMono/` registered in `pubspec.yaml`; `app_typography.dart` uses `fontFamily:` directly; `GoogleFonts.config.allowRuntimeFetching = false` set in `main.dart`
 - [x] Theme applied to `MaterialApp` — pure-white background configured throughout application surfaces
 
 ---
@@ -305,6 +309,81 @@
 
 ---
 
+## Phase 12 — US-002 Guest Mode And Guided Onboarding
+**Goal:** No-commitment entry path with demo data, guided tour, and post-auth setup wizard.
+
+### Router & Auth
+- [x] `lib/app.dart` — `AppSessionStage.guest` redirect fixed: auth paths (including `/welcome`) now redirect to `/`
+- [x] `lib/screens/auth/auth_screens.dart` — "Enter as Guest" renamed to "Use as Guest"
+
+### Guest Session (Implemented)
+- [x] `AppSessionStage.guest` added to `AppSessionController`
+- [x] `enterGuestMode()` opens `mudra_guest` Isar store and seeds demo data
+- [x] `exitGuestMode()` releases guest store and returns to `signedOut`
+- [x] DEMO MODE banner in `ScaffoldWithNavBar` with "SIGN UP" shortcut
+- [x] `lib/providers/onboarding_tour_provider.dart` — 5-step tour state (NotifierProvider)
+- [x] `lib/widgets/onboarding/guided_tour_overlay.dart` — tour overlay widget
+
+### Handoff & Setup (Implemented)
+- [x] `lib/screens/onboarding/guest_handoff_screen.dart` — dark gold gradient handoff screen
+- [x] `lib/screens/onboarding/setup_wizard_screen.dart` — 3-step skippable wizard
+- [x] `lib/providers/setup_wizard_provider.dart` — wizard state (Notifier)
+- [x] `setupRequired` stage routes to `/onboarding/setup`
+
+### Verification Pending
+- [ ] Hot-reload verify: tapping "Use as Guest" navigates to dashboard with demo data and DEMO MODE banner
+- [ ] Verify guided tour overlay appears and advances through 5 steps
+- [ ] Verify "Skip tour" jumps to `/onboarding/handoff`
+- [ ] Verify handoff "Create account" / "Log in" clears guest state and routes correctly
+- [ ] Verify setup wizard flows correctly for new users after email confirmation
+- [ ] `flutter analyze` clean, `flutter test` passing
+
+---
+
+## Phase 13 — Dev Mode Hardening & Security Audit
+**Goal:** Air-gap the dev build so it can be safely installed on a real phone with no outbound network from app code, no phone data access, and a built-in data management screen for the developer.
+
+### Security Audit Findings (all addressed or deferred)
+- [x] **Permissions** — only `INTERNET` on Android; zero `NS*UsageDescription` on iOS. No camera, contacts, location, mic. ✅
+- [x] **Secrets** — no hardcoded keys; all injected via `--dart-define` at build time. ✅
+- [x] **Analytics / tracking** — none; no Firebase, Crashlytics, ad SDKs. ✅
+- [x] **Financial data** — 100% local in Isar; never sent to any server. ✅
+
+### Font Bundling (removes Google CDN calls)
+- [x] Downloaded Cormorant Garamond (Regular, Italic, Medium, SemiBold, Bold) → `assets/fonts/CormorantGaramond/`
+- [x] Downloaded IBM Plex Sans (Regular, Italic, Medium, SemiBold) → `assets/fonts/IBMPlexSans/`
+- [x] Downloaded IBM Plex Mono (Regular, Medium, SemiBold) → `assets/fonts/IBMPlexMono/`
+- [x] `pubspec.yaml` — font families declared under `flutter.fonts:`
+- [x] `lib/core/theme/app_typography.dart` — replaced all `GoogleFonts.*()` calls with `TextStyle(fontFamily: '...')`
+- [x] `lib/widgets/common/amount_display.dart` — replaced `GoogleFonts.ibmPlexMono()` with bundled family
+- [x] `lib/widgets/common/mudra_hero_card.dart` — replaced all `GoogleFonts.ibmPlexMono()` calls
+- [x] `lib/main.dart` — added `GoogleFonts.config.allowRuntimeFetching = false;`
+
+### iCloud Backup Exclusion (iOS)
+- [x] `lib/data/database.dart` — switched `getApplicationDocumentsDirectory()` → `getApplicationSupportDirectory()` in `openDatabase()` and `resetDatabaseFiles()`. The Support directory is excluded from iCloud backup by default on iOS.
+
+### Auth Screen Cleanup
+- [x] `lib/screens/auth/auth_screens.dart` — `_SocialButtons` (Google/Apple) now hidden when `!session.authConfigured`, so they don't silently fail in a dev build with no Supabase keys
+
+### Dev Tools Screen
+- [x] `lib/screens/dev/dev_tools_screen.dart` — new screen (debug builds only)
+  - [x] DB info card: name, file status, record counts (Accounts, Outgoings, Investments, Debts)
+  - [x] **Open dev DB** — calls `signInAsDebug(userId: 'developer', ...)`, navigates to dashboard
+  - [x] **Clear all data** — calls `clearAllData()` with confirmation dialog; keeps DB file
+  - [x] **Delete DB + reset** — calls `resetDatabaseFiles()` with confirmation dialog; wipes `.isar` file, routes to `/welcome`
+- [x] `lib/app.dart` — `/dev-tools` route added (only present in `kDebugMode`)
+- [x] `lib/screens/auth/auth_screens.dart` — "Dev Tools" `TextButton` added below "Dev: Skip auth" on WelcomeScreen
+
+### Deferred to Production Hardening
+- [ ] Database encryption at rest (Isar v3 limitation; address when upgrading to Isar v4+)
+- [ ] Certificate pinning for Supabase connections
+- [ ] Session timeout policies (backend not wired yet)
+- [ ] Biometric unlock (future feature)
+
+**✅ PHASE 13 COMPLETE — `flutter analyze` clean**
+
+---
+
 ## Progress Summary
 
 | Phase | Items | Done | Remaining |
@@ -321,7 +400,9 @@
 | 9 — Polish | 14 | 14 | 0 ✅ |
 | 10 — Variable Spend Logging | 12 | 12 | 0 ✅ |
 | 11 — US-001 Authentication | 15 | 12 | 3 verification items |
-| **TOTAL** | **167** | **164** | **3 verification items** |
+| 12 — US-002 Guest Mode | 12 | 8 | 6 verification items |
+| 13 — Dev Mode Hardening | 18 | 14 | 4 deferred to prod hardening |
+| **TOTAL** | **197** | **186** | **13 items** |
 
 ---
 

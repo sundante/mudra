@@ -1,18 +1,24 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_typography.dart';
 import 'providers/auth_provider.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/accounts/funds_screen.dart';
 import 'screens/auth/auth_screens.dart';
 import 'screens/debts/debts_screen.dart';
+import 'screens/dev/dev_tools_screen.dart';
 import 'screens/map/map_screen.dart';
+import 'screens/onboarding/guest_handoff_screen.dart';
+import 'screens/onboarding/setup_wizard_screen.dart';
 import 'screens/portfolio/investments_screen.dart';
 import 'screens/net/net_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/spend/spend_screen.dart';
+import 'widgets/onboarding/guided_tour_overlay.dart';
 
 CustomTransitionPage<void> _fade(GoRouterState s, Widget child) =>
     CustomTransitionPage<void>(
@@ -38,6 +44,8 @@ GoRouter _createRouter(AppSessionController session) => GoRouter(
             return path == '/loading' ? null : '/loading';
           case AppSessionStage.signedOut:
             return isAuthPath ? null : '/welcome';
+          case AppSessionStage.guest:
+            return (path == '/loading' || isAuthPath) ? '/' : null;
           case AppSessionStage.verificationRequired:
             return path == '/auth/verify-email' ? null : '/auth/verify-email';
           case AppSessionStage.passwordRecovery:
@@ -45,12 +53,14 @@ GoRouter _createRouter(AppSessionController session) => GoRouter(
           case AppSessionStage.legacyDataDecision:
             return path == '/legacy-data' ? null : '/legacy-data';
           case AppSessionStage.setupRequired:
-            return path == '/setup/welcome' ? null : '/setup/welcome';
+            return path == '/onboarding/setup' ? null : '/onboarding/setup';
           case AppSessionStage.ready:
             return isAuthPath ||
                     path == '/loading' ||
                     path == '/legacy-data' ||
-                    path == '/setup/welcome'
+                    path == '/setup/welcome' ||
+                    path == '/onboarding/setup' ||
+                    path == '/onboarding/handoff'
                 ? '/'
                 : null;
         }
@@ -100,6 +110,14 @@ GoRouter _createRouter(AppSessionController session) => GoRouter(
           path: '/setup/welcome',
           pageBuilder: (c, s) => _fade(s, const SetupWelcomeScreen()),
         ),
+        GoRoute(
+          path: '/onboarding/setup',
+          pageBuilder: (c, s) => _fade(s, const SetupWizardScreen()),
+        ),
+        GoRoute(
+          path: '/onboarding/handoff',
+          pageBuilder: (c, s) => _fade(s, const GuestHandoffScreen()),
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -140,6 +158,11 @@ GoRouter _createRouter(AppSessionController session) => GoRouter(
           path: '/map',
           pageBuilder: (c, s) => _fade(s, const MapScreen()),
         ),
+        if (kDebugMode)
+          GoRoute(
+            path: '/dev-tools',
+            pageBuilder: (c, s) => _fade(s, const DevToolsScreen()),
+          ),
         GoRoute(
           path: '/spend',
           pageBuilder: (c, s) => _fade(s, const SpendScreen()),
@@ -180,56 +203,108 @@ class _MudraAppState extends ConsumerState<MudraApp> {
   }
 }
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stage =
+        ref.watch(appSessionControllerProvider).state.stage;
+    final isGuest = stage == AppSessionStage.guest;
+
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: AppColors.background,
+          body: navigationShell,
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isGuest) _DemoBanner(ref: ref),
+              Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                ),
+                child: BottomNavigationBar(
+                  currentIndex: navigationShell.currentIndex,
+                  onTap: (index) => navigationShell.goBranch(
+                    index,
+                    initialLocation: index == navigationShell.currentIndex,
+                  ),
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home_outlined),
+                      activeIcon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.savings_outlined),
+                      activeIcon: Icon(Icons.savings),
+                      label: 'Funds',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.account_balance_outlined),
+                      activeIcon: Icon(Icons.account_balance),
+                      label: 'Debts',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.show_chart_outlined),
+                      activeIcon: Icon(Icons.show_chart),
+                      label: 'Invests',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.donut_large_outlined),
+                      activeIcon: Icon(Icons.donut_large),
+                      label: 'Net',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (isGuest) const GuidedTourOverlay(),
+      ],
+    );
+  }
+}
+
+class _DemoBanner extends StatelessWidget {
+  const _DemoBanner({required this.ref});
+  final WidgetRef ref;
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(
-            top: BorderSide(color: AppColors.border, width: 1),
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF9A5510),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          Text(
+            'DEMO MODE  ·  SAMPLE DATA',
+            style: AppTypography.sectionLabel.copyWith(color: Colors.white),
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          onTap: (index) => navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
+          const Spacer(),
+          GestureDetector(
+            onTap: () {
+              ref.read(appSessionControllerProvider).exitGuestMode();
+              GoRouter.of(context).go('/auth/register');
+            },
+            child: Text(
+              'SIGN UP',
+              style: AppTypography.sectionLabel.copyWith(
+                color: Colors.white,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.white,
+              ),
+            ),
           ),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.savings_outlined),
-              activeIcon: Icon(Icons.savings),
-              label: 'Funds',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_outlined),
-              activeIcon: Icon(Icons.account_balance),
-              label: 'Debts',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart_outlined),
-              activeIcon: Icon(Icons.show_chart),
-              label: 'Invests',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.donut_large_outlined),
-              activeIcon: Icon(Icons.donut_large),
-              label: 'Net',
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

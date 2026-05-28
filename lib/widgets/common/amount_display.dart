@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 
@@ -42,7 +41,8 @@ class AmountDisplay extends StatelessWidget {
     final display = (showSign && amount > 0) ? '+$formatted' : formatted;
 
     final base = style ?? const TextStyle(fontSize: 16);
-    final resolved = GoogleFonts.ibmPlexMono(
+    final resolved = TextStyle(
+      fontFamily: 'IBMPlexMono',
       fontSize: base.fontSize,
       fontWeight: base.fontWeight,
       letterSpacing: base.letterSpacing,

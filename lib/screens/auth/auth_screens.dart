@@ -31,54 +31,85 @@ class WelcomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(appSessionControllerProvider).state;
     return _AuthScaffold(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(),
-          Text(
-            'Mudra',
-            style: AppTypography.displayMedium.copyWith(color: AppColors.gold),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Your money, clear and private.',
-            style: AppTypography.headingLarge.copyWith(color: AppColors.ink),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Build a calm picture of your finances. Your records remain '
-            'private to your account on this device.',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          MudraButton(
-            label: 'Create account',
-            onPressed: () => context.push('/auth/register'),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          MudraButton(
-            label: 'Log in',
-            variant: MudraButtonVariant.secondary,
-            onPressed: () => context.push('/auth/login'),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _SocialButtons(isBusy: session.isBusy),
-          if (!session.authConfigured) ...[
-            const SizedBox(height: AppSpacing.lg),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.xl),
             Text(
-              'Authentication configuration is required before sign-in can '
-              'complete in this build.',
+              'Mudra',
+              style: AppTypography.displayMedium.copyWith(color: AppColors.gold),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Your money, clear and private.',
+              style: AppTypography.headingLarge.copyWith(color: AppColors.ink),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Build a calm picture of your finances. Your records remain '
+              'private to your account on this device.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            MudraButton(
+              label: 'Create account',
+              onPressed: () => context.push('/auth/register'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            MudraButton(
+              label: 'Log in',
+              variant: MudraButtonVariant.secondary,
+              onPressed: () => context.push('/auth/login'),
+            ),
+            if (session.authConfigured) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _SocialButtons(isBusy: session.isBusy),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              onPressed: session.isBusy
+                  ? null
+                  : () => ref.read(appSessionControllerProvider).enterGuestMode(),
+              child: Text(
+                'Use as Guest',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
+              ),
+            ),
+            if (kDebugMode) ...[
+              const SizedBox(height: AppSpacing.sm),
+              MudraButton(
+                label: 'Dev: Skip auth',
+                variant: MudraButtonVariant.secondary,
+                onPressed: session.isBusy
+                    ? null
+                    : () => ref.read(appSessionControllerProvider).signInAsDebug(
+                          userId: 'developer',
+                          email: 'developer@local',
+                          fullName: 'Developer',
+                        ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              TextButton(
+                onPressed: () => context.push('/dev-tools'),
+                child: Text(
+                  'Dev Tools',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.inkDim,
+                    fontFamily: 'IBMPlexMono',
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'By continuing, you agree to Mudra Terms and Privacy Policy.',
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim),
             ),
+            const SizedBox(height: AppSpacing.lg),
           ],
-          const Spacer(),
-          Text(
-            'By continuing, you agree to Mudra Terms and Privacy Policy.',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(color: AppColors.inkDim),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,646 +1,105 @@
+import 'dart:convert';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/constants/spacing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-// ── Data model ────────────────────────────────────────────────────────────
+const _mapAsset = 'assets/maps/mudra_app_map.json';
+const _nodeWidth = 132.0;
+const _nodeHeight = 64.0;
+const _decisionSize = 92.0;
+const _columnGap = 32.0;
+const _rowGap = 14.0;
+const _canvasPadding = 18.0;
+const _initialScale = 0.72;
 
 class _MapNode {
   const _MapNode({
+    required this.id,
     required this.label,
-    this.sub,
+    required this.kind,
     required this.color,
+    this.sub,
     this.children = const [],
-    this.initiallyExpanded = false,
   });
 
+  final String id;
   final String label;
+  final String kind;
+  final String color;
   final String? sub;
-  final Color color;
   final List<_MapNode> children;
-  final bool initiallyExpanded;
 
-  bool get isLeaf => children.isEmpty;
+  bool get hasChildren => children.isNotEmpty;
+  bool get isDecision => kind == 'decision';
+
+  factory _MapNode.fromJson(Map<String, dynamic> json) {
+    return _MapNode(
+      id: json['id'] as String,
+      label: json['label'] as String,
+      kind: json['kind'] as String,
+      color: json['color'] as String,
+      sub: json['sub'] as String?,
+      children: (json['children'] as List<dynamic>? ?? const [])
+          .map((child) => _MapNode.fromJson(child as Map<String, dynamic>))
+          .toList(growable: false),
+    );
+  }
 }
 
-// ── Static tree data ──────────────────────────────────────────────────────
+class _PlacedNode {
+  const _PlacedNode({
+    required this.node,
+    required this.rect,
+    required this.depth,
+  });
 
-const _tree = _MapNode(
-  label: 'Mudra App',
-  sub: 'v1.0 · Flutter',
-  color: AppColors.gold,
-  initiallyExpanded: true,
-  children: [
-    _MapNode(
-      label: 'Splash Screen',
-      color: AppColors.gold,
-      children: [
-        _MapNode(
-          label: 'Session gate',
-          sub: 'Supabase auth before finance access',
-          color: AppColors.surfaceAlt,
-          children: [
-            _MapNode(label: 'Signed out → Welcome', color: AppColors.border),
-            _MapNode(
-                label: 'Verified → private local store',
-                color: AppColors.border),
-          ],
-        ),
-      ],
-    ),
+  final _MapNode node;
+  final Rect rect;
+  final int depth;
+}
 
-    _MapNode(
-      label: 'Authentication Entry',
-      sub: 'Welcome · Login · Register',
-      color: AppColors.inkDim,
-      initiallyExpanded: true,
-      children: [
-        _MapNode(
-            label: 'Welcome', sub: '/welcome', color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Email Verify',
-            sub: 'mudra://auth/callback',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Password Reset',
-            sub: 'mudra://auth/reset-password',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Legacy Data',
-            sub: 'Attach or start fresh',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Setup Welcome',
-            sub: 'Authenticated handoff',
-            color: AppColors.surfaceAlt),
-      ],
-    ),
+class _VisibleEdge {
+  const _VisibleEdge({
+    required this.parentId,
+    required this.childId,
+  });
 
-    _MapNode(
-      label: 'Protected Bottom Nav Shell',
-      sub: 'Authenticated + setup complete · 5 tabs',
-      color: AppColors.gold,
-      initiallyExpanded: true,
-      children: [
-        // ── HOME ───────────────────────────────────────────────────────
-        _MapNode(
-          label: 'Home',
-          sub: '/  ·  Dashboard',
-          color: AppColors.ink,
-          initiallyExpanded: true,
-          children: [
-            _MapNode(
-              label: 'This Month Tab',
-              sub: 'Default on launch',
-              color: AppColors.ink,
-              children: [
-                _MapNode(
-                  label: 'Sticky Date Header',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Tap 📅 → Date Picker (current month only)',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                    label: 'Fuel Gauge Ring',
-                    sub: 'Spend vs budget arc',
-                    color: AppColors.surfaceAlt),
-                _MapNode(
-                  label: 'Day Slider  (1–31)',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Drag → simulate balance on any day',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                    label: 'Liquid / Balance Row',
-                    sub: 'Opening cash · current',
-                    color: AppColors.surfaceAlt),
-                _MapNode(
-                  label: 'Runway Table',
-                  sub: '4 collapsible sections',
-                  color: AppColors.ink,
-                  children: [
-                    _MapNode(
-                      label: 'Opening Cash',
-                      color: AppColors.surfaceAlt,
-                      children: [
-                        _MapNode(
-                            label: 'Expand → account rows',
-                            color: AppColors.border)
-                      ],
-                    ),
-                    _MapNode(
-                      label: 'Credits',
-                      color: AppColors.surfaceAlt,
-                      children: [
-                        _MapNode(
-                            label: 'Expand → received + upcoming',
-                            color: AppColors.border)
-                      ],
-                    ),
-                    _MapNode(
-                      label: 'Debits',
-                      color: AppColors.surfaceAlt,
-                      children: [
-                        _MapNode(
-                            label: 'Expand → category groups + items',
-                            color: AppColors.border)
-                      ],
-                    ),
-                    _MapNode(
-                      label: 'Commitments',
-                      color: AppColors.surfaceAlt,
-                      children: [
-                        _MapNode(
-                            label: 'Expand → CC + future debits',
-                            color: AppColors.border)
-                      ],
-                    ),
-                  ],
-                ),
-                _MapNode(
-                  label: 'Until End of Month',
-                  sub: 'Radar — debits within 7 days',
-                  color: AppColors.ink,
-                  children: [
-                    _MapNode(
-                        label:
-                            'Radar Item: name · type · amount · urgency chip',
-                        color: AppColors.surfaceAlt),
-                  ],
-                ),
-                _MapNode(
-                  label: 'FAB  [+]  → Quick Spend',
-                  color: AppColors.ink,
-                  children: [
-                    _MapNode(
-                        label: 'Amount field', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Category chips',
-                        sub:
-                            'Food / Travel / Shopping / Bills / Health / Other',
-                        color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Optional note', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Date picker (current month)',
-                        color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: '[Save] → VariableExpense created',
-                        color: AppColors.border),
-                  ],
-                ),
-              ],
-            ),
-            _MapNode(
-              label: 'Overall Tab',
-              color: AppColors.ink,
-              children: [
-                _MapNode(
-                  label: 'Net Worth Hero',
-                  sub: 'Tap → /net screen',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Tap → Net Worth screen',
-                        color: AppColors.border)
-                  ],
-                ),
-                _MapNode(
-                  label: 'Asset Allocation Donut',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Liquid Cash segment', color: AppColors.border),
-                    _MapNode(
-                        label: 'Fixed Deposits segment',
-                        color: AppColors.border),
-                    _MapNode(
-                        label: 'Investments segment', color: AppColors.border),
-                    _MapNode(
-                        label: 'Tap segment → shows value',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                  label: 'Stat Tiles Row',
-                  color: AppColors.ink,
-                  children: [
-                    _MapNode(
-                        label: 'ASSETS tap → /accounts',
-                        color: AppColors.border),
-                    _MapNode(
-                        label: 'INVESTED tap → /portfolio',
-                        color: AppColors.border),
-                    _MapNode(
-                        label: 'LIABILITIES tap → /portfolio',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                    label: 'Breakdown Rows',
-                    sub: 'Assets + Liabilities detail',
-                    color: AppColors.surfaceAlt),
-              ],
-            ),
-          ],
-        ),
+  final String parentId;
+  final String childId;
+}
 
-        // ── FUNDS ──────────────────────────────────────────────────────
-        _MapNode(
-          label: 'Funds',
-          sub: '/accounts',
-          color: AppColors.green,
-          initiallyExpanded: true,
-          children: [
-            _MapNode(
-              label: 'Account List',
-              color: AppColors.green,
-              children: [
-                _MapNode(
-                  label: 'AccountTile',
-                  sub: 'nickname · bank · category · balance',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'LIQUID badge (if included in liquid)',
-                        color: AppColors.border),
-                    _MapNode(
-                      label: 'Tap balance → Quick Balance Update Sheet',
-                      color: AppColors.border,
-                      children: [
-                        _MapNode(
-                            label: 'Amount field (pre-filled)',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: '[Update] → saves new balance',
-                            color: AppColors.border),
-                      ],
-                    ),
-                    _MapNode(
-                        label: 'FD Amount row (if > 0)',
-                        color: AppColors.border),
-                    _MapNode(
-                      label: 'Tap tile → Edit Account Sheet',
-                      color: AppColors.border,
-                      children: [
-                        _MapNode(
-                            label: 'Nickname · Bank Name',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Account Type',
-                            sub: 'Personal / Credit Card / Savings',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Balance · FD Amount',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Include in Liquid toggle',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: '[Save]  /  [Delete]',
-                            color: AppColors.border),
-                      ],
-                    ),
-                    _MapNode(
-                        label: 'Swipe left → Delete (confirm)',
-                        color: AppColors.border),
-                  ],
-                ),
-              ],
-            ),
-            _MapNode(
-              label: 'FAB  [+]  → Add Account',
-              color: AppColors.green,
-              children: [
-                _MapNode(
-                    label: 'Same form as Edit Account (blank)',
-                    color: AppColors.surfaceAlt),
-              ],
-            ),
-          ],
-        ),
+class _FlowLayout {
+  const _FlowLayout({
+    required this.nodes,
+    required this.edges,
+    required this.size,
+  });
 
-        // ── DEBTS ──────────────────────────────────────────────────────
-        _MapNode(
-          label: 'Debts',
-          sub: '/debts',
-          color: AppColors.red,
-          initiallyExpanded: true,
-          children: [
-            _MapNode(
-              label: 'Upcoming + Total Committed',
-              color: AppColors.red,
-              children: [
-                _MapNode(
-                  label: 'Fixed Commitment Groups',
-                  sub: 'Loans · Bills · SIPs · Subscriptions',
-                  color: AppColors.surfaceAlt,
-                ),
-              ],
-            ),
-            _MapNode(
-              label: 'VARIABLE SPENT',
-              color: AppColors.red,
-              children: [
-                _MapNode(
-                    label: 'Current-month quick spend rows · swipe delete',
-                    color: AppColors.surfaceAlt),
-              ],
-            ),
-            _MapNode(
-              label: 'PERSONAL DEBTS  + Add Debt',
-              color: AppColors.red,
-              children: [
-                _MapNode(
-                  label: 'I OWE',
-                  sub: 'Active + collapsed SETTLED',
-                  color: AppColors.surfaceAlt,
-                ),
-                _MapNode(
-                  label: 'OWED TO ME',
-                  sub: 'Active + collapsed SETTLED',
-                  color: AppColors.surfaceAlt,
-                ),
-                _MapNode(
-                  label: 'Swipe right → settle · left → delete',
-                  color: AppColors.border,
-                ),
-              ],
-            ),
-            _MapNode(label: 'FAB  [+]  → Add Commitment', color: AppColors.red),
-          ],
-        ),
+  final List<_PlacedNode> nodes;
+  final List<_VisibleEdge> edges;
+  final Size size;
+}
 
-        // ── INVESTMENTS ────────────────────────────────────────────────
-        _MapNode(
-          label: 'Invests',
-          sub: '/portfolio',
-          color: AppColors.amber,
-          initiallyExpanded: true,
-          children: [
-            _MapNode(
-                label: 'Net Worth Hero',
-                sub: 'Tap → /net',
-                color: AppColors.surfaceAlt),
-            _MapNode(
-              label: 'Platform Filter Bar',
-              sub: 'All · Platform name chips',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                    label: 'Tap chip → filter holdings below',
-                    color: AppColors.border)
-              ],
-            ),
-            _MapNode(
-              label: 'Timeline Filter Bar',
-              sub: '1M · 3M · 6M · 1Y · All',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                    label: 'Filters holdings by createdAt date',
-                    color: AppColors.border)
-              ],
-            ),
-            _MapNode(
-              label: 'Asset Allocation Donut',
-              sub: 'By AssetType (when holdings exist)',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                    label: 'Segments per AssetType',
-                    sub: 'MF · Stocks · PPF · EPF · NPS · Gold · Other',
-                    color: AppColors.surfaceAlt),
-                _MapNode(
-                    label: 'Tap segment → shows value vs %',
-                    color: AppColors.border),
-              ],
-            ),
-            _MapNode(
-              label: 'Holdings — by Asset Type',
-              sub: 'ExpansionTile per type',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                  label: 'HoldingRow',
-                  sub: 'scheme · platform badge · P&L chip',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                      label: 'Tap → Edit Holding Sheet',
-                      color: AppColors.border,
-                      children: [
-                        _MapNode(
-                            label: 'Scheme name', color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Platform picker chips',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Asset type chips',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Invested Amount · Current Value',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: 'Units (optional)',
-                            color: AppColors.surfaceAlt),
-                        _MapNode(
-                            label: '[Save]  /  [Delete]',
-                            color: AppColors.border),
-                      ],
-                    ),
-                    _MapNode(
-                        label: 'Swipe left → Delete holding',
-                        color: AppColors.border),
-                  ],
-                ),
-              ],
-            ),
-            _MapNode(
-              label: 'Platform Summary',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                  label: 'PlatformCard',
-                  sub: 'name · asset type · invested · P&L',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Tap → Edit Platform Sheet',
-                        color: AppColors.border),
-                    _MapNode(
-                        label: 'Swipe left → Delete platform',
-                        color: AppColors.border),
-                  ],
-                ),
-              ],
-            ),
-            _MapNode(
-              label: 'FAB  [+]  → Add Choice',
-              color: AppColors.amber,
-              children: [
-                _MapNode(
-                  label: 'Add Holding / Scheme',
-                  color: AppColors.amber,
-                  children: [
-                    _MapNode(label: 'Scheme name', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Platform picker chips',
-                        color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Asset type chips', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Invested Amount · Current Value',
-                        color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Units (optional)', color: AppColors.surfaceAlt),
-                    _MapNode(label: '[Save]', color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                  label: 'Add Platform',
-                  color: AppColors.amber,
-                  children: [
-                    _MapNode(
-                        label: 'Platform name', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Asset type chips', color: AppColors.surfaceAlt),
-                    _MapNode(
-                        label: 'Invested Amount · Current Value',
-                        color: AppColors.surfaceAlt),
-                    _MapNode(label: '[Save]', color: AppColors.border),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+class _NodeTheme {
+  const _NodeTheme({
+    required this.background,
+    required this.border,
+    required this.foreground,
+    required this.subtle,
+    this.italic = false,
+  });
 
-        // ── NET WORTH ──────────────────────────────────────────────────
-        _MapNode(
-          label: 'Net Worth',
-          sub: '/net',
-          color: AppColors.blue,
-          initiallyExpanded: true,
-          children: [
-            _MapNode(
-                label: 'Net Worth Hero',
-                sub: '"Your Net Worth" + pos/neg label',
-                color: AppColors.surfaceAlt),
-            _MapNode(
-              label: 'Asset Allocation Donut',
-              sub: 'Liquid · FD · Investments',
-              color: AppColors.surfaceAlt,
-              children: [
-                _MapNode(
-                    label: 'Tap segment → value vs %', color: AppColors.border)
-              ],
-            ),
-            _MapNode(
-                label: 'Formula Card',
-                sub: 'Assets − Liabilities = Net Worth',
-                color: AppColors.surfaceAlt),
-            _MapNode(
-              label: 'Expandable Sections',
-              color: AppColors.blue,
-              children: [
-                _MapNode(
-                  label: 'MONEY IN BANKS',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'Liquid Accounts → rows',
-                        color: AppColors.border),
-                    _MapNode(
-                        label: 'Fixed Deposits → rows',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                  label: 'INVESTMENTS',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(
-                        label: 'PlatformCard per platform (read-only)',
-                        color: AppColors.border)
-                  ],
-                ),
-                _MapNode(
-                  label: 'CC OUTSTANDING',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(label: 'Credit card rows', color: AppColors.border)
-                  ],
-                ),
-                _MapNode(
-                  label: 'LOANS & I OWE',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(label: 'Personal debts', color: AppColors.border),
-                    _MapNode(
-                        label: 'Active outgoings due ≤ today',
-                        color: AppColors.border),
-                  ],
-                ),
-                _MapNode(
-                  label: 'OWED TO ME',
-                  sub: 'Only shown when entries exist',
-                  color: AppColors.surfaceAlt,
-                  children: [
-                    _MapNode(label: 'Debt rows', color: AppColors.border)
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    ),
-
-    // ── PROFILE ──────────────────────────────────────────────────────
-    _MapNode(
-      label: 'Profile Screen',
-      sub: 'Protected screens only',
-      color: AppColors.inkDim,
-      initiallyExpanded: true,
-      children: [
-        _MapNode(
-            label: 'User Name',
-            sub: 'Display name → initials avatar',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Base Currency',
-            sub: 'INR · USD · EUR · GBP · JPY · AED · SGD',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Pay Date',
-            sub: 'Grid 1–31 picker',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'App Map',
-            sub: 'Navigate to /map screen',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Sign Out',
-            sub: 'Close user store → Welcome',
-            color: AppColors.surfaceAlt),
-        _MapNode(
-            label: 'Clear All Data',
-            sub: 'Double-confirm → wipes current user store',
-            color: AppColors.surfaceAlt),
-      ],
-    ),
-  ],
-);
-
-// ── Screen ────────────────────────────────────────────────────────────────
+  final Color background;
+  final Color border;
+  final Color foreground;
+  final Color subtle;
+  final bool italic;
+}
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -650,252 +109,497 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  bool _allExpanded = false;
-  int _refreshKey = 0;
-
-  void _expandAll() => setState(() {
-        _allExpanded = true;
-        _refreshKey++;
-      });
-  void _collapseAll() => setState(() {
-        _allExpanded = false;
-        _refreshKey++;
-      });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'App Map',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _expandAll,
-            child: Text('Expand all',
-                style:
-                    AppTypography.labelSmall.copyWith(color: AppColors.gold)),
-          ),
-          TextButton(
-            onPressed: _collapseAll,
-            child: Text('Collapse',
-                style:
-                    AppTypography.labelSmall.copyWith(color: AppColors.inkDim)),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.md,
-            AppSpacing.screenH, AppSpacing.xxl),
-        child: _TreeNodeWidget(
-          key: ValueKey(_refreshKey),
-          node: _tree,
-          depth: 0,
-          forceExpand: _allExpanded,
-          forceCollapse: !_allExpanded && _refreshKey > 0,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Recursive Tree Node ───────────────────────────────────────────────────
-
-class _TreeNodeWidget extends StatefulWidget {
-  const _TreeNodeWidget({
-    super.key,
-    required this.node,
-    required this.depth,
-    this.forceExpand = false,
-    this.forceCollapse = false,
-  });
-
-  final _MapNode node;
-  final int depth;
-  final bool forceExpand;
-  final bool forceCollapse;
-
-  @override
-  State<_TreeNodeWidget> createState() => _TreeNodeWidgetState();
-}
-
-class _TreeNodeWidgetState extends State<_TreeNodeWidget>
-    with SingleTickerProviderStateMixin {
-  late bool _expanded;
-  late AnimationController _chevronController;
-  late Animation<double> _chevronTurn;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.node.initiallyExpanded;
-    _chevronController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      value: _expanded ? 1.0 : 0.0,
-    );
-    _chevronTurn = Tween<double>(begin: 0.0, end: 0.25).animate(
-      CurvedAnimation(parent: _chevronController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void didUpdateWidget(_TreeNodeWidget old) {
-    super.didUpdateWidget(old);
-    if (widget.forceExpand && !_expanded) _setExpanded(true);
-    if (widget.forceCollapse && _expanded) _setExpanded(false);
-  }
+  late final Future<_MapNode> _mapFuture = _loadMap();
+  final TransformationController _viewerController = TransformationController(
+    Matrix4.diagonal3Values(_initialScale, _initialScale, 1),
+  );
+  final Set<String> _expandedNodeIds = <String>{};
 
   @override
   void dispose() {
-    _chevronController.dispose();
+    _viewerController.dispose();
     super.dispose();
   }
 
-  void _setExpanded(bool v) {
-    setState(() => _expanded = v);
-    if (v) {
-      _chevronController.forward();
-    } else {
-      _chevronController.reverse();
-    }
+  Future<_MapNode> _loadMap() async {
+    final raw = await rootBundle.loadString(_mapAsset);
+    return _MapNode.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  void _toggle() {
-    if (widget.node.isLeaf) return;
-    _setExpanded(!_expanded);
+  Set<String> _expandableIds(_MapNode root) {
+    final ids = <String>{};
+    void visit(_MapNode node) {
+      if (node.hasChildren) ids.add(node.id);
+      for (final child in node.children) {
+        visit(child);
+      }
+    }
+
+    visit(root);
+    return ids;
+  }
+
+  void _toggleNode(_MapNode node) {
+    if (!node.hasChildren) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (!_expandedNodeIds.add(node.id)) {
+        _expandedNodeIds.remove(node.id);
+      }
+    });
+  }
+
+  void _toggleAll(_MapNode root) {
+    final expandableIds = _expandableIds(root);
+    final allExpanded = _expandedNodeIds.length == expandableIds.length &&
+        _expandedNodeIds.containsAll(expandableIds);
+    HapticFeedback.lightImpact();
+    setState(() {
+      _expandedNodeIds
+        ..clear()
+        ..addAll(allExpanded ? const <String>{} : expandableIds);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final node = widget.node;
-    final indent = widget.depth * 20.0;
-    final isLeaf = node.isLeaf;
+    return FutureBuilder<_MapNode>(
+      future: _mapFuture,
+      builder: (context, snapshot) {
+        final root = snapshot.data;
+        final allExpanded = root != null &&
+            _expandedNodeIds.length == _expandableIds(root).length &&
+            _expandedNodeIds.containsAll(_expandableIds(root));
 
-    // Determine node colours
-    final bool isColoured =
-        node.color != AppColors.surfaceAlt && node.color != AppColors.border;
-    final bgColor = isColoured ? node.color : node.color;
-    final textColor =
-        (node.color == AppColors.surfaceAlt || node.color == AppColors.border)
-            ? AppColors.ink
-            : Colors.white;
-    final subColor =
-        (node.color == AppColors.surfaceAlt || node.color == AppColors.border)
-            ? AppColors.inkDim
-            : Colors.white.withAlpha(180);
-
-    return Padding(
-      padding: EdgeInsets.only(left: indent),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Node Pill ──────────────────────────────────────────────
-          GestureDetector(
-            onTap: _toggle,
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                border: Border.all(
-                  color: isColoured ? bgColor : AppColors.border,
-                ),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            title: Text(
+              'App Map',
+              style: AppTypography.headingMedium.copyWith(
+                color: AppColors.gold,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          node.label,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: textColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (node.sub != null) ...[
-                          const SizedBox(height: 1),
-                          Text(
-                            node.sub!,
-                            style: AppTypography.monoXSmall
-                                .copyWith(color: subColor),
-                          ),
-                        ],
-                      ],
+            ),
+            actions: [
+              if (root != null)
+                TextButton.icon(
+                  key: const ValueKey('map-expand-toggle'),
+                  onPressed: () => _toggleAll(root),
+                  icon: Icon(
+                    allExpanded ? Icons.unfold_less : Icons.unfold_more,
+                    size: 18,
+                    color: allExpanded ? AppColors.inkDim : AppColors.gold,
+                  ),
+                  label: Text(
+                    allExpanded ? 'Collapse all' : 'Expand all',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: allExpanded ? AppColors.inkDim : AppColors.gold,
                     ),
                   ),
-                  if (!isLeaf) ...[
-                    const SizedBox(width: 8),
-                    RotationTransition(
-                      turns: _chevronTurn,
-                      child: Icon(
-                        Icons.chevron_right,
-                        size: 14,
-                        color: textColor.withAlpha(180),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
+              const SizedBox(width: 4),
+            ],
+          ),
+          body: _buildBody(snapshot),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(AsyncSnapshot<_MapNode> snapshot) {
+    if (snapshot.connectionState != ConnectionState.done) {
+      return const Center(
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (snapshot.hasError || snapshot.data == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Text(
+            'Unable to load app map.',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.red),
+          ),
+        ),
+      );
+    }
+
+    final layout = _FlowLayoutBuilder(_expandedNodeIds).build(snapshot.data!);
+    return InteractiveViewer(
+      transformationController: _viewerController,
+      constrained: false,
+      boundaryMargin: const EdgeInsets.all(220),
+      minScale: 0.55,
+      maxScale: 2.0,
+      child: SizedBox(
+        width: math.max(layout.size.width, MediaQuery.sizeOf(context).width),
+        height: math.max(
+          layout.size.height,
+          MediaQuery.sizeOf(context).height - kToolbarHeight,
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ConnectorPainter(layout: layout),
               ),
             ),
-          ),
+            for (final placed in layout.nodes)
+              Positioned.fromRect(
+                rect: placed.rect,
+                child: _FlowNodeCard(
+                  placed: placed,
+                  expanded: _expandedNodeIds.contains(placed.node.id),
+                  onTap: () => _toggleNode(placed.node),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          // ── Children ───────────────────────────────────────────────
-          if (!isLeaf)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              child: _expanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 12, bottom: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Vertical connector line + children
-                          IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Container(
-                                  width: 1.5,
-                                  margin: const EdgeInsets.only(right: 10),
-                                  color: AppColors.border,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: node.children.map((child) {
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 4),
-                                        child: _TreeNodeWidget(
-                                          node: child,
-                                          depth: 0,
-                                          forceExpand: widget.forceExpand,
-                                          forceCollapse: widget.forceCollapse,
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+class _FlowLayoutBuilder {
+  const _FlowLayoutBuilder(this.expandedIds);
+
+  final Set<String> expandedIds;
+
+  _FlowLayout build(_MapNode root) {
+    final placed = <_PlacedNode>[];
+    final edges = <_VisibleEdge>[];
+
+    final bottom = _place(root, 0, _canvasPadding, placed, edges);
+    var maxRight = 0.0;
+    for (final node in placed) {
+      maxRight = math.max(maxRight, node.rect.right);
+    }
+
+    return _FlowLayout(
+      nodes: placed,
+      edges: edges,
+      size: Size(
+        maxRight + _canvasPadding,
+        math.max(bottom + _canvasPadding, _nodeHeight + _canvasPadding * 2),
+      ),
+    );
+  }
+
+  double _place(
+    _MapNode node,
+    int depth,
+    double top,
+    List<_PlacedNode> placed,
+    List<_VisibleEdge> edges,
+  ) {
+    final visibleChildren = expandedIds.contains(node.id) ? node.children : [];
+    final nodeSize = _sizeFor(node);
+    final left = _canvasPadding + depth * (_nodeWidth + _columnGap);
+
+    if (visibleChildren.isEmpty) {
+      placed.add(_PlacedNode(
+        node: node,
+        rect: Rect.fromLTWH(left, top, nodeSize.width, nodeSize.height),
+        depth: depth,
+      ));
+      return top + nodeSize.height + _rowGap;
+    }
+
+    final childStart = top;
+    var cursor = childStart;
+    final childRects = <Rect>[];
+    for (final child in visibleChildren) {
+      final beforeCount = placed.length;
+      cursor = _place(child, depth + 1, cursor, placed, edges);
+      edges.add(_VisibleEdge(parentId: node.id, childId: child.id));
+      childRects.add(placed[beforeCount].rect);
+    }
+
+    final childrenTop = childRects.map((rect) => rect.top).reduce(math.min);
+    final childrenBottom =
+        childRects.map((rect) => rect.bottom).reduce(math.max);
+    final centeredTop =
+        childrenTop + (childrenBottom - childrenTop - nodeSize.height) / 2;
+
+    placed.add(_PlacedNode(
+      node: node,
+      rect: Rect.fromLTWH(
+        left,
+        math.max(_canvasPadding, centeredTop),
+        nodeSize.width,
+        nodeSize.height,
+      ),
+      depth: depth,
+    ));
+    return math.max(cursor, top + nodeSize.height + _rowGap);
+  }
+
+  Size _sizeFor(_MapNode node) {
+    if (node.isDecision) return const Size(_decisionSize, _decisionSize);
+    return const Size(_nodeWidth, _nodeHeight);
+  }
+}
+
+class _ConnectorPainter extends CustomPainter {
+  const _ConnectorPainter({required this.layout});
+
+  final _FlowLayout layout;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final nodesById = {
+      for (final placed in layout.nodes) placed.node.id: placed,
+    };
+    final paint = Paint()
+      ..color = AppColors.border
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final arrowPaint = Paint()
+      ..color = AppColors.border
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+
+    for (final edge in layout.edges) {
+      final parent = nodesById[edge.parentId];
+      final child = nodesById[edge.childId];
+      if (parent == null || child == null) continue;
+
+      final start = Offset(parent.rect.right, parent.rect.center.dy);
+      final end = Offset(child.rect.left, child.rect.center.dy);
+      final midX = start.dx + math.max(18, (end.dx - start.dx) * 0.52);
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..cubicTo(midX, start.dy, midX, end.dy, end.dx, end.dy);
+      canvas.drawPath(path, paint);
+
+      const arrow = 5.0;
+      canvas
+        ..drawLine(end, Offset(end.dx - arrow, end.dy - arrow), arrowPaint)
+        ..drawLine(end, Offset(end.dx - arrow, end.dy + arrow), arrowPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConnectorPainter oldDelegate) {
+    return oldDelegate.layout != layout;
+  }
+}
+
+class _FlowNodeCard extends StatelessWidget {
+  const _FlowNodeCard({
+    required this.placed,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  final _PlacedNode placed;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final node = placed.node;
+    final theme = _themeFor(node.color);
+    final content = _NodeContent(
+      node: node,
+      theme: theme,
+      expanded: expanded,
+    );
+
+    return Semantics(
+      button: node.hasChildren,
+      label: node.label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: node.hasChildren ? onTap : null,
+          borderRadius: BorderRadius.circular(node.isDecision ? 13 : 7),
+          child: node.isDecision
+              ? Transform.rotate(
+                  angle: math.pi / 4,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.background,
+                      border: Border.all(color: theme.border, width: 1.8),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Transform.rotate(
+                      angle: -math.pi / 4,
+                      child: Center(child: content),
+                    ),
+                  ),
+                )
+              : Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: theme.background,
+                    border: Border.all(color: theme.border, width: 1.1),
+                    borderRadius: BorderRadius.circular(7),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.ink.withAlpha(12),
+                        blurRadius: 7,
+                        offset: const Offset(0, 3),
                       ),
-                    )
-                  : const SizedBox.shrink(),
+                    ],
+                  ),
+                  child: content,
+                ),
+        ),
+      ),
+    );
+  }
+
+  _NodeTheme _themeFor(String color) {
+    switch (color) {
+      case 'shell':
+        return const _NodeTheme(
+          background: AppColors.gold,
+          border: AppColors.gold,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'home':
+        return const _NodeTheme(
+          background: AppColors.ink,
+          border: AppColors.ink,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'funds':
+        return const _NodeTheme(
+          background: AppColors.green,
+          border: AppColors.green,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'debts':
+        return const _NodeTheme(
+          background: AppColors.red,
+          border: AppColors.red,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'invest':
+        return const _NodeTheme(
+          background: AppColors.amber,
+          border: AppColors.amber,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'net':
+        return const _NodeTheme(
+          background: AppColors.blue,
+          border: AppColors.blue,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'profile':
+        return const _NodeTheme(
+          background: AppColors.inkDim,
+          border: AppColors.inkDim,
+          foreground: Colors.white,
+          subtle: Color(0xD9FFFFFF),
+        );
+      case 'action':
+        return const _NodeTheme(
+          background: AppColors.surface,
+          border: AppColors.border,
+          foreground: AppColors.inkMid,
+          subtle: AppColors.inkDim,
+          italic: true,
+        );
+      case 'leaf':
+      default:
+        return const _NodeTheme(
+          background: AppColors.surfaceAlt,
+          border: AppColors.border,
+          foreground: AppColors.ink,
+          subtle: AppColors.inkDim,
+        );
+    }
+  }
+}
+
+class _NodeContent extends StatelessWidget {
+  const _NodeContent({
+    required this.node,
+    required this.theme,
+    required this.expanded,
+  });
+
+  final _MapNode node;
+  final _NodeTheme theme;
+  final bool expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: node.isDecision ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  node.label,
+                  textAlign: TextAlign.center,
+                  maxLines: node.isDecision ? 3 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: theme.foreground,
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
+                    fontStyle: theme.italic ? FontStyle.italic : null,
+                  ),
+                ),
+              ),
+              if (node.hasChildren && !node.isDecision) ...[
+                const SizedBox(width: 3),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 12,
+                  color: theme.subtle,
+                ),
+              ],
+            ],
+          ),
+          if (node.sub != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              node.sub!,
+              textAlign: TextAlign.center,
+              maxLines: node.isDecision ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.monoXSmall.copyWith(
+                color: theme.subtle,
+                fontSize: 8,
+                height: 1.05,
+              ),
             ),
+          ],
+          if (node.hasChildren && node.isDecision) ...[
+            const SizedBox(height: 2),
+            Icon(
+              expanded ? Icons.expand_less : Icons.expand_more,
+              size: 11,
+              color: theme.subtle,
+            ),
+          ],
         ],
       ),
     );

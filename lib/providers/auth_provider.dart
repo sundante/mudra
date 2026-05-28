@@ -16,6 +16,7 @@ final authRepositoryProvider = Provider<AuthRepository>(
 enum AppSessionStage {
   loading,
   signedOut,
+  guest,
   verificationRequired,
   passwordRecovery,
   legacyDataDecision,
@@ -137,6 +138,43 @@ class AppSessionController extends ChangeNotifier {
     }
   }
 
+  /// Debug helper to sign in without hitting real auth backends.
+  /// Creates/opens a user database for [userId] and routes the app.
+  Future<void> signInAsDebug({
+    required String userId,
+    required String email,
+    String? fullName,
+  }) async {
+    _setState(_state.copyWith(isBusy: true, clearError: true));
+    try {
+      final bootstrap = await openUserDatabase(userId);
+      await _activateDatabase(bootstrap.isar);
+
+      // Ensure settings using provided fullName if available.
+      final db = _activeDatabase!;
+      final existing = await db.appSettings.get(1);
+      if (existing == null) {
+        final name = fullName?.trim() ?? '';
+        final settings = AppSettings()..userName = name;
+        await db.writeTxn(() => db.appSettings.put(settings));
+      }
+
+      if (await legacyDatabaseHasData()) {
+        _setState(AppSessionState(
+          stage: AppSessionStage.legacyDataDecision,
+          email: email,
+        ));
+        return;
+      }
+      await _routeFromSettings(email: email);
+    } catch (error) {
+      _setState(AppSessionState(
+        stage: AppSessionStage.signedOut,
+        errorMessage: 'Could not open your private local data: $error',
+      ));
+    }
+  }
+
   Future<void> _ensureSettings(User user) async {
     final db = _activeDatabase!;
     final existing = await db.appSettings.get(1);
@@ -246,6 +284,33 @@ class AppSessionController extends ChangeNotifier {
         errorMessage: 'Could not discard legacy data: $error',
       ));
     }
+  }
+
+  Future<void> enterGuestMode() async {
+    _setState(_state.copyWith(isBusy: true, clearError: true));
+    try {
+      final isar = await openGuestDatabase();
+      await _activateDatabase(isar);
+      _setState(const AppSessionState(stage: AppSessionStage.guest));
+    } catch (error) {
+      _setState(AppSessionState(
+        stage: AppSessionStage.signedOut,
+        errorMessage: 'Could not load demo data: $error',
+        authConfigured: _auth.isConfigured,
+      ));
+    }
+  }
+
+  Future<void> completeSetup() async {
+    await _routeFromSettings(email: _state.email);
+  }
+
+  Future<void> exitGuestMode() async {
+    await _releaseDatabase();
+    _setState(AppSessionState(
+      stage: AppSessionStage.signedOut,
+      authConfigured: _auth.isConfigured,
+    ));
   }
 
   Future<void> signOut() async {

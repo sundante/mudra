@@ -81,3 +81,40 @@ flutter:
 
   assets:
     - assets/icon/
+    - assets/maps/
+
+  fonts:
+    - family: CormorantGaramond
+      fonts:
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-Bold.ttf
+          weight: 700
+
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-SemiBold.ttf
+          weight: 600
+
+    - family: IBMPlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-SemiBold.ttf
+          weight: 600

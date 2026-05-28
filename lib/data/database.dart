@@ -12,8 +12,10 @@ import 'models/investment_holding.dart';
 import 'models/investment_platform.dart';
 import 'models/outgoing.dart';
 import 'models/variable_expense.dart';
+import 'seed_data.dart';
 
 const mudraDbName = 'mudra_db';
+const guestDatabaseName = 'mudra_guest';
 const _userDbPrefix = 'mudra_user_';
 
 class DatabaseBootstrapResult {
@@ -83,7 +85,7 @@ String userDatabaseName(String userId) {
 }
 
 Future<Isar> openDatabase({String name = mudraDbName}) async {
-  final dir = await getApplicationDocumentsDirectory();
+  final dir = await getApplicationSupportDirectory();
   return Isar.open(
     [
       AccountSchema,
@@ -157,7 +159,7 @@ Future<void> resetDatabaseFiles({String name = mudraDbName}) async {
     return;
   }
 
-  final dir = await getApplicationDocumentsDirectory();
+  final dir = await getApplicationSupportDirectory();
   final dbDir = Directory(dir.path);
   if (!await dbDir.exists()) return;
 
@@ -172,6 +174,15 @@ Future<void> resetDatabaseFiles({String name = mudraDbName}) async {
       await entity.delete(recursive: true);
     }
   }
+}
+
+Future<Isar> openGuestDatabase() async {
+  final isar = await openDatabase(name: guestDatabaseName);
+  final isEmpty = await isar.accounts.count() == 0;
+  if (isEmpty) {
+    await seedDemoData(isar);
+  }
+  return isar;
 }
 
 Future<bool> legacyDatabaseHasData() async {
