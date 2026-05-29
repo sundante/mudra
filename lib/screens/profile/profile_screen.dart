@@ -33,7 +33,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
         title: Text(
           'Profile',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
+          style: AppTypography.headingMedium.copyWith(color: AppColors.red),
         ),
       ),
       body: settingsAsync.when(
@@ -70,7 +70,7 @@ class _ProfileBody extends ConsumerWidget {
                 onTap: () => _openNameSheet(context, ref, settings),
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundColor: AppColors.gold,
+                  backgroundColor: AppColors.red,
                   child: Text(
                     initials.isEmpty ? 'M' : initials,
                     style: AppTypography.displaySmall.copyWith(
@@ -323,7 +323,7 @@ class _Footer extends StatelessWidget {
       children: [
         Text(
           'Mudra',
-          style: AppTypography.displaySmall.copyWith(color: AppColors.gold),
+          style: AppTypography.displaySmall.copyWith(color: AppColors.red),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
@@ -394,7 +394,7 @@ class _NameSheetState extends State<_NameSheet> {
                 Expanded(
                   child: Text('Your Name',
                       style: AppTypography.headingMedium
-                          .copyWith(color: AppColors.gold)),
+                          .copyWith(color: AppColors.red)),
                 ),
                 IconButton(
                   onPressed: _saving ? null : () => Navigator.of(context).pop(),

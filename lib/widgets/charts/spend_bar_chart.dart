@@ -60,11 +60,11 @@ class _SpendBarChartState extends State<SpendBarChart> {
       final isTouched = i == _touchedIndex;
 
       final Color baseColor = isCurrentMonth
-          ? AppColors.gold
-          : AppColors.gold.withValues(alpha: 0.2 + (i * 0.1));
+          ? AppColors.red
+          : AppColors.red.withValues(alpha: 0.2 + (i * 0.1));
 
       final Color rodColor = isTouched
-          ? AppColors.goldLight
+          ? AppColors.redLight
           : baseColor;
 
       return BarChartGroupData(

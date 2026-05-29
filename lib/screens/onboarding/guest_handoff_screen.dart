@@ -18,7 +18,7 @@ class GuestHandoffScreen extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF2A1C04), Color(0xFFA07020)],
+            colors: [Color(0xFF1A0404), Color(0xFF7A1F16)],
           ),
         ),
         child: SafeArea(

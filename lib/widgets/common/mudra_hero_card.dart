@@ -20,7 +20,7 @@ class MudraHeroCard extends StatelessWidget {
   final String label;
   final String amount;
 
-  /// Defaults to AppColors.gold. Pass AppColors.green or .red for semantic values.
+  /// Defaults to AppColors.ink. Pass AppColors.green or .red for semantic values.
   final Color? amountColor;
   final String? sublabel;
   final Widget? trailing;
@@ -52,7 +52,7 @@ class MudraHeroCard extends StatelessWidget {
           Text(
             amount,
             style: AppTypography.displaySmall.copyWith(
-              color: amountColor ?? AppColors.gold,
+              color: amountColor ?? AppColors.ink,
               height: 1.0,
             ),
           ),

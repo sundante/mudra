@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../widgets/common/mudra_hero_card.dart';
+import '../../widgets/common/hero_stat.dart';
 import '../../data/models/investment_holding.dart';
 import '../../data/models/investment_platform.dart';
 import '../../providers/dashboard_provider.dart';
@@ -85,7 +86,7 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
         elevation: 0,
         title: Text(
           'Investments',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
+          style: AppTypography.headingMedium.copyWith(color: AppColors.red),
         ),
         actions: [
           IconButton(
@@ -111,11 +112,11 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
                   sublabel: 'Tap for full breakdown',
                   bottom: Row(
                     children: [
-                      _HeroInvestStat(label: 'ASSETS', value: CurrencyFormatter.compact(dashboard.totalAssets, dashboard.currency), color: AppColors.green),
+                      HeroStat(label: 'ASSETS', value: CurrencyFormatter.compact(dashboard.totalAssets, dashboard.currency), color: AppColors.green),
                       Container(width: 1, height: 24, color: AppColors.border),
-                      _HeroInvestStat(label: 'INVESTED', value: CurrencyFormatter.compact(dashboard.investmentsTotal, dashboard.currency), color: AppColors.amber),
+                      HeroStat(label: 'INVESTED', value: CurrencyFormatter.compact(dashboard.investmentsTotal, dashboard.currency), color: AppColors.amber),
                       Container(width: 1, height: 24, color: AppColors.border),
-                      _HeroInvestStat(label: 'DEBTS', value: CurrencyFormatter.compact(dashboard.totalLiabilities, dashboard.currency), color: AppColors.red),
+                      HeroStat(label: 'DEBTS', value: CurrencyFormatter.compact(dashboard.totalLiabilities, dashboard.currency), color: AppColors.red),
                     ],
                   ),
                 ),
@@ -408,7 +409,7 @@ class _InvestmentsScreenState extends ConsumerState<InvestmentsScreen> {
         AssetType.mutualFund => AppColors.amber,
         AssetType.indianStocks => AppColors.green,
         AssetType.usStocks => AppColors.blue,
-        AssetType.ppf => AppColors.gold,
+        AssetType.ppf => AppColors.amber,
         AssetType.epf => AppColors.inkMid,
         AssetType.nps => AppColors.inkDim,
         AssetType.gold => const Color(0xFFC8A44A),
@@ -502,10 +503,10 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md, vertical: AppSpacing.xs),
         decoration: BoxDecoration(
-          color: selected ? AppColors.gold : AppColors.surface,
+          color: selected ? AppColors.red : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.full),
           border:
-              Border.all(color: selected ? AppColors.gold : AppColors.border),
+              Border.all(color: selected ? AppColors.red : AppColors.border),
         ),
         child: Text(
           label,
@@ -622,7 +623,7 @@ class _AddChoiceSheet extends StatelessWidget {
         children: [
           Text('What would you like to add?',
               style:
-                  AppTypography.headingMedium.copyWith(color: AppColors.gold)),
+                  AppTypography.headingMedium.copyWith(color: AppColors.red)),
           const SizedBox(height: AppSpacing.lg),
           MudraButton(
             label: 'Add Holding / Scheme',
@@ -644,36 +645,6 @@ class _AddChoiceSheet extends StatelessWidget {
 
 // ── Hero Invest Stat ──────────────────────────────────────────────────────
 
-class _HeroInvestStat extends StatelessWidget {
-  const _HeroInvestStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: AppTypography.monoSmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          SectionLabel(label),
-        ],
-      ),
-    );
-  }
-}
 
 class _SectionActionHeader extends StatelessWidget {
   const _SectionActionHeader({
@@ -904,13 +875,13 @@ class _HoldingEditorSheetState extends State<_HoldingEditorSheet> {
                                 vertical: AppSpacing.xs),
                             decoration: BoxDecoration(
                               color: _platformId == p.id
-                                  ? AppColors.gold
+                                  ? AppColors.red
                                   : AppColors.surface,
                               borderRadius:
                                   BorderRadius.circular(AppRadius.full),
                               border: Border.all(
                                   color: _platformId == p.id
-                                      ? AppColors.gold
+                                      ? AppColors.red
                                       : AppColors.border),
                             ),
                             child: Text(
@@ -1301,7 +1272,7 @@ class _SheetHeader extends StatelessWidget {
         Expanded(
           child: Text(title,
               style:
-                  AppTypography.headingMedium.copyWith(color: AppColors.gold)),
+                  AppTypography.headingMedium.copyWith(color: AppColors.red)),
         ),
         IconButton(
           onPressed: disabled ? null : () => Navigator.of(context).pop(),

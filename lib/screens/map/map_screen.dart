@@ -179,7 +179,7 @@ class _MapScreenState extends State<MapScreen> {
             title: Text(
               'App Map',
               style: AppTypography.headingMedium.copyWith(
-                color: AppColors.gold,
+                color: AppColors.red,
               ),
             ),
             actions: [
@@ -190,12 +190,12 @@ class _MapScreenState extends State<MapScreen> {
                   icon: Icon(
                     allExpanded ? Icons.unfold_less : Icons.unfold_more,
                     size: 18,
-                    color: allExpanded ? AppColors.inkDim : AppColors.gold,
+                    color: allExpanded ? AppColors.inkDim : AppColors.red,
                   ),
                   label: Text(
                     allExpanded ? 'Collapse all' : 'Expand all',
                     style: AppTypography.labelSmall.copyWith(
-                      color: allExpanded ? AppColors.inkDim : AppColors.gold,
+                      color: allExpanded ? AppColors.inkDim : AppColors.red,
                     ),
                   ),
                 ),
@@ -464,8 +464,8 @@ class _FlowNodeCard extends StatelessWidget {
     switch (color) {
       case 'shell':
         return const _NodeTheme(
-          background: AppColors.gold,
-          border: AppColors.gold,
+          background: AppColors.red,
+          border: AppColors.red,
           foreground: Colors.white,
           subtle: Color(0xD9FFFFFF),
         );

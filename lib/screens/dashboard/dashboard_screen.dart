@@ -16,11 +16,13 @@ import '../../providers/selected_day_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/variable_expense_provider.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_helpers.dart';
 import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../providers/fab_trigger_provider.dart';
 import '../../widgets/common/mudra_card.dart';
+import '../../widgets/common/hero_stat.dart';
 import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/common/quick_spend_sheet.dart';
@@ -67,7 +69,7 @@ class DashboardScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: RefreshIndicator(
-        color: AppColors.gold,
+        color: AppColors.red,
         onRefresh: () => _refresh(ref),
         child: CustomScrollView(
           slivers: [
@@ -78,7 +80,7 @@ class DashboardScreen extends ConsumerWidget {
               title: Text(
                 'Mudra',
                 style:
-                    AppTypography.headingMedium.copyWith(color: AppColors.gold),
+                    AppTypography.headingMedium.copyWith(color: AppColors.red),
               ),
               actions: [
                 IconButton(
@@ -88,11 +90,11 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
               bottom: TabBar(
-                labelColor: AppColors.gold,
+                labelColor: AppColors.red,
                 unselectedLabelColor: AppColors.inkDim,
                 labelStyle: AppTypography.labelMedium,
                 unselectedLabelStyle: AppTypography.labelMedium,
-                indicatorColor: AppColors.gold,
+                indicatorColor: AppColors.red,
                 indicatorWeight: 2,
                 tabs: const [
                   Tab(text: 'This Month'),
@@ -191,7 +193,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                           Text(
                             _formatMonth(now),
                             style: AppTypography.headingSmall
-                                .copyWith(color: AppColors.gold),
+                                .copyWith(color: AppColors.red),
                           ),
                         ],
                       ),
@@ -202,7 +204,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                             const Icon(Icons.calendar_month_outlined, size: 18),
                         label: Text(_formatPickerLabel(now, selectedDay)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.gold,
+                          foregroundColor: AppColors.red,
                           side: const BorderSide(color: AppColors.border),
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,
@@ -219,11 +221,64 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                 ),
               ),
 
-              // ── Projection Block ────────────────────────────────────────────
+              // ── Spendable Hero Tile ─────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenH,
                   AppSpacing.screenV,
+                  AppSpacing.screenH,
+                  0,
+                ),
+                child: () {
+                  final liquid = dashboard.bankBalance;
+                  final projected = dashboard.monthRunway;
+                  final daysLeft = daysInMonth - today;
+                  final liquidColor =
+                      liquid >= 0 ? AppColors.green : AppColors.red;
+                  final projColor =
+                      projected >= 0 ? AppColors.green : AppColors.red;
+                  final projSign = projected >= 0 ? '+' : '';
+                  return MudraHeroCard(
+                    label: 'SPENDABLE THIS MONTH',
+                    amount: CurrencyFormatter.compact(liquid, dashboard.currency),
+                    amountColor: liquidColor,
+                    sublabel: '$daysLeft days left',
+                    bottom: Row(
+                      children: [
+                        HeroStat(
+                          label: 'LIQUID',
+                          value: CurrencyFormatter.compact(
+                              liquid, dashboard.currency),
+                          color: liquidColor,
+                        ),
+                        Container(
+                            width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'DAYS LEFT',
+                          value: '$daysLeft',
+                          color: AppColors.inkDim,
+                        ),
+                        Container(
+                            width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'PROJECTED',
+                          value:
+                              '$projSign${CurrencyFormatter.compact(projected, dashboard.currency)}',
+                          color: projColor,
+                        ),
+                      ],
+                    ),
+                  );
+                }(),
+              ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              // ── Projection Block ────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenH,
+                  0,
                   AppSpacing.screenH,
                   0,
                 ),
@@ -401,7 +456,7 @@ class _ThisMonthTabState extends ConsumerState<_ThisMonthTab> {
                           child: Text(
                             'See all in Debits',
                             style: AppTypography.labelMedium
-                                .copyWith(color: AppColors.gold),
+                                .copyWith(color: AppColors.red),
                           ),
                         ),
                     ],
@@ -1115,12 +1170,6 @@ class _RadarItem extends StatelessWidget {
   final int daysUntil;
   final String currency;
 
-  String _debitLabel(int d) {
-    if (d == 0) return 'Today';
-    if (d == 1) return 'Tomorrow';
-    return 'in $d days';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isExpense = row.type == OutgoingType.expense;
@@ -1178,7 +1227,7 @@ class _RadarItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  _debitLabel(daysUntil),
+                  DateHelpers.debitLabel(daysUntil),
                   style: AppTypography.monoXSmall.copyWith(color: chipText),
                 ),
               ),
@@ -1463,7 +1512,7 @@ class _QuickActionTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: AppColors.gold, size: 20),
+          Icon(icon, color: AppColors.red, size: 20),
           const SizedBox(height: 4),
           Text(
             label,
@@ -1543,7 +1592,7 @@ class _ProjectionBlock extends StatelessWidget {
               const Spacer(),
               Text(
                 'Day $selectedDay',
-                style: AppTypography.monoXSmall.copyWith(color: AppColors.gold),
+                style: AppTypography.monoXSmall.copyWith(color: AppColors.red),
               ),
             ],
           ),
@@ -1605,3 +1654,4 @@ class _ProjectionBlock extends StatelessWidget {
     );
   }
 }
+

@@ -3,8 +3,8 @@
 
 > Legend: `[ ]` Not Started · `[~]` In Progress · `[x]` Done · `[!]` Blocked
 
-**Last Updated:** 2026-05-29
-**Current Phase:** Phase 15 Complete — Design System v2 Restyle
+**Last Updated:** 2026-05-30
+**Current Phase:** Phase 17 Complete — Unified Hero Tile Layout
 **Overall Progress:** Core implementation complete; configured auth/device verification pending
 
 ---
@@ -14,6 +14,8 @@
 
 | Date | Session | What was done | Stopped at |
 |---|---|---|---|
+| 2026-05-30 | Phase 17 — Unified Hero Tile | Standardised hero tile layout across all main screens to match the Investments pattern: `MudraHeroCard` + 3-stat bottom row. Dashboard `_SpendableHeroTile` replaced (LIQUID / DAYS LEFT / PROJECTED). Funds two-column stat cards replaced (LIQUID / FIXED DEPOSITS / ACCOUNTS). Debts two-column stat cards replaced (COMMITTED / ACTIVE ITEMS / UPCOMING). `_SpendHeroStat` in Spend screen aligned to use `AppTypography`. `flutter analyze` clean. | — |
+| 2026-05-30 | Phase 16 — Design Language v3 (Red Brand) | Replaced gold with red as primary brand color across entire app. `app_theme.dart` primary/nav/button/input → red. `app_typography.dart` sectionLabel → inkDim. `mudra_card.dart` primary border → red. All 9 screens cleaned (semantic exceptions: PPF→amber, entertainment→amber, physical gold asset kept). `outgoing_row.dart` rewritten with 3px left accent bar. `spend_bar_chart.dart`, `sparkline_chart.dart`, `quick_spend_sheet.dart` updated. New `_SpendableHeroTile` added to Dashboard above day slider. `guest_handoff_screen.dart` gradient → dark red `#1A0404→#7A1F16`. `CLAUDE.md` and `DESIGN_DIRECTION.md` updated with full component grammar. `flutter analyze` clean. | — |
 | 2026-05-29 | Design System v2 Restyle | Created `docs/DESIGN.md` master design reference. Tightened typography (body/label/mono scale −1–2px) and spacing (screenH 20→16, screenV 24→16, cardPad=12). Rewrote `MudraCard` (3 variants: default, `.stat`, `.primary` with 3px gold left border), `MudraHeroCard` (flat white, Cormorant gold number, no gradient). Replaced fuel gauge with `_ProjectionBlock` (green/red projected month-end + inline slider). Section labels default to gold. ExpansionTiles replaced with always-visible cards + "show N more" pattern across Debts, Investments, Net screens. `OutgoingRow` dot prefix. Centralized FAB via `fabTriggerProvider`. Updated `seed_data.dart` with 10 seeded variable expenses. `flutter analyze` clean; `flutter test` passing. | — |
 | 2026-05-28 | Flow map + profile/home UX refinements | Rebuilt App Map as a compact flow-board driven by `assets/maps/mudra_app_map.json`, regenerated `docs/vibes/APP_MAP.html`, and added map widget coverage. Removed App Map from Home quick actions so it lives only in Profile. Simplified Profile to identity/navigation/account/data actions only; removed income, pay date, and currency controls from Profile. Removed the gold Month Runway hero from Home → This Month so the gauge is the primary visual. Gauge colour now follows projected month-end runway directly: grey at 0, green above 0, red below 0. `flutter analyze` clean; `flutter test` passing. | — |
 | 2026-05-28 | Dev mode hardening | Full security audit and air-gap for dev builds. Bundled Cormorant Garamond, IBM Plex Sans, IBM Plex Mono as local assets — removed all google_fonts CDN calls from `app_typography.dart`, `amount_display.dart`, `mudra_hero_card.dart`; added `GoogleFonts.config.allowRuntimeFetching = false` guard. Switched `openDatabase()` and `resetDatabaseFiles()` to `getApplicationSupportDirectory()` (iOS iCloud backup excluded by default). Hidden Google/Apple social buttons when Supabase not configured. Added `Dev: Skip auth` + `Dev Tools` entry on WelcomeScreen (debug only). New `lib/screens/dev/dev_tools_screen.dart` with DB info, Clear all data, and Delete DB + reset. `flutter analyze` clean. | Install on real device to verify fonts + Dev Tools flow |
@@ -436,6 +438,42 @@
 
 ---
 
+## Phase 16 — Design Language v3 (Red Brand + Accent Bars)
+
+**Goal:** Replace gold with red as the primary brand colour; standardise row anatomy with left accent bars; hero tile shows numbers only (no gauges).
+
+- [x] `lib/core/theme/app_theme.dart` — primary, nav active, button bg, input focus → red
+- [x] `lib/core/theme/app_typography.dart` — `sectionLabel` default colour → `inkDim`
+- [x] `lib/widgets/common/mudra_card.dart` — `.primary()` left border → red
+- [x] `lib/widgets/common/mudra_hero_card.dart` — default amount colour → `ink`
+- [x] `lib/widgets/common/timeline_filter_bar.dart` — active chip → red
+- [x] `lib/widgets/outgoing_row.dart` — 6×6 dot replaced with 3px full-height left accent bar; day badge → `surfaceAlt/inkDim`
+- [x] `lib/widgets/charts/spend_bar_chart.dart` — bars → red
+- [x] `lib/widgets/charts/sparkline_chart.dart` — line → red
+- [x] `lib/widgets/common/quick_spend_sheet.dart` — selected chip → red; date chip → `surfaceAlt/inkDim`
+- [x] `lib/screens/dashboard/dashboard_screen.dart` — 9 gold refs replaced; new `_SpendableHeroTile` above day slider
+- [x] All 8 remaining screens — bulk `gold→red` replace (semantic exceptions: PPF→amber, entertainment→amber, physical gold asset type kept)
+- [x] `lib/screens/onboarding/guest_handoff_screen.dart` — gradient → dark red (`#1A0404 → #7A1F16`)
+- [x] `docs/vibes/DESIGN_DIRECTION.md` — full Component Catalogue added; Design Decisions Log updated
+- [x] `CLAUDE.md` — colour grammar, component grammar, gradient spec updated; personal name references removed
+
+**✅ PHASE 16 COMPLETE — `flutter analyze` clean**
+
+---
+
+## Phase 17 — Unified Hero Tile Layout
+
+**Goal:** Every main screen uses `MudraHeroCard` with a 3-stat bottom row (matching the Investments screen pattern).
+
+- [x] `lib/screens/dashboard/dashboard_screen.dart` — `_SpendableHeroTile` replaced with `MudraHeroCard`; 3-stat row: LIQUID · DAYS LEFT · PROJECTED
+- [x] `lib/screens/accounts/funds_screen.dart` — two-column `MudraCard.primary + .stat` replaced with `MudraHeroCard`; 3-stat row: LIQUID · FIXED DEPOSITS · ACCOUNTS
+- [x] `lib/screens/debts/debts_screen.dart` — two-column stat cards replaced with `MudraHeroCard`; 3-stat row: COMMITTED · ACTIVE ITEMS · UPCOMING
+- [x] `lib/screens/spend/spend_screen.dart` — `_SpendHeroStat` hardcoded `TextStyle` aligned to use `AppTypography`
+
+**✅ PHASE 17 COMPLETE — `flutter analyze` clean**
+
+---
+
 ## Progress Summary
 
 | Phase | Items | Done | Remaining |
@@ -456,7 +494,9 @@
 | 13 — Dev Mode Hardening | 18 | 14 | 4 deferred to prod hardening |
 | 14 — Flow Map + UX Refinements | 11 | 11 | 0 ✅ |
 | 15 — Design System v2 Restyle | 15 | 15 | 0 ✅ |
-| **TOTAL** | **223** | **210** | **13 items** |
+| 16 — Design Language v3 (Red Brand) | 14 | 14 | 0 ✅ |
+| 17 — Unified Hero Tile Layout | 4 | 4 | 0 ✅ |
+| **TOTAL** | **241** | **228** | **13 items** |
 
 ---
 

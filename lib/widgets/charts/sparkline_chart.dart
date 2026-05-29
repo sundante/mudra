@@ -19,7 +19,7 @@ class SparklinePoint {
 /// ```dart
 /// SparklineChart(
 ///   points: dailyPoints,
-///   lineColor: AppColors.gold,
+///   lineColor: AppColors.red,
 /// )
 /// ```
 class SparklineChart extends StatelessWidget {
@@ -31,12 +31,12 @@ class SparklineChart extends StatelessWidget {
 
   final List<SparklinePoint> points;
 
-  /// Defaults to [AppColors.gold] when null.
+  /// Defaults to [AppColors.red] when null.
   final Color? lineColor;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = lineColor ?? AppColors.gold;
+    final effectiveColor = lineColor ?? AppColors.red;
 
     final spots = points
         .map((p) => FlSpot(p.day.toDouble(), p.amount))

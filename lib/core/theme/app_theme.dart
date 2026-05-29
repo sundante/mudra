@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../constants/spacing.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
+
+const _inputRadius = BorderRadius.all(Radius.circular(AppRadius.sm));
 
 class AppTheme {
   AppTheme._();
@@ -9,7 +12,7 @@ class AppTheme {
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: const ColorScheme.light(
-          primary: AppColors.gold,
+          primary: AppColors.red,
           onPrimary: Colors.white,
           surface: AppColors.surface,
           onSurface: AppColors.ink,
@@ -23,13 +26,13 @@ class AppTheme {
           shadowColor: AppColors.border,
           centerTitle: false,
           titleTextStyle: AppTypography.headingMedium.copyWith(
-            color: AppColors.gold,
+            color: AppColors.red,
           ),
           iconTheme: const IconThemeData(color: AppColors.ink),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: AppColors.surface,
-          selectedItemColor: AppColors.gold,
+          selectedItemColor: AppColors.red,
           unselectedItemColor: AppColors.inkDim,
           type: BottomNavigationBarType.fixed,
           elevation: 8,
@@ -52,32 +55,33 @@ class AppTheme {
           filled: true,
           fillColor: AppColors.surface,
           hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.inkDim),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.border),
+          border: const OutlineInputBorder(
+            borderRadius: _inputRadius,
+            borderSide: BorderSide(color: AppColors.border),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.border),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: _inputRadius,
+            borderSide: BorderSide(color: AppColors.border),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: _inputRadius,
+            borderSide: BorderSide(color: AppColors.red, width: 1.5),
           ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.red),
+          errorBorder: const OutlineInputBorder(
+            borderRadius: _inputRadius,
+            borderSide: BorderSide(color: AppColors.red),
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.gold,
+            backgroundColor: AppColors.red,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            shape: const RoundedRectangleBorder(borderRadius: _inputRadius),
             textStyle: AppTypography.labelLarge,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),

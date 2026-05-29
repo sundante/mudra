@@ -194,7 +194,7 @@ class _StepIndicator extends StatelessWidget {
               margin: EdgeInsets.only(right: i < total - 1 ? 4 : 0),
               height: 3,
               decoration: BoxDecoration(
-                color: active ? AppColors.gold : AppColors.border,
+                color: active ? AppColors.red : AppColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -294,10 +294,10 @@ class _AccountTypeSelector extends StatelessWidget {
               margin: const EdgeInsets.only(right: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? AppColors.gold : AppColors.surface,
+                color: selected ? AppColors.red : AppColors.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: selected ? AppColors.gold : AppColors.border,
+                  color: selected ? AppColors.red : AppColors.border,
                 ),
               ),
               child: Center(

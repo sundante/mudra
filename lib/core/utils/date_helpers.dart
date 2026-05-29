@@ -37,10 +37,4 @@ class DateHelpers {
   }
 
   static bool isUrgent(int daysUntil) => daysUntil <= 2;
-
-  static int daysRemainingInMonth() {
-    final now = DateTime.now();
-    final lastDay = DateTime(now.year, now.month + 1, 0).day;
-    return lastDay - now.day;
-  }
 }

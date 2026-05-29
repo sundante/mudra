@@ -45,7 +45,7 @@ class MudraCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border(
           left: BorderSide(
-            color: _isPrimary ? AppColors.gold : AppColors.border,
+            color: _isPrimary ? AppColors.red : AppColors.border,
             width: _isPrimary ? 3 : 1,
           ),
           top: const BorderSide(color: AppColors.border),

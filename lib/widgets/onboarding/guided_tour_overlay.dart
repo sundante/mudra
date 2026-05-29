@@ -161,7 +161,7 @@ class _CalloutCard extends StatelessWidget {
               Text(
                 '${step + 1} OF $total',
                 style: AppTypography.sectionLabel
-                    .copyWith(color: AppColors.gold),
+                    .copyWith(color: AppColors.red),
               ),
               const Spacer(),
               GestureDetector(

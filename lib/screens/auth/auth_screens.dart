@@ -19,7 +19,7 @@ class AuthLoadingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      body: Center(child: CircularProgressIndicator(color: AppColors.red)),
     );
   }
 }
@@ -38,7 +38,7 @@ class WelcomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
             Text(
               'Mudra',
-              style: AppTypography.displayMedium.copyWith(color: AppColors.gold),
+              style: AppTypography.displayMedium.copyWith(color: AppColors.red),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -189,7 +189,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             const SizedBox(height: AppSpacing.md),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
-              activeColor: AppColors.gold,
+              activeColor: AppColors.red,
               value: _consented,
               onChanged: state.isBusy
                   ? null
@@ -337,7 +337,7 @@ class VerifyEmailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.mark_email_unread_outlined,
-                size: 50, color: AppColors.gold),
+                size: 50, color: AppColors.red),
             const SizedBox(height: AppSpacing.lg),
             Text('Check your inbox',
                 style:
@@ -561,7 +561,7 @@ class SetupWelcomeScreen extends ConsumerWidget {
           children: [
             Text('Welcome to Mudra',
                 style:
-                    AppTypography.displaySmall.copyWith(color: AppColors.gold)),
+                    AppTypography.displaySmall.copyWith(color: AppColors.red)),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Your private account is ready. Financial setup begins in the '
@@ -650,7 +650,7 @@ class _AuthScaffold extends StatelessWidget {
               surfaceTintColor: Colors.transparent,
               title: Text(title!,
                   style: AppTypography.headingMedium
-                      .copyWith(color: AppColors.gold)),
+                      .copyWith(color: AppColors.red)),
             ),
       body: SafeArea(
         child: Padding(

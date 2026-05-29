@@ -18,6 +18,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../widgets/charts/asset_allocation_donut.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/mudra_card.dart';
+import '../../widgets/common/hero_stat.dart';
 import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/platform_card.dart';
@@ -68,7 +69,7 @@ class NetScreen extends ConsumerWidget {
             title: Text(
               'Net Worth',
               style:
-                  AppTypography.headingMedium.copyWith(color: AppColors.gold),
+                  AppTypography.headingMedium.copyWith(color: AppColors.red),
             ),
             actions: [
               IconButton(
@@ -97,20 +98,11 @@ class NetScreen extends ConsumerWidget {
                         : 'Liabilities exceed assets',
                     bottom: Row(
                       children: [
-                        _NetHeroStat(
-                          label: 'ASSETS',
-                          value: CurrencyFormatter.compact(dashboard.totalAssets, currency),
-                        ),
+                        HeroStat(label: 'ASSETS', value: CurrencyFormatter.compact(dashboard.totalAssets, currency), color: Colors.white, onDarkBackground: true),
                         Container(width: 1, height: 28, color: Colors.white24),
-                        _NetHeroStat(
-                          label: 'LIABILITIES',
-                          value: CurrencyFormatter.compact(dashboard.totalLiabilities, currency),
-                        ),
+                        HeroStat(label: 'LIABILITIES', value: CurrencyFormatter.compact(dashboard.totalLiabilities, currency), color: Colors.white, onDarkBackground: true),
                         Container(width: 1, height: 28, color: Colors.white24),
-                        _NetHeroStat(
-                          label: 'INVESTED',
-                          value: CurrencyFormatter.compact(dashboard.investmentsTotal, currency),
-                        ),
+                        HeroStat(label: 'INVESTED', value: CurrencyFormatter.compact(dashboard.investmentsTotal, currency), color: Colors.white, onDarkBackground: true),
                       ],
                     ),
                   ),
@@ -313,38 +305,6 @@ class NetScreen extends ConsumerWidget {
 }
 
 // ── Hero Stat (for hero card bottom row) ──────────────────────────────────
-
-class _NetHeroStat extends StatelessWidget {
-  const _NetHeroStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Mono',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              )),
-          const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Mono',
-                fontSize: 8,
-                letterSpacing: 1.0,
-                color: Colors.white38,
-              )),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Formula Card ───────────────────────────────────────────────────────────
 

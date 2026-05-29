@@ -41,13 +41,6 @@ class AppTypography {
         fontWeight: FontWeight.w600,
       );
 
-  static TextStyle get displayItalic => const TextStyle(
-        fontFamily: 'CormorantGaramond',
-        fontSize: 22,
-        fontWeight: FontWeight.w400,
-        fontStyle: FontStyle.italic,
-      );
-
   // Body — IBM Plex Sans (all UI text)
   static TextStyle get bodyLarge => const TextStyle(
         fontFamily: 'IBMPlexSans',
@@ -124,6 +117,6 @@ class AppTypography {
         fontSize: 9.5,
         fontWeight: FontWeight.w400,
         letterSpacing: 1.8,
-        color: AppColors.gold,
+        color: AppColors.inkDim,
       );
 }

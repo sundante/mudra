@@ -9,7 +9,6 @@ class AccountRepository {
       _isar.accounts.filter().isDeletedEqualTo(false).watch(fireImmediately: true);
 
   Future<void> save(Account account) async {
-    account.createdAt = account.createdAt;
     await _isar.writeTxn(() => _isar.accounts.put(account));
   }
 

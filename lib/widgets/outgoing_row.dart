@@ -33,62 +33,67 @@ class OutgoingRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+      child: IntrinsicHeight(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: accentColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
+            Container(width: 3, color: accentColor),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.ink,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      _Badge(
-                        label: categoryLabel,
-                        backgroundColor: AppColors.surfaceAlt,
-                        textColor: AppColors.inkDim,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      _Badge(
-                        label: 'Day $debitDate',
-                        backgroundColor: AppColors.goldLight,
-                        textColor: AppColors.gold,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                AmountDisplay(
-                  amount: amount,
-                  currency: currency,
-                  style: AppTypography.monoSmall,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppSpacing.sm,
                 ),
-                const SizedBox(height: 2),
-                SectionLabel(_daysUntilLabel(daysUntil)),
-              ],
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.ink,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              _Badge(
+                                label: categoryLabel,
+                                backgroundColor: AppColors.surfaceAlt,
+                                textColor: AppColors.inkDim,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              _Badge(
+                                label: 'Day $debitDate',
+                                backgroundColor: AppColors.surfaceAlt,
+                                textColor: AppColors.inkDim,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AmountDisplay(
+                          amount: amount,
+                          currency: currency,
+                          style: AppTypography.monoSmall,
+                        ),
+                        const SizedBox(height: 2),
+                        SectionLabel(_daysUntilLabel(daysUntil)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

@@ -14,9 +14,9 @@ class AppColors {
   static const Color inkMid = Color(0xFF4A4642);
   static const Color inkDim = Color(0xFF8C8480);
 
-  // Brand Gold
+  // Brand Gold — reserved for hero gradient only; not used in UI text, CTAs, or labels
   static const Color gold = Color(0xFF8A6520);
-  static const Color goldLight = Color(0xFFF5EDD9);
+
 
   // Semantic: Positive
   static const Color green = Color(0xFF1E6B44);
@@ -32,5 +32,4 @@ class AppColors {
 
   // Semantic: Info
   static const Color blue = Color(0xFF1A5F8A);
-  static const Color blueLight = Color(0xFFE6F2FA);
 }

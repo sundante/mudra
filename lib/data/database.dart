@@ -112,40 +112,43 @@ Future<DatabaseBootstrapResult> openUserDatabase(String userId) {
 }
 
 Future<void> validateDatabase(Isar isar) async {
-  final account = await isar.accounts.where().findFirst();
-  account?.safeUid;
-  account?.safeNickname;
-  account?.safeAccountType;
+  final results = await Future.wait([
+    isar.accounts.where().findFirst(),
+    isar.outgoings.where().findFirst(),
+    isar.investmentPlatforms.where().findFirst(),
+    isar.investmentHoldings.where().findFirst(),
+    isar.debts.where().findFirst(),
+    isar.credits.where().findFirst(),
+    isar.variableExpenses.where().findFirst(),
+  ]);
 
-  final outgoing = await isar.outgoings.where().findFirst();
-  outgoing?.safeUid;
-  outgoing?.safeName;
-  outgoing?.safeType;
+  (results[0] as Account?)?.safeUid;
+  (results[0] as Account?)?.safeNickname;
+  (results[0] as Account?)?.safeAccountType;
 
-  final platform = await isar.investmentPlatforms.where().findFirst();
-  platform?.safeUid;
-  platform?.safePlatformName;
-  platform?.safeAssetType;
+  (results[1] as Outgoing?)?.safeUid;
+  (results[1] as Outgoing?)?.safeName;
+  (results[1] as Outgoing?)?.safeType;
 
-  final holding = await isar.investmentHoldings.where().findFirst();
-  holding?.safeUid;
-  holding?.safeSchemeName;
-  holding?.safeAssetType;
+  (results[2] as InvestmentPlatform?)?.safeUid;
+  (results[2] as InvestmentPlatform?)?.safePlatformName;
+  (results[2] as InvestmentPlatform?)?.safeAssetType;
 
-  final debt = await isar.debts.where().findFirst();
-  debt?.safeUid;
-  debt?.safeCounterpartyName;
-  debt?.safeDirection;
+  (results[3] as InvestmentHolding?)?.safeUid;
+  (results[3] as InvestmentHolding?)?.safeSchemeName;
+  (results[3] as InvestmentHolding?)?.safeAssetType;
 
-  final credit = await isar.credits.where().findFirst();
-  credit?.safeUid;
-  credit?.safeName;
-  credit?.safeCategory;
+  (results[4] as Debt?)?.safeUid;
+  (results[4] as Debt?)?.safeCounterpartyName;
+  (results[4] as Debt?)?.safeDirection;
 
-  final variableExpense = await isar.variableExpenses.where().findFirst();
-  variableExpense?.safeUid;
-  variableExpense?.safeCategory;
-  variableExpense?.safeAmount;
+  (results[5] as Credit?)?.safeUid;
+  (results[5] as Credit?)?.safeName;
+  (results[5] as Credit?)?.safeCategory;
+
+  (results[6] as VariableExpense?)?.safeUid;
+  (results[6] as VariableExpense?)?.safeCategory;
+  (results[6] as VariableExpense?)?.safeAmount;
 
   final settings = await isar.appSettings.get(1);
   settings?.safeBaseCurrency;

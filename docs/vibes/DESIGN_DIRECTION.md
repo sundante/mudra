@@ -4,6 +4,155 @@
 
 ---
 
+## Component Catalogue
+
+Reference specs for every recurring UI pattern. All token names map to `AppColors` and `AppTypography` constants.
+
+---
+
+### 1. Greeting Header
+
+```
+Good morning,          ← IBM Plex Sans 16px w400, AppColors.inkMid
+[User name].           ← Cormorant Garamond italic 22px w400, AppColors.red  (AppTypography.displayItalic, color overridden)
+FRI · 23 MAY           ← IBM Plex Mono 9.5px ALL CAPS inkDim, tracked  (sectionLabel style, inkDim)
+```
+
+Currency switcher pill (top-right): dark `AppColors.ink` background pill; ₹ $ £ options in IBM Plex Mono 11px; active option = white text, inactive = `inkDim`.
+
+---
+
+### 2. Section Label + Count Row
+
+Two-column header above every list section:
+
+- **Left**: IBM Plex Mono 9.5px ALL CAPS `inkDim`, letterSpacing 1.8 — e.g. `NEXT 7 DAYS`
+- **Right**: same size/tracking, `AppColors.red` — e.g. `3 DEBITS`
+
+Use `inkDim` for neutral counts, `red` for debt/outflow counts, `amber` for investment counts.
+
+---
+
+### 3. Hero Tile (Home — replaces FuelGaugeRing)
+
+Numbers-only compact tile. No arcs, rings, dials, or progress indicators.
+
+```
+┌──────────────────────────────────────┐
+│  SPENDABLE THIS MONTH   ← sectionLabel, inkDim
+│                                      │
+│  ₹ 84,320               ← IBM Plex Mono 36px w600; green if >0, red if <0
+│                                      │
+│  14 days left · Projected +₹ 12,400  ← IBM Plex Sans 12px inkDim;
+│                                         surplus inline green, deficit inline red
+└──────────────────────────────────────┘
+```
+
+- Background: `AppColors.surface` white
+- Border: 1px `AppColors.border`, 12px radius
+- Padding: 20px horizontal, 18px vertical
+- Max 1 per screen
+
+---
+
+### 4. Summary Tile (stat tiles, all screens)
+
+Consistent spec — every paired tile must match in height and structure.
+
+```
+┌──────────────────────┐
+│  ACCOUNTS            ← IBM Plex Mono 9.5px ALL CAPS inkDim
+│  ₹ 2.14L             ← IBM Plex Mono ~20px w600, ink
+│  +12.4K this wk      ← IBM Plex Sans 11px, semantic color
+└──────────────────────┘
+```
+
+- Background tint: `greenLight` (#E8F5EE) for liquid/account tiles · `amberLight` (#FEF0E0) for investment tiles · `surfaceAlt` for neutral/net worth
+- Corner radius 10px, padding 14px
+- Delta row: omit if not applicable
+- No gauges, bars, or progress indicators — numbers only
+
+---
+
+### 5. Outgoing / Debit Row
+
+Core list cell used across Home, Radar, Spend, and Debts screens.
+
+```
+│▌ Title (IBM Plex Sans 14px w500, ink)          [Category chip]
+│  DAY · DATE (mono 10px inkDim) · IN X DAYS     ₹ AMOUNT (mono 14px w500)
+```
+
+- Left accent bar: 3–4px, semantic color — red for outflow/debt, amber for investment/SIP, green for income
+- Amount always right-aligned
+- `IN X DAYS` only shown on upcoming/scheduled rows; omit on past transactions
+
+---
+
+### 6. Category Chip Pill
+
+Small inline label attached to the row title.
+
+| Category | Background | Text color |
+|---|---|---|
+| EMI / CC / Bill / Expense | `AppColors.redLight` | `AppColors.red` |
+| SIP / Investment | `AppColors.amberLight` | `AppColors.amber` |
+| Income / Salary | `AppColors.greenLight` | `AppColors.green` |
+
+- Shape: 4px border radius, no border
+- Font: IBM Plex Mono 9px ALL CAPS
+- Padding: 2px vertical, 6px horizontal
+
+---
+
+### 7. Day Picker Strip (Radar screen)
+
+Horizontal 7-column week strip.
+
+- Each column: abbreviated day label (MON) above date number
+- Active day with items: red outline pill (1.5px `AppColors.red` border), date number in `red`
+- Dot indicator below date for days with scheduled items — `AppColors.red` dot
+- Inactive days: plain `inkDim` text, no border
+- Scroll: horizontal, snaps to selected day
+
+---
+
+### 8. Total Footer Card
+
+Full-width summary card at the bottom of a list section.
+
+- Background: `AppColors.redLight` (#FAEAE9), 12px radius
+- Label: sectionLabel style — `TOTAL THIS WEEK`
+- Amount: IBM Plex Mono 28px w600, `AppColors.red`
+- Padding: 16px horizontal, 14px vertical
+
+Use `amberLight` bg + `amber` text when summarising investment outflows.
+
+---
+
+### 9. Inline Semantic Highlighting (Morning Briefing)
+
+Inline tinted pills within prose text to draw attention to key figures.
+
+- Positive amounts: `greenLight` bg pill, `green` text, IBM Plex Mono
+- Debt labels / category names: `redLight` bg inline highlight, `red` text
+- % gains: `greenLight` pill, `green` text
+- Investment amounts: `amberLight` pill, `amber` text
+- All inline highlights: IBM Plex Mono, same size as surrounding text, 4px radius
+
+---
+
+### 10. CTA Button Variants
+
+| Variant | Spec |
+|---|---|
+| Primary | Full-width, `AppColors.red` bg, white label, IBM Plex Sans 14px w600, 12px radius, 52px height |
+| Secondary | Full-width, outlined (1.5px `AppColors.ink` border), white bg, `ink` label, same radius/height |
+
+Never use gold as a CTA color.
+
+---
+
 ## Vision
 
 **"The richness of a premium fintech dashboard — but warmer, gold-first, and more personal."**
@@ -110,3 +259,7 @@ Key differentiators vs the reference:
 | 2026-05-28 | Rebuilt App Map as a compact horizontal flow board with shared JSON source and generated HTML map |
 | 2026-05-28 | Profile simplified to identity/navigation/account/data actions; income, pay date, and currency removed from Profile |
 | 2026-05-28 | Home This Month now leads with the fuel gauge only; the gold Month Runway hero was removed and gauge colour is value-based (0 grey, positive green, negative red) |
+| 2026-05-30 | Color grammar sharpened: Red `#A83226` is now primary brand signal AND semantic outflow color (active nav, CTAs, brand italic text, debit rows). Gold `#8A6520` retired from UI — hero gradient only. Amber = promises (future investment commitments). Green = surplus/income |
+| 2026-05-30 | Fuel gauge ring replaced with compact hero tile on Home — numbers only (spendable + days left + projected month-end surplus/deficit); no arcs, rings, or dials anywhere in the app |
+| 2026-05-30 | Section labels switched from gold to `inkDim` — neutral mono label; count on right stays red |
+| 2026-05-30 | Component Catalogue added to this file — 10 component specs with exact token references for row anatomy, tiles, chips, day picker, footer card, briefing highlights, and CTA buttons |

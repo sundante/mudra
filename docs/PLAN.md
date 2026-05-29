@@ -11,13 +11,15 @@ Version 2.0 · May 2026
 ## Design System Grammar
 
 ### Colour Grammar
-- Positive / income → `AppColors.green` (#1E6B44)
-- Expense / negative / debt → `AppColors.red` (#A83226)
-- Investment / neutral → `AppColors.amber` (#9A5510)
-- Primary CTA / accent → `AppColors.gold` (#8A6520)
+
+- Surplus / income / positive balance → `AppColors.green` (#1E6B44)
+- Outflows / brand primary / negative amounts / debt → `AppColors.red` (#A83226) — active nav, CTAs, brand italic text, debit accent bars
+- Promises / investments / SIPs not yet executed → `AppColors.amber` (#9A5510)
+- Hero gradient only (never UI text, CTAs, or labels) → `AppColors.gold` (#8A6520)
+- Negative amounts always red regardless of row type
 - Background → `AppColors.background` (#FFFFFF) — pure white across scaffolds
-- Dashboard fuel gauge → `AppColors.green` when projected month end is > 0,
-  `AppColors.inkDim` at exactly 0, and `AppColors.red` when < 0
+- Section labels → `AppColors.inkDim` (#8C8480) — IBM Plex Mono 9.5px ALL CAPS; count label on right uses same style in red
+- Dashboard projected month end → `AppColors.green` when > 0, `AppColors.inkDim` at 0, `AppColors.red` when < 0
 
 ### Typography Grammar
 - **Hero numbers / display headings** → Cormorant Garamond (`AppTypography.displayLarge` etc.)

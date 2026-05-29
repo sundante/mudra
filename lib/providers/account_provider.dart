@@ -9,21 +9,3 @@ final accountRepoProvider = Provider<AccountRepository>(
 final accountsStreamProvider = StreamProvider<List<Account>>(
     (ref) => ref.watch(accountRepoProvider).watchAll());
 
-final personalAccountsProvider = Provider<List<Account>>((ref) {
-  final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
-  return accounts
-      .where((a) => a.safeAccountType == AccountType.personal)
-      .toList();
-});
-
-final jointAccountsProvider = Provider<List<Account>>((ref) {
-  final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
-  return accounts.where((a) => a.safeAccountType == AccountType.joint).toList();
-});
-
-final businessAccountsProvider = Provider<List<Account>>((ref) {
-  final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
-  return accounts
-      .where((a) => a.safeAccountType == AccountType.business)
-      .toList();
-});

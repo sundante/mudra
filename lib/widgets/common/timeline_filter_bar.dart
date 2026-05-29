@@ -58,10 +58,10 @@ class TimelineFilterBar extends StatelessWidget {
               margin: const EdgeInsets.only(right: AppSpacing.xs),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: active ? AppColors.gold : AppColors.surfaceAlt,
+                color: active ? AppColors.red : AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(AppRadius.full),
                 border: Border.all(
-                  color: active ? AppColors.gold : AppColors.border,
+                  color: active ? AppColors.red : AppColors.border,
                 ),
               ),
               child: Text(

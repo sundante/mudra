@@ -20,7 +20,10 @@ import '../../providers/settings_provider.dart';
 import '../../providers/variable_expense_provider.dart';
 import '../../widgets/common/amount_display.dart';
 import '../../widgets/common/mudra_button.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../widgets/common/mudra_card.dart';
+import '../../widgets/common/hero_stat.dart';
+import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/mudra_input.dart';
 import '../../widgets/common/section_label.dart';
 import '../../widgets/outgoing_row.dart';
@@ -171,7 +174,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
       appBar: AppBar(
         title: Text(
           'Debts',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
+          style: AppTypography.headingMedium.copyWith(color: AppColors.red),
         ),
         actions: [
           IconButton(
@@ -193,44 +196,36 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Summary stat row ────────────────────────────
-                  Row(
-                    children: [
-                      Expanded(
-                        child: MudraCard.primary(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SectionLabel('committed'),
-                              const SizedBox(height: 4),
-                              AmountDisplay(
-                                amount: totalCommitted,
-                                currency: currency,
-                                style: AppTypography.monoMedium
-                                    .copyWith(color: AppColors.red),
-                              ),
-                            ],
-                          ),
+                  // ── Hero card ───────────────────────────────────
+                  MudraHeroCard(
+                    label: 'COMMITTED',
+                    amount: CurrencyFormatter.compact(totalCommitted, currency),
+                    amountColor: AppColors.red,
+                    sublabel: 'monthly outflow',
+                    bottom: Row(
+                      children: [
+                        HeroStat(
+                          label: 'COMMITTED',
+                          value: CurrencyFormatter.compact(
+                              totalCommitted, currency),
+                          color: AppColors.red,
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: MudraCard.stat(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SectionLabel('items'),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${activeItems.length}',
-                                style: AppTypography.monoMedium
-                                    .copyWith(color: AppColors.ink),
-                              ),
-                            ],
-                          ),
+                        Container(
+                            width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'ACTIVE ITEMS',
+                          value: '${activeItems.length}',
+                          color: AppColors.ink,
                         ),
-                      ),
-                    ],
+                        Container(
+                            width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'UPCOMING',
+                          value: '${upcoming.length}',
+                          color: AppColors.amber,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   // ── Upcoming featured card ──────────────────────
@@ -636,7 +631,7 @@ class _GroupSectionState extends State<_GroupSection> {
                   child: Text(
                     'Show $hidden more',
                     style: AppTypography.labelSmall
-                        .copyWith(color: AppColors.gold),
+                        .copyWith(color: AppColors.red),
                   ),
                 ),
             ],
@@ -1301,7 +1296,7 @@ class _OutgoingEditorSheetState extends ConsumerState<_OutgoingEditorSheet> {
                       child: Text(
                         isEditing ? 'Edit Commitment' : 'Add Commitment',
                         style: AppTypography.headingMedium
-                            .copyWith(color: AppColors.gold),
+                            .copyWith(color: AppColors.red),
                       ),
                     ),
                     IconButton(
@@ -1333,7 +1328,7 @@ class _OutgoingEditorSheetState extends ConsumerState<_OutgoingEditorSheet> {
                             : AppColors.ink),
                     backgroundColor: WidgetStateProperty.resolveWith((s) =>
                         s.contains(WidgetState.selected)
-                            ? AppColors.gold
+                            ? AppColors.red
                             : AppColors.surface),
                     side: const WidgetStatePropertyAll(
                         BorderSide(color: AppColors.border)),
@@ -1590,7 +1585,7 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                       child: Text(
                         isEditing ? 'Edit Debt' : 'Add Debt',
                         style: AppTypography.headingMedium
-                            .copyWith(color: AppColors.gold),
+                            .copyWith(color: AppColors.red),
                       ),
                     ),
                     IconButton(
@@ -1619,7 +1614,7 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                             : AppColors.ink),
                     backgroundColor: WidgetStateProperty.resolveWith((s) =>
                         s.contains(WidgetState.selected)
-                            ? AppColors.gold
+                            ? AppColors.red
                             : AppColors.surface),
                     side: const WidgetStatePropertyAll(
                         BorderSide(color: AppColors.border)),
@@ -1665,14 +1660,14 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 ActionChip(
-                  backgroundColor: AppColors.goldLight,
+                  backgroundColor: AppColors.surfaceAlt,
                   side: const BorderSide(color: AppColors.border),
                   avatar: const Icon(Icons.calendar_today_outlined,
-                      size: 16, color: AppColors.gold),
+                      size: 16, color: AppColors.red),
                   label: Text(
                     _dueDate == null ? 'Set due date' : _fmtDate(_dueDate!),
                     style: AppTypography.labelMedium
-                        .copyWith(color: AppColors.gold),
+                        .copyWith(color: AppColors.red),
                   ),
                   onPressed: _saving ? null : _pickDueDate,
                 ),
@@ -1772,3 +1767,5 @@ class _DebtEditorSheetState extends State<_DebtEditorSheet> {
     if (mounted) Navigator.of(context).pop();
   }
 }
+
+

@@ -15,6 +15,7 @@ import '../../widgets/charts/spend_bar_chart.dart';
 import '../../widgets/charts/sparkline_chart.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/mudra_card.dart';
+import '../../widgets/common/hero_stat.dart';
 import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/quick_spend_sheet.dart';
 import '../../widgets/common/section_label.dart';
@@ -26,7 +27,7 @@ Color _categoryColor(VariableCategory cat) => switch (cat) {
       VariableCategory.transport => AppColors.amber,
       VariableCategory.shopping => AppColors.blue,
       VariableCategory.health => AppColors.green,
-      VariableCategory.entertainment => AppColors.gold,
+      VariableCategory.entertainment => AppColors.amber,
       VariableCategory.misc => AppColors.inkDim,
     };
 
@@ -97,7 +98,7 @@ class SpendScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.gold,
+        backgroundColor: AppColors.red,
         foregroundColor: Colors.white,
         onPressed: () => _openQuickSpend(context, ref, currency),
         child: const Icon(Icons.add),
@@ -110,7 +111,7 @@ class SpendScreen extends ConsumerWidget {
             pinned: true,
             title: Text('Spending',
                 style: AppTypography.headingMedium
-                    .copyWith(color: AppColors.gold)),
+                    .copyWith(color: AppColors.red)),
           ),
 
           // ── Hero Card ─────────────────────────────────────────────────────
@@ -126,21 +127,11 @@ class SpendScreen extends ConsumerWidget {
                     'of ${CurrencyFormatter.compact(dashboard.bankBalance, currency)} liquid',
                 bottom: Row(
                   children: [
-                    _SpendHeroStat(
-                      label: 'TRANSACTIONS',
-                      value: '${currentMonth.length}',
-                    ),
+                    HeroStat(label: 'TRANSACTIONS', value: '${currentMonth.length}', color: Colors.white, onDarkBackground: true),
                     Container(width: 1, height: 28, color: Colors.white24),
-                    _SpendHeroStat(
-                      label: 'CATEGORIES',
-                      value: '${catTotals.length}',
-                    ),
+                    HeroStat(label: 'CATEGORIES', value: '${catTotals.length}', color: Colors.white, onDarkBackground: true),
                     Container(width: 1, height: 28, color: Colors.white24),
-                    _SpendHeroStat(
-                      label: 'THIS MONTH',
-                      value:
-                          '${_monthShort(now.month)} ${now.year}',
-                    ),
+                    HeroStat(label: 'THIS MONTH', value: '${_monthShort(now.month)} ${now.year}', color: Colors.white, onDarkBackground: true),
                   ],
                 ),
               ),
@@ -238,7 +229,7 @@ class SpendScreen extends ConsumerWidget {
                         Text(
                           CurrencyFormatter.compact(totalSpent, currency),
                           style: AppTypography.monoSmall
-                              .copyWith(color: AppColors.gold),
+                              .copyWith(color: AppColors.red),
                         ),
                       ],
                     ),
@@ -314,39 +305,6 @@ class SpendScreen extends ConsumerWidget {
 
   String _monthShort(int m) =>
       ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1];
-}
-
-// ── Hero Stat ─────────────────────────────────────────────────────────────
-
-class _SpendHeroStat extends StatelessWidget {
-  const _SpendHeroStat({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Mono',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              )),
-          const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                fontFamily: 'IBM Plex Mono',
-                fontSize: 8,
-                letterSpacing: 1.0,
-                color: Colors.white38,
-              )),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Category Progress Row ─────────────────────────────────────────────────

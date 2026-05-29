@@ -16,13 +16,54 @@
 ## Design Rules (non-negotiable)
 
 - **Background**: `#FFFFFF` pure white — `#FAF8F4` cream is banned
-- **Colour grammar**: Green `#1E6B44` = income/positive · Red `#A83226` = expense/debt · Amber `#9A5510` = investment · Gold `#8A6520` = brand/CTA/active — never break this in charts or UI
-- **Gold is sacred**: use only on primary CTA, brand mark, key numbers, active nav state — overuse kills its signal
+- **Colour grammar**:
+  - Red `#A83226` (`AppColors.red`) = primary brand signal + all outflows — active nav, CTAs, brand italic text (user name, screen titles like "briefing"), debit row accent bars, negative amounts, expense chips
+  - Green `#1E6B44` (`AppColors.green`) = surplus / income / positive balance
+  - Amber `#9A5510` (`AppColors.amber`) = promises — future investment or savings commitments not yet executed (SIP, recurring invest)
+  - Gold `#8A6520` (`AppColors.gold`) = hero gradient only — retired from UI text, CTAs, labels, and nav; never use on financial data
+  - Negative amounts always red regardless of row type
+- **Red is the primary brand signal** — use for active nav state, CTAs, and brand italic text; do not overuse on non-brand, non-outflow elements
 - **Typography**: Cormorant Garamond = hero/display numbers · IBM Plex Sans = all UI text · IBM Plex Mono = **every** currency amount (no exceptions)
-- **Section labels**: IBM Plex Mono, 9.5px, ALL CAPS, tracked — e.g. `NEXT 7 DAYS`
-- **Hero gradient card**: dark gold (`#2A1C04 → #A07020`) — max 1 per screen, never stack two
+- **Section labels**: IBM Plex Mono, 9.5px, ALL CAPS, `inkDim` (#8C8480) — not gold. Count label on the right (e.g. `3 DEBITS`) uses same style in red
+- **Hero gradient card**: dark red (`#1A0404 → #7A1F16`) — max 1 per screen, never stack two
+- **No gauges or dials** — hero tile on Home shows numbers only (spendable + days left + projected month-end); no arcs, rings, or progress bars inside tiles
 - **Full design reference**: `docs/vibes/mudra_design_system.html`
-- **Aspirational direction + roadmap**: `docs/vibes/DESIGN_DIRECTION.md`
+- **Aspirational direction + component catalogue**: `docs/vibes/DESIGN_DIRECTION.md`
+
+### Component Grammar
+
+Rules agents must follow for every list row, tile, and header:
+
+**Row anatomy** (outgoing, debit, account, holding rows):
+- Left accent bar: 3–4px wide, semantic color (red = outflow/debt, amber = investment/SIP, green = income)
+- Title: IBM Plex Sans 14px w500, `ink`
+- Sublabel: IBM Plex Mono 10px, `inkDim` — format `DAY · DATE`
+- Countdown (upcoming rows only): IBM Plex Sans 11px `inkDim` — `IN X DAYS` after the date
+- Category chip: small pill 4px radius, tinted bg + matching text (EMI/CC/Bill → redLight/red; SIP/Invest → amberLight/amber; Income → greenLight/green); IBM Plex Mono 9px ALL CAPS
+- Amount: IBM Plex Mono 14px w500, right-aligned; color follows row type
+
+**Stat tiles** (all screens, consistent spec):
+- Label: IBM Plex Mono 9.5px ALL CAPS `inkDim`
+- Amount: IBM Plex Mono ~20px w600, `ink`
+- Delta: IBM Plex Sans 11px, semantic color
+- Background tint: `greenLight` for liquid/account tiles, `amberLight` for investment tiles, `surfaceAlt` for neutral
+- Corner radius 10px, padding 14px; equal height when tiled side-by-side
+- No gauges, bars, or progress indicators inside — numbers only
+
+**Hero tile** (Home screen, max 1 per screen):
+- Label: `SPENDABLE THIS MONTH` — section label style, `inkDim`
+- Hero amount: IBM Plex Mono ~36px w600, green if positive / red if negative
+- Sub-row: `N days left · Projected ±₹ X` — IBM Plex Sans 12px `inkDim`; projected amount inline green/red
+- White bg, 1px `border` border, 12px radius, 20px horizontal / 18px vertical padding
+
+**Greeting header**:
+- Line 1: IBM Plex Sans 16px w400, `inkMid` — `Good morning,`
+- Line 2: Cormorant Garamond italic 22px w400, `red` — user name
+- Line 3: section label (mono 9.5px ALL CAPS `inkDim`) — date
+
+**Section label + count row**:
+- Left: IBM Plex Mono 9.5px ALL CAPS `inkDim` — e.g. `NEXT 7 DAYS`
+- Right: same style, `red` — e.g. `3 DEBITS`
 
 ## Architecture
 

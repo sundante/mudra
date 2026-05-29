@@ -135,7 +135,7 @@ class _QuickSpendSheetState extends State<QuickSpendSheet> {
                     hintText: '0',
                     prefixText: '$symbol ',
                     prefixStyle: AppTypography.monoLarge.copyWith(
-                      color: AppColors.gold,
+                      color: AppColors.ink,
                       fontSize: 40,
                     ),
                   ),
@@ -150,13 +150,13 @@ class _QuickSpendSheetState extends State<QuickSpendSheet> {
                       label: Text('${category.emoji} ${category.label}'),
                       selected: selected,
                       onSelected: (_) => setState(() => _category = category),
-                      selectedColor: AppColors.gold,
+                      selectedColor: AppColors.red,
                       backgroundColor: AppColors.surfaceAlt,
                       labelStyle: AppTypography.labelMedium.copyWith(
                         color: selected ? Colors.white : AppColors.inkMid,
                       ),
                       side: BorderSide(
-                        color: selected ? AppColors.gold : AppColors.border,
+                        color: selected ? AppColors.red : AppColors.border,
                       ),
                     );
                   }).toList(),
@@ -176,19 +176,19 @@ class _QuickSpendSheetState extends State<QuickSpendSheet> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: ActionChip(
-                    backgroundColor: AppColors.goldLight,
+                    backgroundColor: AppColors.surfaceAlt,
                     side: const BorderSide(color: AppColors.border),
                     label: Text(
                       _isToday(_spentAt)
                           ? 'Today'
                           : '${_spentAt.day} ${_monthName(_spentAt.month)}',
                       style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.gold),
+                          .copyWith(color: AppColors.inkDim),
                     ),
                     avatar: const Icon(
                       Icons.calendar_today_outlined,
                       size: 16,
-                      color: AppColors.gold,
+                      color: AppColors.inkDim,
                     ),
                     onPressed: _saving ? null : _pickDate,
                   ),

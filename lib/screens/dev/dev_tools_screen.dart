@@ -122,7 +122,7 @@ class _DevToolsScreenState extends ConsumerState<DevToolsScreen> {
         title: Text(
           'DEV TOOLS',
           style: AppTypography.sectionLabel.copyWith(
-            color: AppColors.gold,
+            color: AppColors.red,
             fontSize: 13,
           ),
         ),
@@ -207,7 +207,7 @@ class _InfoCard extends StatelessWidget {
       child: info == null
           ? const Center(
               child: CircularProgressIndicator(
-                color: AppColors.gold,
+                color: AppColors.red,
                 strokeWidth: 2,
               ),
             )

@@ -13,12 +13,12 @@ import '../../data/models/app_settings.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/account_tile.dart';
-import '../../widgets/common/amount_display.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../widgets/common/hero_stat.dart';
+import '../../widgets/common/mudra_hero_card.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/mudra_button.dart';
-import '../../widgets/common/mudra_card.dart';
 import '../../widgets/common/mudra_input.dart';
-import '../../widgets/common/section_label.dart';
 
 const _uuid = Uuid();
 const _bankSuggestions = <String>[
@@ -78,7 +78,7 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
       appBar: AppBar(
         title: Text(
           'Funds',
-          style: AppTypography.headingMedium.copyWith(color: AppColors.gold),
+          style: AppTypography.headingMedium.copyWith(color: AppColors.red),
         ),
         actions: [
           IconButton(
@@ -89,7 +89,7 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openAccountSheet(context),
-        backgroundColor: AppColors.gold,
+        backgroundColor: AppColors.red,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
@@ -105,30 +105,32 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: MudraCard.primary(
-                          child: _SummaryStat(
-                            label: 'LIQUID',
-                            amount: liquidTotal,
-                            currency: currency,
-                            color: AppColors.green,
-                          ),
+                  MudraHeroCard(
+                    label: 'FUNDS',
+                    amount: CurrencyFormatter.compact(liquidTotal, currency),
+                    amountColor: AppColors.green,
+                    sublabel: 'across ${viewData.length} accounts',
+                    bottom: Row(
+                      children: [
+                        HeroStat(
+                          label: 'LIQUID',
+                          value: CurrencyFormatter.compact(liquidTotal, currency),
+                          color: AppColors.green,
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: MudraCard.stat(
-                          child: _SummaryStat(
-                            label: 'FIXED DEPOSITS',
-                            amount: fdTotal,
-                            currency: currency,
-                            color: AppColors.amber,
-                          ),
+                        Container(width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'FIXED DEPOSITS',
+                          value: CurrencyFormatter.compact(fdTotal, currency),
+                          color: AppColors.amber,
                         ),
-                      ),
-                    ],
+                        Container(width: 1, height: 24, color: AppColors.border),
+                        HeroStat(
+                          label: 'ACCOUNTS',
+                          value: '${viewData.length}',
+                          color: AppColors.ink,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Align(
@@ -165,7 +167,7 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
                         backgroundColor:
                             WidgetStateProperty.resolveWith((states) {
                           return states.contains(WidgetState.selected)
-                              ? AppColors.gold
+                              ? AppColors.red
                               : AppColors.surface;
                         }),
                         side: const WidgetStatePropertyAll(
@@ -400,39 +402,6 @@ class _FundsScreenState extends ConsumerState<FundsScreen> {
       };
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.label,
-    required this.amount,
-    required this.currency,
-    required this.color,
-  });
-
-  final String label;
-  final double amount;
-  final String currency;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionLabel(label, color: AppColors.inkDim),
-        const SizedBox(height: AppSpacing.xs),
-        AmountDisplay(
-          amount: amount,
-          currency: currency,
-          style: AppTypography.monoMedium.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _FundsAccountView {
   const _FundsAccountView({
     required this.id,
@@ -597,7 +566,7 @@ class _AccountEditorSheetState extends ConsumerState<_AccountEditorSheet> {
                       child: Text(
                         isEditing ? 'Edit Account' : 'Add Account',
                         style: AppTypography.headingMedium
-                            .copyWith(color: AppColors.gold),
+                            .copyWith(color: AppColors.red),
                       ),
                     ),
                     IconButton(
@@ -923,7 +892,7 @@ class _QuickBalanceSheetState extends State<_QuickBalanceSheet> {
                       child: Text(
                         'Quick Balance Update',
                         style: AppTypography.headingMedium
-                            .copyWith(color: AppColors.gold),
+                            .copyWith(color: AppColors.red),
                       ),
                     ),
                     IconButton(
